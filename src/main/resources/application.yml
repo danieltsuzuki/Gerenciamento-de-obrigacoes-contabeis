@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: Player Contabilidade Back
+
+  profiles:
+    active: dev
