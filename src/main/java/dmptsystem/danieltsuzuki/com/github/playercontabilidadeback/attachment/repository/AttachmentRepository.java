@@ -17,4 +17,6 @@ public interface AttachmentRepository extends Repository<Attachment, Long> {
     Page<Attachment> findAll(Pageable pageable);
 
     List<Attachment> findByObligationId(Long obligationId);
+
+    long countByObligationId(Long obligationId);
 }

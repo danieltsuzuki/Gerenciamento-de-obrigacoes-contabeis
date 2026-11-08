@@ -29,6 +29,8 @@ As respostas de erro seguem o padrão padronizado com corpo JSON contendo `code`
 | 404 | `NOT_FOUND` | Recurso solicitado não foi encontrado pelo identificador |
 | 409 | `DUPLICATE_CNPJ` | Conflito por tentativa de cadastrar ou alterar para CNPJ já existente |
 | 409 | `DUPLICATE_EMAIL` | Conflito por tentativa de cadastrar ou alterar para e-mail já existente |
+| 422 | `COMPANY_INACTIVE` / `USER_INACTIVE` | Violação de regra de negócio RN-006 (atribuição para empresa ou responsável inativo) |
+| 422 | `INVALID_STATUS_TRANSITION` | Violação do ciclo de vida de status da obrigação RN-008 |
 | 405 | — | Método HTTP não permitido (ex.: tentativa de `DELETE` físico) |
 
 ---
@@ -268,3 +270,117 @@ Atualiza os dados de uma empresa existente, incluindo razão social, nome fantas
 | 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
 | 404 | `NOT_FOUND` | Identificador informado não existe |
 | 409 | `DUPLICATE_CNPJ` | CNPJ alterado pertence a outra empresa |
+
+---
+
+## Endpoints de Obrigações Fiscais (`/api/obligations`)
+
+### POST /api/obligations
+Cria uma nova obrigação tributária para uma empresa e responsável especificados.
+- Valida a existência e a situação cadastral ativa de ambos (`RN-006`).
+- Define automaticamente o status inicial como `PENDING` no servidor.
+- Registra a data de criação (`createdAt`) automaticamente.
+- Requer autenticação JWT (`Authorization: Bearer <token>`).
+
+**Request**
+```json
+{
+  "companyId": 1,
+  "responsibleId": 2,
+  "title": "Declaração de Débitos e Créditos Tributários Federais",
+  "description": "DCTF mensal referente ao período de apuração anterior",
+  "dueDate": "2026-11-30"
+}
+```
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|:---:|---|
+| `companyId` | Long | Sim | Identificador da empresa contratante (deve existir e estar ativa) |
+| `responsibleId` | Long | Sim | Identificador do usuário responsável (deve existir e estar ativo) |
+| `title` | String | Sim | Título ou nome da obrigação (máx. 255 caracteres) |
+| `description` | String | Não | Detalhamento ou instruções complementares |
+| `dueDate` | String (`YYYY-MM-DD`) | Sim | Prazo limite de entrega/conclusão |
+
+**Respostas**
+| HTTP | code | Quando |
+|---|---|---|
+| 201 | — | Obrigação cadastrada com sucesso |
+| 400 | `VALIDATION_ERROR` | Falha de validação nos campos da requisição |
+| 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
+| 404 | `NOT_FOUND` | Empresa ou responsável não encontrado |
+| 422 | `COMPANY_INACTIVE` / `USER_INACTIVE` | Empresa ou responsável inativo (RN-006) |
+
+---
+
+### GET /api/obligations
+Lista obrigações cadastradas com suporte a paginação e filtros opcionais por empresa, responsável e status.
+Para cada obrigação, retorna os dados necessários para exibição: empresa (`id`, `legalName`, `tradeName`, `cnpj`, `active`), responsável (`id`, `name`, `email`, `active`), status, quantidade de anexos (`attachmentCount`) e data de criação (`createdAt`).
+Acesso anônimo permitido.
+
+**Parâmetros de Query**
+| Parâmetro | Tipo | Padrão | Descrição |
+|---|---|---|---|
+| `companyId` | Long | opcional | Filtra obrigações vinculadas a uma empresa específica |
+| `responsibleId` | Long | opcional | Filtra obrigações atribuídas a um responsável específico |
+| `status` | ObligationStatus (`PENDING`, `IN_PROGRESS`, `COMPLETED`) | opcional | Filtra por status atual |
+| `page` | Integer | `0` | Número da página (base zero) |
+| `size` | Integer | `20` | Quantidade de registros por página |
+| `sort` | String | `dueDate,asc` | Critério de ordenação |
+
+**Respostas**
+| HTTP | code | Quando |
+|---|---|---|
+| 200 | — | Listagem paginada retornada com sucesso |
+
+---
+
+### GET /api/obligations/{id}
+Recupera os detalhes completos de uma obrigação tributária a partir do seu identificador numérico, incluindo dados da empresa, do responsável, quantidade de anexos, data de criação e data de conclusão (`completedAt`), se houver.
+Acesso anônimo permitido.
+
+**Respostas**
+| HTTP | code | Quando |
+|---|---|---|
+| 200 | — | Obrigação encontrada |
+| 404 | `NOT_FOUND` | Identificador não existe no banco de dados |
+
+---
+
+### PUT /api/obligations/{id}
+Atualiza os dados de uma obrigação existente.
+- Permite alterar título, descrição, prazo (`dueDate`), e opcionalmente realizar transição de status (`RN-008`).
+- Permite reatribuir empresa ou responsável. Caso alterados, valida se o novo destinatário está ativo (`RN-006`).
+- Se o status for alterado para `COMPLETED`, registra a data/hora de conclusão (`completedAt`).
+- Transições de status são validadas de acordo com a máquina de estados (`RN-008`): `PENDING` -> `IN_PROGRESS` / `COMPLETED`, `IN_PROGRESS` -> `COMPLETED`. Transições regressivas ou modificação de obrigações já concluídas resultam em erro 422.
+- Requer autenticação JWT (`Authorization: Bearer <token>`).
+
+**Request**
+```json
+{
+  "companyId": 1,
+  "responsibleId": 2,
+  "title": "Declaração de Débitos e Créditos Tributários Federais - Retificadora",
+  "description": "Retificação referente ao período anterior",
+  "dueDate": "2026-12-05",
+  "status": "IN_PROGRESS"
+}
+```
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|:---:|---|
+| `companyId` | Long | Sim | Identificador da empresa vinculada |
+| `responsibleId` | Long | Sim | Identificador do responsável atribuído |
+| `title` | String | Sim | Título da obrigação (máx. 255 caracteres) |
+| `description` | String | Não | Descrição da obrigação |
+| `dueDate` | String (`YYYY-MM-DD`) | Sim | Prazo de entrega |
+| `status` | ObligationStatus | Não | Novo status desejado (se nulo, mantém o status atual) |
+
+**Respostas**
+| HTTP | code | Quando |
+|---|---|---|
+| 200 | — | Obrigação atualizada com sucesso |
+| 400 | `VALIDATION_ERROR` | Falha de validação ou campos obrigatórios ausentes |
+| 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
+| 404 | `NOT_FOUND` | Obrigação, empresa ou responsável não encontrado |
+| 422 | `COMPANY_INACTIVE` / `USER_INACTIVE` | Nova empresa ou responsável está inativo (RN-006) |
+| 422 | `INVALID_STATUS_TRANSITION` | Transição de status proibida pelo ciclo de vida (RN-008) |

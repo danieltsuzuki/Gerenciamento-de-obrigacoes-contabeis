@@ -50,4 +50,37 @@ public interface ObligationRepository extends Repository<Obligation, Long> {
             @Param("dueTo") LocalDate dueTo,
             Pageable pageable
     );
+
+    @Query(
+            value = """
+                    select new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationWithAttachmentCount(
+                        o,
+                        (select count(a) from Attachment a where a.obligation = o)
+                    )
+                    from Obligation o
+                    join fetch o.company
+                    join fetch o.responsible
+                    where (:companyId is null or o.company.id = :companyId)
+                      and (:responsibleId is null or o.responsible.id = :responsibleId)
+                      and (:status is null or o.status = :status)
+                      and (:dueFrom is null or o.dueDate >= :dueFrom)
+                      and (:dueTo is null or o.dueDate <= :dueTo)
+                    """,
+            countQuery = """
+                    select count(o) from Obligation o
+                    where (:companyId is null or o.company.id = :companyId)
+                      and (:responsibleId is null or o.responsible.id = :responsibleId)
+                      and (:status is null or o.status = :status)
+                      and (:dueFrom is null or o.dueDate >= :dueFrom)
+                      and (:dueTo is null or o.dueDate <= :dueTo)
+                    """
+    )
+    Page<dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationWithAttachmentCount> findWithAttachmentCountByFilters(
+            @Param("companyId") Long companyId,
+            @Param("responsibleId") Long responsibleId,
+            @Param("status") ObligationStatus status,
+            @Param("dueFrom") LocalDate dueFrom,
+            @Param("dueTo") LocalDate dueTo,
+            Pageable pageable
+    );
 }
