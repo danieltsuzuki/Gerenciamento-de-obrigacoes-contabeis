@@ -6,6 +6,18 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Não lançado]
 
 ### Adicionado
+- Endpoints REST para gerenciamento de empresas em `/api/companies`:
+  - `POST /api/companies`: cadastro com validação de razão social, nome fantasia e CNPJ único.
+  - `GET /api/companies`: listagem com paginação padrão Spring Data (`page`, `size`, `sort`) e filtro opcional por `active`.
+  - `GET /api/companies/{id}`: busca de empresa por identificador numérico.
+  - `PUT /api/companies/{id}`: atualização cadastral e inativação/ativação (`active`).
+- Validador puro Java `Cnpj` com normalização (apenas dígitos), descarte de sequências repetidas e cálculo estrito dos dois dígitos verificadores (DVs).
+- Anotação de Bean Validation `@ValidCnpj` e validador `CnpjValidator` para validação declarativa nos DTOs.
+- DTOs de request e response: `CreateCompanyRequest`, `UpdateCompanyRequest` e `CompanyResponse`.
+- Camada de mapeamento `CompanyMapper` e camada de serviço `CompanyService`.
+- Tratamento global de exceções via `@RestControllerAdvice` (`GlobalExceptionHandler`) com respostas padronizadas para erros de validação (400), recurso não encontrado (404) e duplicidade de CNPJ (409).
+- Documentação formal dos endpoints em `docs/api.md`.
+- Suíte completa de testes automatizados: unitários de validador (`CnpjTest`), serviço (`CompanyServiceTest`), web layer (`CompanyControllerTest`) e integração com Testcontainers MySQL 8 (`CompanyApiIntegrationTest`).
 - Entidades JPA `Company`, `Responsible`, `Obligation` e `Attachment`, com normalização defensiva, auditoria e relações LAZY.
 - Enum de ciclo de vida de obrigações, transições protegidas e repositories sem operações `delete*`.
 - Migration V2 para `legal_name` e `trade_name`.

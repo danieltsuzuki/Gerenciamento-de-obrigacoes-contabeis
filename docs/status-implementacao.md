@@ -1,12 +1,12 @@
 # Status de implementação
-Atualizado em: 2026-11-07
+Atualizado em: 2026-11-08
 
 | Regra | Descrição | Estado | Implementação | Teste |
 |---|---|---|---|---|
-| RN-001 | CNPJ com validação de DV e normalização | Planejado | — | — |
-| RN-002 | Unicidade de CNPJ no banco de dados | Testado | `V1__create_schema.sql` (`uk_company_cnpj`) | `DatabaseMigrationIntegrationTest#shouldRejectDuplicateCnpj` |
+| RN-001 | CNPJ com validação de DV e normalização | Testado | `Cnpj.java`, `ValidCnpj`, `CompanyService` | `CnpjTest`, `CompanyServiceTest`, `CompanyApiIntegrationTest` |
+| RN-002 | Unicidade de CNPJ no banco de dados | Testado | `V1__create_schema.sql` (`uk_company_cnpj`), `CompanyService` | `DatabaseMigrationIntegrationTest#shouldRejectDuplicateCnpj`, `CompanyServiceTest`, `CompanyApiIntegrationTest` |
 | RN-003 | Unicidade de e-mail no banco de dados | Testado | `V1__create_schema.sql` (`uk_users_email`) | `DatabaseMigrationIntegrationTest#shouldRejectDuplicateEmail` |
-| RN-004 | Sem exclusão física (soft delete via campo `active`) | Implementado | `Company.active`, `Responsible.active`, repositories sem `delete*` | `RepositoriesDoNotExposeDeleteTest` |
+| RN-004 | Sem exclusão física (soft delete via campo `active`) | Testado | `Company.active`, `Responsible.active`, repositories sem `delete*`, `CompanyController` (sem `DELETE`, inativação via `PUT`) | `RepositoriesDoNotExposeDeleteTest`, `CompanyControllerTest`, `CompanyApiIntegrationTest` |
 | RN-005 | Preservação de histórico fiscal (FKs sem `CASCADE`) | Testado | `V1__create_schema.sql` (`fk_obligation_company`, etc.) | `DatabaseMigrationIntegrationTest#shouldRefuseToDeleteCompanyWithObligations` |
 | RN-006 | Inativos não recebem novas atribuições de obrigações | Planejado | — | — |
 | RN-007 | Senha com hash seguro e fora dos DTOs de resposta | Planejado | — | — |
@@ -14,8 +14,8 @@ Atualizado em: 2026-11-07
 | RN-009 | Armazenamento de arquivo fora do banco com metadados em `attachment` | Implementado | `Attachment`, `AttachmentRepository` | `DomainPersistenceIntegrationTest#saveAndReloadEachEntity` |
 
 ## Resumo
-- **Testado:** 6
-- **Implementado:** 2
+- **Testado:** 7
+- **Implementado:** 1
 - **Em andamento:** 0
 - **Planejado:** 2
 
