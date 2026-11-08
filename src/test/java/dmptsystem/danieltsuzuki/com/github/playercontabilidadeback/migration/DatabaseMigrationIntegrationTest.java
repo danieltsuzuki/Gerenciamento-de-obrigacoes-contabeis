@@ -41,10 +41,10 @@ class DatabaseMigrationIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("2. CNPJ duplicado é rejeitado pelo banco (UNIQUE CONSTRAINT uk_company_cnpj)")
     void shouldRejectDuplicateCnpj() {
         String cnpj = "12345678000195";
-        jdbcTemplate.update("INSERT INTO company (name, cnpj) VALUES (?, ?)", "Empresa Alpha", cnpj);
+        jdbcTemplate.update("INSERT INTO company (legal_name, cnpj) VALUES (?, ?)", "Empresa Alpha", cnpj);
 
         assertThatThrownBy(() ->
-                jdbcTemplate.update("INSERT INTO company (name, cnpj) VALUES (?, ?)", "Empresa Beta", cnpj)
+                jdbcTemplate.update("INSERT INTO company (legal_name, cnpj) VALUES (?, ?)", "Empresa Beta", cnpj)
         ).isInstanceOf(DataIntegrityViolationException.class);
     }
 
@@ -69,7 +69,7 @@ class DatabaseMigrationIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("4. O banco recusa apagar uma empresa que tenha obrigação vinculada (FK sem cascade)")
     void shouldRefuseToDeleteCompanyWithObligations() {
         jdbcTemplate.update(
-                "INSERT INTO company (id, name, cnpj) VALUES (?, ?, ?)",
+                "INSERT INTO company (id, legal_name, cnpj) VALUES (?, ?, ?)",
                 100L, "Empresa Com Obrigacao", "98765432000188"
         );
         jdbcTemplate.update(
