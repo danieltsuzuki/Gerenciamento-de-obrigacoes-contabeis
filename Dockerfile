@@ -1,0 +1,4 @@
+FROM mysql:8.0
+
+ENV LC_ALL=C.UTF-8
+
