@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,10 +33,38 @@ class CompanyApiIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private String obtainBearerToken() throws Exception {
+        jdbcTemplate.update("DELETE FROM users WHERE email = 'company_admin@empresa.com'");
+        jdbcTemplate.update(
+                "INSERT INTO users (name, email, password, active, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
+                "Admin User",
+                "company_admin@empresa.com",
+                passwordEncoder.encode("secret123"),
+                true
+        );
+
+        String loginJson = """
+                {
+                    "email": "company_admin@empresa.com",
+                    "password": "secret123"
+                }
+                """;
+
+        String loginResponse = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        return com.jayway.jsonpath.JsonPath.read(loginResponse, "$.token");
+    }
+
     @Test
-    @DisplayName("Ciclo completo da API de Company: criação, busca, listagem, atualização/inativação e bloqueio de exclusão física")
+    @DisplayName("Ciclo completo da API de Company: segurança JWT, criação, busca, listagem, atualização/inativação e bloqueio de exclusão física")
     void testCompanyApiLifecycle() throws Exception {
-        // 1. POST /api/companies -> Criação com sucesso
         String createJson = """
                 {
                     "legalName": "Petróleo Brasileiro S.A.",
@@ -45,7 +74,20 @@ class CompanyApiIntegrationTest extends AbstractIntegrationTest {
                 }
                 """.formatted(PETROBRAS_CNPJ_FORMATTED);
 
+        // 0. POST sem token deve retornar 401 UNAUTHORIZED
+        mockMvc.perform(post("/api/companies")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createJson))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+
+        // Obter token autenticado
+        String token = obtainBearerToken();
+        String authHeader = "Bearer " + token;
+
+        // 1. POST /api/companies autenticado -> Criação com sucesso
         String createResponse = mockMvc.perform(post("/api/companies")
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createJson))
                 .andExpect(status().isCreated())
@@ -70,6 +112,7 @@ class CompanyApiIntegrationTest extends AbstractIntegrationTest {
 
         // 2. POST /api/companies com CNPJ duplicado -> 409 Conflict
         mockMvc.perform(post("/api/companies")
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createJson))
                 .andExpect(status().isConflict())
@@ -83,12 +126,13 @@ class CompanyApiIntegrationTest extends AbstractIntegrationTest {
                 }
                 """;
         mockMvc.perform(post("/api/companies")
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidCnpjJson))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        // 4. GET /api/companies/{id} -> 200 OK
+        // 4. GET /api/companies/{id} anônimo -> 200 OK (GET liberado sem autenticação)
         mockMvc.perform(get("/api/companies/" + companyId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(companyId))
@@ -109,17 +153,18 @@ class CompanyApiIntegrationTest extends AbstractIntegrationTest {
                 }
                 """.formatted(AMBEV_CNPJ_FORMATTED);
         mockMvc.perform(post("/api/companies")
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createSecondJson))
                 .andExpect(status().isCreated());
 
-        // 7. GET /api/companies -> Listagem paginada
+        // 7. GET /api/companies anônimo -> Listagem paginada liberada sem auth
         mockMvc.perform(get("/api/companies?page=0&size=10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.page.totalElements").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
 
-        // 8. PUT /api/companies/{id} -> Atualização e inativação (soft delete)
+        // 8. PUT /api/companies/{id} sem autenticação deve retornar 401
         String updateJson = """
                 {
                     "legalName": "Petróleo Brasileiro S.A. - Em Liquidação",
@@ -130,6 +175,14 @@ class CompanyApiIntegrationTest extends AbstractIntegrationTest {
                 """.formatted(PETROBRAS_CNPJ_FORMATTED);
 
         mockMvc.perform(put("/api/companies/" + companyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateJson))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+
+        // 8.1 PUT com autenticação -> Atualização e inativação (soft delete)
+        mockMvc.perform(put("/api/companies/" + companyId)
+                        .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateJson))
                 .andExpect(status().isOk())
@@ -151,7 +204,8 @@ class CompanyApiIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.content[?(@.id == " + companyId + ")].active").value(false));
 
         // 10. DELETE /api/companies/{id} -> 405 Method Not Allowed (Sem exclusão física)
-        mockMvc.perform(delete("/api/companies/" + companyId))
+        mockMvc.perform(delete("/api/companies/" + companyId)
+                        .header("Authorization", authHeader))
                 .andExpect(status().isMethodNotAllowed());
     }
 }

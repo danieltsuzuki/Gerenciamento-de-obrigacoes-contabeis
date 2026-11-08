@@ -17,6 +17,8 @@ public interface ResponsibleRepository extends Repository<Responsible, Long> {
 
     boolean existsByEmail(String email);
 
+    boolean existsByEmailAndIdNot(String email, Long id);
+
     Optional<Responsible> findByEmail(String email);
 
     Page<Responsible> findByActive(boolean active, Pageable pageable);
