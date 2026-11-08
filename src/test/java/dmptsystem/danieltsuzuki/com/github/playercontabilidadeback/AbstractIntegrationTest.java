@@ -1,20 +1,21 @@
 package dmptsystem.danieltsuzuki.com.github.playercontabilidadeback;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
-@Testcontainers
 public abstract class AbstractIntegrationTest {
 
-    @Container
-    @ServiceConnection
-    protected static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("test_db")
-            .withUsername("test_user")
-            .withPassword("test_password");
-}
+    protected static final MySQLContainer<?> mysql;
 
+    static {
+        mysql = new MySQLContainer<>("mysql:8.0")
+                .withDatabaseName("test_db")
+                .withUsername("test_user")
+                .withPassword("test_password");
+        mysql.start();
+        System.setProperty("spring.datasource.url", mysql.getJdbcUrl());
+        System.setProperty("spring.datasource.username", mysql.getUsername());
+        System.setProperty("spring.datasource.password", mysql.getPassword());
+    }
+}

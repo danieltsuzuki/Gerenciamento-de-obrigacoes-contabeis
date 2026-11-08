@@ -6,18 +6,34 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Não lançado]
 
 ### Adicionado
+- Autenticação e Segurança com Spring Security e JWT (JJWT):
+  - `POST /api/auth/register`: rota pública para autocadastro / registro de usuários responsáveis sem necessidade de autenticação prévia.
+  - `POST /api/auth/login`: autenticação por e-mail e senha, retornando token Bearer e dados do usuário responsável, com tempo de expiração padrão configurado para 30 minutos (1800s).
+  - Implementação de `CustomUserDetailsService` (`UserDetailsService`) para autenticação stateless no Spring Security.
+  - `JwtService`: geração e validação de tokens JWT HMAC-SHA com expiração de 30 minutos por padrão (`jwt.expiration-ms=1800000`).
+  - `JwtAuthenticationFilter`: interceptação de requisições stateless com cabeçalho `Authorization: Bearer <token>` e carregamento de contexto de segurança.
+  - `SecurityConfig`: política de segurança stateless permitindo acesso anônimo a `GET /api/**`, `POST /api/auth/login` e `POST /api/auth/register`, e exigindo autenticação para as demais operações de mutação (`POST /api/**` e `PUT /api/**`).
+  - `RestAuthenticationEntryPoint`: tratamento uniforme de 401 Unauthorized com payload JSON padronizado.
+  - Hash seguro de senhas com `BCryptPasswordEncoder` (RN-007).
+- Endpoints REST para gerenciamento de responsáveis em `/api/responsibles`:
+  - `POST /api/responsibles`: cadastro de responsável com hash de senha, validação de e-mail único e nome obrigatório. Requer autenticação.
+  - `GET /api/responsibles`: listagem com paginação padrão Spring Data (`page`, `size`, `sort`) e filtro opcional por `active`. Acesso anônimo permitido.
+  - `GET /api/responsibles/{id}`: busca de responsável por ID (sem expor hash de senha). Acesso anônimo permitido.
+  - `PUT /api/responsibles/{id}`: atualização de nome, e-mail e inativação/ativação (`active` para soft delete). Requer autenticação.
+- DTOs de request e response: `CreateResponsibleRequest`, `UpdateResponsibleRequest`, `ResponsibleResponse`, `LoginRequest` e `LoginResponse`.
+- Camada de mapeamento `ResponsibleMapper` e de serviços `ResponsibleService` e `AuthService`.
 - Endpoints REST para gerenciamento de empresas em `/api/companies`:
-  - `POST /api/companies`: cadastro com validação de razão social, nome fantasia e CNPJ único.
-  - `GET /api/companies`: listagem com paginação padrão Spring Data (`page`, `size`, `sort`) e filtro opcional por `active`.
-  - `GET /api/companies/{id}`: busca de empresa por identificador numérico.
-  - `PUT /api/companies/{id}`: atualização cadastral e inativação/ativação (`active`).
+  - `POST /api/companies`: cadastro com validação de razão social, nome fantasia e CNPJ único. Requer autenticação.
+  - `GET /api/companies`: listagem com paginação padrão Spring Data (`page`, `size`, `sort`) e filtro opcional por `active`. Acesso anônimo permitido.
+  - `GET /api/companies/{id}`: busca de empresa por identificador numérico. Acesso anônimo permitido.
+  - `PUT /api/companies/{id}`: atualização cadastral e inativação/ativação (`active`). Requer autenticação.
 - Validador puro Java `Cnpj` com normalização (apenas dígitos), descarte de sequências repetidas e cálculo estrito dos dois dígitos verificadores (DVs).
 - Anotação de Bean Validation `@ValidCnpj` e validador `CnpjValidator` para validação declarativa nos DTOs.
-- DTOs de request e response: `CreateCompanyRequest`, `UpdateCompanyRequest` e `CompanyResponse`.
+- DTOs de request e response de empresa: `CreateCompanyRequest`, `UpdateCompanyRequest` e `CompanyResponse`.
 - Camada de mapeamento `CompanyMapper` e camada de serviço `CompanyService`.
-- Tratamento global de exceções via `@RestControllerAdvice` (`GlobalExceptionHandler`) com respostas padronizadas para erros de validação (400), recurso não encontrado (404) e duplicidade de CNPJ (409).
-- Documentação formal dos endpoints em `docs/api.md`.
-- Suíte completa de testes automatizados: unitários de validador (`CnpjTest`), serviço (`CompanyServiceTest`), web layer (`CompanyControllerTest`) e integração com Testcontainers MySQL 8 (`CompanyApiIntegrationTest`).
+- Tratamento global de exceções via `@RestControllerAdvice` (`GlobalExceptionHandler`) com respostas padronizadas para erros de validação (400), credenciais inválidas (401), recurso não encontrado (404) e duplicidade de CNPJ/e-mail (409).
+- Documentação formal dos endpoints em `docs/api.md` cobrindo segurança, login e responsáveis.
+- Suíte completa de testes automatizados: unitários de validador (`CnpjTest`), segurança (`JwtServiceTest`), serviços (`CompanyServiceTest`, `ResponsibleServiceTest`), web layer (`CompanyControllerTest`, `ResponsibleControllerTest`, `AuthControllerTest`) e integração com Testcontainers MySQL 8 (`CompanyApiIntegrationTest`, `ResponsibleApiIntegrationTest`).
 - Entidades JPA `Company`, `Responsible`, `Obligation` e `Attachment`, com normalização defensiva, auditoria e relações LAZY.
 - Enum de ciclo de vida de obrigações, transições protegidas e repositories sem operações `delete*`.
 - Migration V2 para `legal_name` e `trade_name`.
@@ -25,8 +41,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - ADR sobre repositories sem operações de exclusão.
 
 ### Alterado
-- A documentação passou a refletir `Responsible`, `legalName`, `tradeName` e `storageKey`.
-- A autenticação permanece fora do escopo; `passwordHash` apenas mapeia `users.password`.
+- Acesso à API de empresas (`/api/companies`) agora protegido por autenticação JWT nas operações de mutação (`POST` e `PUT`).
+- A documentação passou a refletir `Responsible`, `legalName`, `tradeName`, `storageKey` e regras de segurança JWT.
 - O lock otimista foi removido; o domínio não define controle de concorrência por versão.
 
 ## [0.1.0] - 2026-11-07
@@ -48,5 +64,4 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   1. Aplicação com sucesso da migration `V1` em banco limpo.
   2. Rejeição de CNPJ duplicado pela restrição de unicidade do banco.
   3. Rejeição de e-mail duplicado pela restrição de unicidade do banco.
-  4. Bloqueio de exclusão física de empresa com obrigações vinculadas pela restrição de integridade referencial.
-- Documentação inicial do projeto em `README.md`, `docs/modelo-de-dados.md` (com diagrama ER Mermaid), `docs/status-implementacao.md`, `docs/pendencias-e-perguntas-em-aberto.md` e `docs/index.md`.
+  4. Recusa de exclusão de empresa com obrigações vinculadas via FK sem cascade.
