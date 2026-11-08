@@ -5,6 +5,18 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Não lançado]
 
+### Adicionado
+- Entidades JPA `Company`, `Responsible`, `Obligation` e `Attachment`, com normalização defensiva, auditoria e relações LAZY.
+- Enum de ciclo de vida de obrigações, transições protegidas e repositories sem operações `delete*`.
+- Migration V2 para `legal_name` e `trade_name`.
+- Testes unitários do domínio e integração MySQL 8 via Testcontainers.
+- ADR sobre repositories sem operações de exclusão.
+
+### Alterado
+- A documentação passou a refletir `Responsible`, `legalName`, `tradeName` e `storageKey`.
+- A autenticação permanece fora do escopo; `passwordHash` apenas mapeia `users.password`.
+- O lock otimista foi removido; o domínio não define controle de concorrência por versão.
+
 ## [0.1.0] - 2026-11-07
 
 ### Adicionado
@@ -25,5 +37,4 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   2. Rejeição de CNPJ duplicado pela restrição de unicidade do banco.
   3. Rejeição de e-mail duplicado pela restrição de unicidade do banco.
   4. Bloqueio de exclusão física de empresa com obrigações vinculadas pela restrição de integridade referencial.
-- Documentação inicial do projeto em `README.md`, `docs/modelo-de-dados.md` (com diagrama ER Mermaid), `docs/status-implementacao.md` e `docs/index.md`.
-
+- Documentação inicial do projeto em `README.md`, `docs/modelo-de-dados.md` (com diagrama ER Mermaid), `docs/status-implementacao.md`, `docs/pendencias-e-perguntas-em-aberto.md` e `docs/index.md`.

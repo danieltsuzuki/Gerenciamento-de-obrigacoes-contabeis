@@ -104,5 +104,6 @@ A documentação detalhada do sistema está estruturada na pasta `docs/`:
 - [Mapa da Documentação](docs/index.md)
 - [Modelo de Dados e Diagrama ER](docs/modelo-de-dados.md)
 - [Status de Implementação das Regras](docs/status-implementacao.md)
+- [Pendências e Perguntas em Aberto](docs/pendencias-e-perguntas-em-aberto.md)
 - [Changelog](docs/CHANGELOG.md)
 

@@ -1,6 +1,6 @@
 # Modelo de dados
 
-> Derivado das migrations em `src/main/resources/db/migration`. Última migration considerada: `V1__create_schema.sql`.
+> Derivado das migrations em `src/main/resources/db/migration`. Última migration considerada: `V2__align_domain_names.sql`.
 
 ## Diagrama ER
 
@@ -12,7 +12,8 @@ erDiagram
 
     COMPANY {
         BIGINT id PK
-        VARCHAR name
+        VARCHAR legal_name
+        VARCHAR trade_name
         VARCHAR cnpj UK
         BOOLEAN active
         DATETIME created_at
@@ -62,7 +63,8 @@ Representa as empresas clientes gerenciadas no sistema contábil.
 | Coluna | Tipo | Nulo | Restrições | Descrição |
 |---|---|---|---|---|
 | `id` | `BIGINT` | Não | PK, `AUTO_INCREMENT` | Identificador único da empresa |
-| `name` | `VARCHAR(255)` | Não | — | Razão social ou nome fantasia |
+| `legal_name` | `VARCHAR(255)` | Não | — | Razão social |
+| `trade_name` | `VARCHAR(255)` | Sim | — | Nome fantasia |
 | `cnpj` | `VARCHAR(14)` | Não | `uk_company_cnpj` (UNIQUE) | CNPJ normalizado (somente os 14 dígitos) |
 | `active` | `BOOLEAN` | Não | Padrão `TRUE` | Status para exclusão lógica (soft delete) |
 | `created_at` | `DATETIME` | Não | Padrão `CURRENT_TIMESTAMP` | Data/hora de cadastro da empresa |
@@ -79,7 +81,7 @@ Representa as empresas clientes gerenciadas no sistema contábil.
 ---
 
 ### `users`
-Representa os colaboradores e responsáveis fiscais pelas obrigações.
+Representa os colaboradores e responsáveis fiscais pelas obrigações (`Responsible`).
 
 | Coluna | Tipo | Nulo | Restrições | Descrição |
 |---|---|---|---|---|
@@ -102,7 +104,7 @@ Representa os colaboradores e responsáveis fiscais pelas obrigações.
 ---
 
 ### `obligation`
-Representa as obrigações fiscais atribuídas a empresas e sob responsabilidade de um usuário.
+Representa as obrigações fiscais atribuídas a empresas e sob responsabilidade de um `Responsible`.
 
 | Coluna | Tipo | Nulo | Restrições | Descrição |
 |---|---|---|---|---|
@@ -127,6 +129,16 @@ Representa as obrigações fiscais atribuídas a empresas e sob responsabilidade
   - FK `fk_obligation_company` referencia `company(id)` (sem `ON DELETE CASCADE`).
   - FK `fk_obligation_responsible` referencia `users(id)` (sem `ON DELETE CASCADE`).
   - `completed_at` inicia nulo e é preenchido somente na conclusão.
+  - `status` é controlado pelo domínio; somente `PENDING → IN_PROGRESS → COMPLETED` é permitido.
+
+---
+
+## Mapeamento JPA
+
+- `Company.legalName` → `company.legal_name`; `tradeName` → `company.trade_name`.
+- `Responsible` → `users`; `passwordHash` → `password` (a autenticação ainda não existe).
+- `Attachment.name`, `contentType`, `size`, `storageKey` e `uploadedAt` → `file_name`, `content_type`, `file_size`, `file_path` e `uploaded_at`.
+- Relações para pais usam `ManyToOne(fetch = LAZY, optional = false)`; não há `OneToMany`, cascata de remoção ou `orphanRemoval`.
 
 ---
 
@@ -149,4 +161,3 @@ Metadados de arquivos comprobatórios anexados a uma obrigação fiscal.
 - **Regras de integridade:**
   - FK `fk_attachment_obligation` referencia `obligation(id)` (sem `ON DELETE CASCADE`).
   - Todo anexo deve estar estritamente vinculado a uma obrigação existente.
-
