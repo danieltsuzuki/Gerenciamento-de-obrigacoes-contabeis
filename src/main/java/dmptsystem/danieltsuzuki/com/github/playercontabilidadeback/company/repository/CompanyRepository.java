@@ -17,6 +17,8 @@ public interface CompanyRepository extends Repository<Company, Long> {
 
     boolean existsByCnpj(String cnpj);
 
+    boolean existsByCnpjAndIdNot(String cnpj, Long id);
+
     Optional<Company> findByCnpj(String cnpj);
 
     Page<Company> findByActive(boolean active, Pageable pageable);

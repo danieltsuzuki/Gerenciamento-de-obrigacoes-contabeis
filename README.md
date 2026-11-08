@@ -6,8 +6,8 @@ API backend para gerenciamento de obrigações fiscais, empresas clientes, respo
 - **Infraestrutura de Banco de Dados**: Versionamento de esquema via Flyway (`V1__create_schema.sql`).
 - **Segurança de Configuração**: Parametrização estrita por variáveis de ambiente, sem credenciais expostas no código ou repositório.
 - **Validação de Integridade**: Constraints de unicidade para CNPJ e e-mail, integridade referencial sem exclusão em cascata (preservação do histórico fiscal).
-- *[Planejado]* Cadastro e validação de Empresas (`Company`) com validação de dígitos verificadores de CNPJ.
-- *[Planejado]* Gestão de Responsáveis (`User`) com hash de senhas e controle de ativação.
+- **API de Empresas (`/api/companies`)**: Cadastro, listagem paginada com filtro por situação (`active`), busca por identificador e atualização/inativação (sem exclusão física), com validação estrita de CNPJ e unicidade.
+- *[Planejado]* Gestão de Responsáveis (`User` / `Responsible`) com hash de senhas e controle de ativação.
 - *[Planejado]* Ciclo de vida de Obrigações Fiscais (`Obligation`: `PENDING` -> `IN_PROGRESS` -> `COMPLETED`).
 - *[Planejado]* Gestão de Anexos (`Attachment`) com armazenamento em filesystem/object storage.
 
@@ -102,6 +102,7 @@ Os testes de integração utilizam o Testcontainers para instanciar dinamicament
 ## Documentação do Projeto
 A documentação detalhada do sistema está estruturada na pasta `docs/`:
 - [Mapa da Documentação](docs/index.md)
+- [Especificação da API REST](docs/api.md)
 - [Modelo de Dados e Diagrama ER](docs/modelo-de-dados.md)
 - [Status de Implementação das Regras](docs/status-implementacao.md)
 - [Pendências e Perguntas em Aberto](docs/pendencias-e-perguntas-em-aberto.md)
