@@ -5,6 +5,13 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Não lançado]
 
+### Alterado
+- Reestruturação do repositório em formato monorepo:
+  - Movimentação do código da aplicação Spring Boot para a pasta `/backend` (`src`, `pom.xml`, wrappers Maven, `.env.example`, `Dockerfile`).
+  - Criação da pasta `/frontend` para a aplicação Flutter.
+  - Manutenção da documentação unificada (`/docs`) e das diretrizes e especificações do agente (`/.agent`) na raiz do repositório para atender a ambos os módulos.
+  - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
+
 ### Adicionado
 - Validação e formalização da SPEC-012 (Adicionar testes do backend):
   - Cobertura abrangente com suíte de testes automatizados cobrindo domínio, serviços, controllers, segurança, validações e persistência.
@@ -133,6 +140,13 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - O lock otimista foi removido; o domínio não define controle de concorrência por versão.
 
 ## [0.1.0] - 2026-11-07
+
+### Alterado
+- Reestruturação do repositório em formato monorepo:
+  - Movimentação do código da aplicação Spring Boot para a pasta `/backend` (`src`, `pom.xml`, wrappers Maven, `.env.example`, `Dockerfile`).
+  - Criação da pasta `/frontend` para a aplicação Flutter.
+  - Manutenção da documentação unificada (`/docs`) e das diretrizes e especificações do agente (`/.agent`) na raiz do repositório para atender a ambos os módulos.
+  - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
 - Configuração de ambiente Docker e Docker Compose (`docker-compose.yml` e `Dockerfile`) para instância MySQL 8.0.
