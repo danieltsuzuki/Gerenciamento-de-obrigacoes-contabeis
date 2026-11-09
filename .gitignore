@@ -32,8 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 
-### IA ###
-.agent
+#### IA ###
+#.agent
 
 ### Uploads ###
 uploads/
