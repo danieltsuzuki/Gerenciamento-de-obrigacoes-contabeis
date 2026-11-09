@@ -10,7 +10,7 @@ Atualizado em: 2026-11-08
 | RN-005 | Preservação de histórico fiscal (FKs sem `CASCADE`) | Testado | `V1__create_schema.sql` (`fk_obligation_company`, etc.) | `DatabaseMigrationIntegrationTest#shouldRefuseToDeleteCompanyWithObligations` |
 | RN-006 | Inativos não recebem novas atribuições de obrigações | Testado | `ObligationService#requireActiveCompany`, `ObligationService#requireActiveResponsible` | `ObligationServiceTest`, `ObligationControllerTest`, `ObligationApiIntegrationTest` |
 | RN-007 | Senha com hash seguro e fora dos DTOs de resposta | Testado | `BCryptPasswordEncoder`, `Responsible.passwordHash`, `ResponsibleResponse`, `AuthService` | `ResponsibleServiceTest`, `ResponsibleApiIntegrationTest`, `AuthControllerTest` |
-| RN-008 | Ciclo de vida de status e preenchimento de `completed_at` | Testado | `ObligationStatus`, `Obligation#changeStatus`, `ObligationService#update` | `ObligationStatusTest`, `ObligationChangeStatusTest`, `ObligationServiceTest`, `ObligationControllerTest`, `ObligationApiIntegrationTest` |
+| RN-008 | Ciclo de vida de status e preenchimento de `completed_at` | Testado | `ObligationStatus`, `Obligation#changeStatus`, `ObligationService#updateStatus`, `ObligationController#updateStatus` (`PATCH /api/obligations/{id}/status`) | `ObligationStatusTest`, `ObligationChangeStatusTest`, `ObligationServiceTest`, `ObligationControllerTest`, `ObligationApiIntegrationTest` |
 | RN-009 | Armazenamento de arquivo fora do banco com metadados em `attachment` | Implementado | `Attachment`, `AttachmentRepository` | `DomainPersistenceIntegrationTest#saveAndReloadEachEntity` |
 
 ## Resumo

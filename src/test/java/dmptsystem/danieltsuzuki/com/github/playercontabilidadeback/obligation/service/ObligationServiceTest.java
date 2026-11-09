@@ -298,5 +298,96 @@ class ObligationServiceTest {
                 .isInstanceOf(BusinessRuleException.class)
                 .satisfies(e -> assertThat(((BusinessRuleException) e).getCode()).isEqualTo("USER_INACTIVE"));
     }
+
+    @Test
+    @DisplayName("Deve atualizar status de PENDING para IN_PROGRESS com sucesso")
+    void shouldUpdateStatusSuccessfullyFromPendingToInProgress() {
+        Company company = new Company();
+        company.setId(1L);
+
+        Responsible responsible = new Responsible();
+        responsible.setId(2L);
+
+        Obligation obligation = new Obligation();
+        obligation.setCompany(company);
+        obligation.setResponsible(responsible);
+        obligation.setTitle("DIPJ");
+        obligation.setDueDate(LocalDate.of(2026, 6, 30));
+
+        assertThat(obligation.getStatus()).isEqualTo(ObligationStatus.PENDING);
+
+        when(obligationRepository.findById(15L)).thenReturn(Optional.of(obligation));
+        when(obligationRepository.save(any(Obligation.class))).thenAnswer(i -> i.getArgument(0));
+        when(attachmentRepository.countByObligationId(15L)).thenReturn(2L);
+
+        ObligationDetailResponse response = obligationService.updateStatus(15L, ObligationStatus.IN_PROGRESS);
+
+        assertThat(response.status()).isEqualTo(ObligationStatus.IN_PROGRESS);
+        assertThat(response.completedAt()).isNull();
+        assertThat(response.attachmentCount()).isEqualTo(2);
+        verify(obligationRepository).save(obligation);
+    }
+
+    @Test
+    @DisplayName("Deve atualizar status de IN_PROGRESS para COMPLETED e preencher completedAt com timestamp do clock")
+    void shouldUpdateStatusSuccessfullyFromInProgressToCompleted() {
+        Company company = new Company();
+        company.setId(1L);
+
+        Responsible responsible = new Responsible();
+        responsible.setId(2L);
+
+        Obligation obligation = new Obligation();
+        obligation.setCompany(company);
+        obligation.setResponsible(responsible);
+        obligation.setTitle("DIPJ");
+        obligation.setDueDate(LocalDate.of(2026, 6, 30));
+        obligation.changeStatus(ObligationStatus.IN_PROGRESS, clock);
+
+        when(obligationRepository.findById(15L)).thenReturn(Optional.of(obligation));
+        when(obligationRepository.save(any(Obligation.class))).thenAnswer(i -> i.getArgument(0));
+        when(attachmentRepository.countByObligationId(15L)).thenReturn(0L);
+
+        ObligationDetailResponse response = obligationService.updateStatus(15L, ObligationStatus.COMPLETED);
+
+        assertThat(response.status()).isEqualTo(ObligationStatus.COMPLETED);
+        assertThat(response.completedAt()).isEqualTo("2026-11-08T12:00:00");
+        verify(obligationRepository).save(obligation);
+    }
+
+    @Test
+    @DisplayName("Deve lançar InvalidStatusTransitionException ao tentar transição inválida via updateStatus")
+    void shouldRejectInvalidTransitionViaUpdateStatus() {
+        Company company = new Company();
+        company.setId(1L);
+
+        Responsible responsible = new Responsible();
+        responsible.setId(2L);
+
+        Obligation obligation = new Obligation();
+        obligation.setCompany(company);
+        obligation.setResponsible(responsible);
+        obligation.setTitle("DIPJ");
+        obligation.setDueDate(LocalDate.of(2026, 6, 30));
+
+        when(obligationRepository.findById(15L)).thenReturn(Optional.of(obligation));
+
+        // PENDING -> COMPLETED (salto proibido)
+        assertThatThrownBy(() -> obligationService.updateStatus(15L, ObligationStatus.COMPLETED))
+                .isInstanceOf(InvalidStatusTransitionException.class);
+
+        verify(obligationRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar NotFoundException ao tentar alterar status de obrigação inexistente")
+    void shouldThrowNotFoundExceptionWhenUpdatingStatusOfNonExistentObligation() {
+        when(obligationRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> obligationService.updateStatus(999L, ObligationStatus.IN_PROGRESS))
+                .isInstanceOf(NotFoundException.class);
+
+        verify(obligationRepository, never()).save(any());
+    }
 }
 

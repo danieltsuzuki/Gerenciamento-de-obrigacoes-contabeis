@@ -384,3 +384,37 @@ Atualiza os dados de uma obrigação existente.
 | 404 | `NOT_FOUND` | Obrigação, empresa ou responsável não encontrado |
 | 422 | `COMPANY_INACTIVE` / `USER_INACTIVE` | Nova empresa ou responsável está inativo (RN-006) |
 | 422 | `INVALID_STATUS_TRANSITION` | Transição de status proibida pelo ciclo de vida (RN-008) |
+
+---
+
+### PATCH /api/obligations/{id}/status
+Operação explícita para transição de status da obrigação fiscal.
+- Segue a máquina de estados estrita do domínio (`RN-008`):
+  - `PENDING` -> `IN_PROGRESS`
+  - `IN_PROGRESS` -> `COMPLETED`
+- Bloqueia saltos (ex.: `PENDING -> COMPLETED`).
+- Bloqueia regressões (ex.: `IN_PROGRESS -> PENDING`, `COMPLETED -> IN_PROGRESS`, `COMPLETED -> PENDING`).
+- Bloqueia qualquer alteração a partir de `COMPLETED` (estado terminal).
+- Bloqueia transições para o mesmo status (operação não-idempotente).
+- Ao atingir o status `COMPLETED`, preenche automaticamente a data de conclusão (`completedAt`). Em qualquer transição rejeitada, o estado e `completedAt` permanecem intocados.
+- Requer autenticação JWT (`Authorization: Bearer <token>`).
+
+**Request**
+```json
+{
+  "status": "IN_PROGRESS"
+}
+```
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|:---:|---|
+| `status` | ObligationStatus (`IN_PROGRESS`, `COMPLETED`) | Sim | Novo status desejado para a obrigação |
+
+**Respostas**
+| HTTP | code | Quando |
+|---|---|---|
+| 200 | — | Status atualizado com sucesso |
+| 400 | `VALIDATION_ERROR` | Status nulo ou formato enum inválido |
+| 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
+| 404 | `NOT_FOUND` | Obrigação informada não foi encontrada |
+| 422 | `INVALID_STATUS_TRANSITION` | Transição de status proibida pelo ciclo de vida (RN-008) |
