@@ -6,6 +6,14 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Não lançado]
 
 ### Adicionado
+- Endpoints REST para gerenciamento de anexos de obrigações fiscais:
+  - `POST /api/obligations/{id}/attachments`: upload multipart (`multipart/form-data`) de arquivos vinculados à obrigação, com validação de tipo MIME seguro, nome e tamanho máximo (10MB), gerando identificador interno seguro contra path traversal e gravando metadados no MySQL. Requer autenticação JWT.
+  - `GET /api/obligations/{id}/attachments`: listagem dos anexos vinculados a uma obrigação com dados completos de metadados. Requer autenticação JWT.
+  - `GET /api/attachments/{attachmentId}/download`: download seguro de arquivo binário com cabeçalhos `Content-Type` e `Content-Disposition` devidamente sanitizados. Requer autenticação JWT.
+- Camada de armazenamento desacoplada: interface `FileStorage` e implementação `LocalFileSystemStorage` com diretório configurável (`storage.location`), proteção contra path traversal e mecanismo de compensação para deleção de arquivo físico em caso de erro na persistência do banco.
+- DTOs e mapeamento de anexo: `AttachmentResponse`, `DownloadedFile` e `AttachmentMapper`.
+- Tratamento de exceções com `StorageException` (500) e `InvalidFileException` (400) no `GlobalExceptionHandler`.
+- Suíte de testes automatizados para anexos: unitários de storage (`LocalFileSystemStorageTest`), serviço (`AttachmentServiceTest`), WebMvc (`AttachmentControllerTest`) e integração com Testcontainers MySQL 8 (`AttachmentApiIntegrationTest`).
 - Endpoints REST para gerenciamento de obrigações fiscais em `/api/obligations`:
   - `POST /api/obligations`: cadastro de obrigação vinculando empresa e responsável (validação de existência e situação ativa via RN-006), definindo status padrão `PENDING` no servidor e data de criação automática. Requer autenticação.
   - `GET /api/obligations`: listagem paginada com suporte a filtros por `companyId`, `responsibleId` e `status`, retornando dados completos de exibição: empresa resumida, responsável resumido, status, contagem de anexos (`attachmentCount`) e data de criação (`createdAt`). Acesso anônimo permitido.

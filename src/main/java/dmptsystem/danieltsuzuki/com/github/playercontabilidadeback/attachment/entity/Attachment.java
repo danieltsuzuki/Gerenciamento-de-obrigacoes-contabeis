@@ -57,6 +57,10 @@ public class Attachment {
         return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getName() {
         return name;
     }
@@ -83,6 +87,10 @@ public class Attachment {
 
     public LocalDateTime getUploadedAt() {
         return uploadedAt;
+    }
+
+    public void setUploadedAt(LocalDateTime uploadedAt) {
+        this.uploadedAt = uploadedAt;
     }
 
     public String getStorageKey() {

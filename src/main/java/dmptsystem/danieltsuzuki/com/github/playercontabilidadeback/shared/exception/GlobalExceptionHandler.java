@@ -71,6 +71,30 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
 
+    @ExceptionHandler(dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.exception.InvalidFileException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFileException(
+            dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.exception.InvalidFileException ex
+    ) {
+        ErrorResponse error = new ErrorResponse("VALIDATION_ERROR", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceededException(
+            org.springframework.web.multipart.MaxUploadSizeExceededException ex
+    ) {
+        ErrorResponse error = new ErrorResponse("VALIDATION_ERROR", "Tamanho do arquivo excede o limite máximo permitido.");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.storage.StorageException.class)
+    public ResponseEntity<ErrorResponse> handleStorageException(
+            dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.storage.StorageException ex
+    ) {
+        ErrorResponse error = new ErrorResponse("STORAGE_ERROR", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
         ErrorResponse error = new ErrorResponse("BAD_REQUEST", ex.getMessage());
