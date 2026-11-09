@@ -7,7 +7,7 @@
 | Card | [Implementar upload e listagem de anexos (API)](https://trello.com/c/LU2iFUy2) |
 | Status no Trello (09/11/2026) | Concluído |
 | Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Situação da especificação | Concluído — implementado e testado |
 
 ## 1. Objetivo
 
@@ -15,12 +15,12 @@ Implementar armazenamento de arquivos anexados às obrigações e disponibilizar
 
 ## 2. Escopo funcional
 
-- [ ] POST /api/obligations/{id}/attachments recebe multipart/form-data.
-- [ ] GET /api/obligations/{id}/attachments lista metadados.
-- [ ] GET /api/attachments/{attachmentId}/download retorna arquivo binário.
-- [ ] Armazenar arquivo no filesystem local configurável e metadados no MySQL.
-- [ ] Gerar chave/nome interno seguro; não confiar no nome original para caminho.
-- [ ] Executar compensação removendo arquivo se persistência dos metadados falhar.
+- [x] POST /api/obligations/{id}/attachments recebe multipart/form-data.
+- [x] GET /api/obligations/{id}/attachments lista metadados.
+- [x] GET /api/attachments/{attachmentId}/download retorna arquivo binário.
+- [x] Armazenar arquivo no filesystem local configurável e metadados no MySQL.
+- [x] Gerar chave/nome interno seguro; não confiar no nome original para caminho.
+- [x] Executar compensação removendo arquivo se persistência dos metadados falhar.
 
 ## 3. Regras de negócio e restrições
 
@@ -41,11 +41,11 @@ Implementar armazenamento de arquivos anexados às obrigações e disponibilizar
 
 ## 5. Critérios de aceitação
 
-- [ ] Upload retorna 201 e metadados.
-- [ ] Listagem retorna metadados corretos.
-- [ ] Download retorna bytes e Content-Disposition sanitizado.
-- [ ] Arquivo acima do limite, MIME inválido, obrigação ausente e falhas de storage são tratados.
-- [ ] Testes de storage, serviço, controller e integração aprovados.
+- [x] Upload retorna 201 e metadados.
+- [x] Listagem retorna metadados corretos.
+- [x] Download retorna bytes e Content-Disposition sanitizado.
+- [x] Arquivo acima do limite, MIME inválido, obrigação ausente e falhas de storage são tratados.
+- [x] Testes de storage, serviço, controller e integração aprovados.
 
 ## 6. Cenários de teste
 

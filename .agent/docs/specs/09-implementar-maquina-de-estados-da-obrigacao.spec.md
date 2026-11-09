@@ -7,7 +7,7 @@
 | Card | [Implementar máquina de estados da obrigação](https://trello.com/c/YDrtyWN1) |
 | Status no Trello (09/11/2026) | Concluído |
 | Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Situação da especificação | Concluído — implementado e testado |
 
 ## 1. Objetivo
 
@@ -15,11 +15,11 @@ Implementar no domínio a operação explícita e protegida para transição do 
 
 ## 2. Escopo funcional
 
-- [ ] Implementar PATCH /api/obligations/{id}/status.
-- [ ] Permitir PENDING → IN_PROGRESS.
-- [ ] Permitir IN_PROGRESS → COMPLETED.
-- [ ] Bloquear saltos, regressões, transição para o mesmo status e qualquer transição a partir de COMPLETED.
-- [ ] Preencher completedAt ao concluir.
+- [x] Implementar PATCH /api/obligations/{id}/status.
+- [x] Permitir PENDING → IN_PROGRESS.
+- [x] Permitir IN_PROGRESS → COMPLETED.
+- [x] Bloquear saltos, regressões, transição para o mesmo status e qualquer transição a partir de COMPLETED.
+- [x] Preencher completedAt ao concluir.
 
 ## 3. Regras de negócio e restrições
 
@@ -36,10 +36,10 @@ Implementar no domínio a operação explícita e protegida para transição do 
 
 ## 5. Critérios de aceitação
 
-- [ ] Todos os caminhos válidos atualizam estado.
-- [ ] Saltos, regressões, repetição e reabertura são rejeitados.
-- [ ] completedAt é preenchido somente ao concluir.
-- [ ] Testes unitários de domínio, serviço, controller e integração cobrem casos positivos/negativos.
+- [x] Todos os caminhos válidos atualizam estado.
+- [x] Saltos, regressões, repetição e reabertura são rejeitados.
+- [x] completedAt é preenchido somente ao concluir.
+- [x] Testes unitários de domínio, serviço, controller e integração cobrem casos positivos/negativos.
 
 ## 6. Cenários de teste
 

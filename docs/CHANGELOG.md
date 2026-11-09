@@ -6,6 +6,57 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Não lançado]
 
 ### Adicionado
+- Validação e formalização da SPEC-012 (Adicionar testes do backend):
+  - Cobertura abrangente com suíte de testes automatizados cobrindo domínio, serviços, controllers, segurança, validações e persistência.
+  - Execução de 149 testes unitários e de fatiamento WebMvc com 100% de sucesso.
+  - Testes de integração ponta a ponta com Testcontainers MySQL 8 (`CompanyApiIntegrationTest`, `ResponsibleApiIntegrationTest`, `ObligationApiIntegrationTest`, `AttachmentApiIntegrationTest`, `DatabaseMigrationIntegrationTest`, `DomainPersistenceIntegrationTest`, `OpenApiIntegrationTest`, `ActuatorHealthTest`).
+  - Geração automatizada de relatórios de cobertura com JaCoCo 0.8.12 (`target/site/jacoco/index.html`), atingindo 100% de cobertura nos controllers e mais de 86% no backend global.
+  - Fechamento formal dos critérios de aceite da SPEC-012.
+- Validação e formalização da SPEC-011 (Padronizar DTOs, validações e tratamento de exceções):
+  - Isolamento estrito entre DTOs e entidades JPA em todas as camadas de apresentação e persistência.
+  - Validação de entrada via Bean Validation nos payloads de requisição com respostas `400 VALIDATION_ERROR` detalhadas.
+  - Tratamento global de exceções via `GlobalExceptionHandler` padronizando respostas para `400`, `401`, `404`, `409`, `422`, `405` e `500` via estrutura `ErrorResponse`.
+  - Tratamento genérico de exceções não mapeadas retornando `500 INTERNAL_SERVER_ERROR` sem expor stack traces ou detalhes sensíveis.
+  - Criação da suíte unitária `GlobalExceptionHandlerTest` com cobertura completa de todos os fluxos de tratamento de erros.
+  - Fechamento formal dos critérios de aceite da SPEC-011.
+- Validação e formalização da SPEC-010 (Implementar upload e listagem de anexos - API):
+  - Validação dos endpoints REST para anexos: `POST /api/obligations/{id}/attachments` (upload multipart), `GET /api/obligations/{id}/attachments` (metadados) e `GET /api/attachments/{attachmentId}/download` (download via streaming).
+  - Validação da arquitetura de armazenamento desacoplada via `FileStorage` e `LocalFileSystemStorage`, com isolamento de diretório, geração de storageKey via UUID, prevenção contra *Path Traversal* e compensação com deleção física do arquivo no filesystem caso a persistência relacional falhe.
+  - Validação de restrições de segurança e tamanho: limite de 10 MB, validação de MIME types permitidos e exigência de autenticação JWT em todos os endpoints de anexos.
+  - Fechamento formal dos critérios de aceite da SPEC-010.
+- Validação e formalização da SPEC-009 (Implementar máquina de estados da obrigação):
+  - Validação do endpoint `PATCH /api/obligations/{id}/status` e regra de transições estritas: `PENDING` -> `IN_PROGRESS` -> `COMPLETED`.
+  - Validação do bloqueio a nível de domínio e API para saltos de estado, regressões, reabertura de obrigações concluídas e repetição do mesmo status (422 INVALID_STATUS_TRANSITION).
+  - Validação do preenchimento automático e auditável de `completedAt` exclusivamente ao atingir `COMPLETED`.
+  - Fechamento formal dos critérios de aceite da SPEC-009.
+- Validação e formalização da SPEC-008 (Implementar cadastro e consulta de obrigações - API):
+  - Validação dos endpoints REST em `/api/obligations` (`POST`, `GET`, `GET /{id}`, `PUT /{id}`).
+  - Validação de regras de negócio: inicialização forçada em `PENDING`, bloqueio de atribuição para participantes inativos (RN-006 com HTTP 422) e contagem de anexos (`attachmentCount`) na listagem paginada.
+  - Fechamento formal dos critérios de aceite da SPEC-008.
+- Validação e formalização da SPEC-007 (Implementar cadastro e consulta de responsáveis - API):
+  - Validação dos endpoints REST em `/api/responsibles` (`POST`, `GET`, `GET /{id}`, `PUT /{id}`) e `/api/auth` (`POST /register`, `POST /login`).
+  - Validação de segurança com senhas hashadas via `BCrypt`, ocultação de hash nos DTOs de resposta, validação de e-mail único e bloqueio de login para inativos.
+  - Fechamento formal dos critérios de aceite da SPEC-007.
+- Validação e formalização da SPEC-006 (Implementar cadastro e consulta de empresas - API):
+  - Validação dos endpoints REST em `/api/companies` (`POST`, `GET`, `GET /{id}`, `PUT /{id}`).
+  - Validação de regras de negócio de CNPJ (normalização para somente dígitos, validação de dois dígitos verificadores via `Cnpj` e unicidade).
+  - Validação de exclusão lógica (soft delete via `active: false`) e bloqueio de métodos `DELETE` (405 Method Not Allowed).
+  - Fechamento formal dos critérios de aceite da SPEC-006.
+- Validação e formalização da SPEC-005 (Implementar entidades e mapeamentos JPA):
+  - Validação das entidades `Company`, `Responsible`, `Obligation`, `Attachment` e enum `ObligationStatus`.
+  - Validação dos mapeamentos relacionais ManyToOne com fetch LAZY e `optional = false`, sem cascatas de remoção ou orphanRemoval.
+  - Validação da ADR-0001 via teste de reflexão `RepositoriesDoNotExposeDeleteTest` (nenhum repository declara ou herda métodos `delete*`).
+- Validação e formalização da SPEC-004 (Configurar MySQL e migrations com Flyway):
+  - Validação do esquema relacional versionado via Flyway (`V1__create_schema.sql` e `V2__align_domain_names.sql`) para as tabelas `company`, `users`, `obligation` e `attachment`.
+  - Validação de constraints de integridade referencial (`ON DELETE RESTRICT`, sem cascata), unicidade de CNPJ (`uk_company_cnpj`), unicidade de e-mail (`uk_users_email`) e checagem de status da obrigação (`ck_obligation_status`).
+  - Validação de execução de migrações e garantia de integridade com Testcontainers MySQL 8 (`DatabaseMigrationIntegrationTest`).
+- Conclusão e formalização da SPEC-003 (Criar repositório e estrutura do backend):
+  - Liberação do endpoint de health check (`/actuator/health`, `/actuator/health/**`, `/actuator/info`) como público no `SecurityConfig` para sondas de liveness/readiness e monitoramento.
+  - Configuração de exposição de endpoints de gerenciamento no `application.yml` (`management.endpoints.web.exposure.include=health,info`).
+  - Criação do teste de integração `ActuatorHealthTest` validando a resposta do status `UP` sem exigência de autenticação.
+- Validação e formalização da SPEC-002 (Modelar domínio e relacionamentos):
+  - Validação das entidades JPA (`Company`, `Responsible`, `Obligation`, `Attachment`) e seus relacionamentos (Company 1:N Obligation, Responsible 1:N Obligation, Obligation 1:N Attachment com `@ManyToOne(fetch = LAZY, optional = false)`).
+  - Atualização de notas de autenticação em `docs/modelo-de-dados.md` e fechamento formal dos critérios de aceite da SPEC-002.
 - Formalização e conclusão da SPEC-001 (Arquitetura, Escopo do MVP e Convenções):
   - Criação do documento mestre `docs/arquitetura.md` definindo os limites do MVP (o que está dentro e fora do escopo), organização em camadas e *Package-by-Feature* no backend e *Feature-First / Clean Architecture* no frontend Flutter.
   - Documentação da estratégia de armazenamento local de anexos desacoplada (`FileStorage` + `LocalFileSystemStorage`), isolamento por UUID, proteção contra *Path Traversal* e compensação no filesystem em caso de falha de persistência no MySQL.

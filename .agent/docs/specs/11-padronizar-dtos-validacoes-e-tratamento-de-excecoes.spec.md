@@ -7,7 +7,7 @@
 | Card | [Padronizar DTOs, validações e tratamento de exceções](https://trello.com/c/OARCmyxB) |
 | Status no Trello (09/11/2026) | Concluído |
 | Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Situação da especificação | Concluído — implementado e testado |
 
 ## 1. Objetivo
 
@@ -15,11 +15,11 @@ Padronizar contratos de entrada/saída, validação dos payloads e respostas de 
 
 ## 2. Escopo funcional
 
-- [ ] Separar DTOs das entidades JPA.
-- [ ] Aplicar Bean Validation nos requests.
-- [ ] Implementar tratamento global de exceções.
-- [ ] Padronizar códigos HTTP e payload JSON.
-- [ ] Não expor stack trace, senha, hash ou detalhes internos.
+- [x] Separar DTOs das entidades JPA.
+- [x] Aplicar Bean Validation nos requests.
+- [x] Implementar tratamento global de exceções.
+- [x] Padronizar códigos HTTP e payload JSON.
+- [x] Não expor stack trace, senha, hash ou detalhes internos.
 
 ## 3. Regras de negócio e restrições
 
@@ -39,9 +39,9 @@ Padronizar contratos de entrada/saída, validação dos payloads e respostas de 
 
 ## 5. Critérios de aceitação
 
-- [ ] Erros de validação, ausência, duplicidade e transição inválida têm status/mensagem consistentes.
-- [ ] Nenhuma resposta expõe stack trace/dados internos.
-- [ ] Controllers usam DTOs e não entidades JPA diretamente.
+- [x] Erros de validação, ausência, duplicidade e transição inválida têm status/mensagem consistentes.
+- [x] Nenhuma resposta expõe stack trace/dados internos.
+- [x] Controllers usam DTOs e não entidades JPA diretamente.
 
 ## 6. Cenários de teste
 

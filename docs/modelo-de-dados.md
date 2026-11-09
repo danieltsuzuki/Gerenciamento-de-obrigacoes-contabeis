@@ -136,7 +136,7 @@ Representa as obrigações fiscais atribuídas a empresas e sob responsabilidade
 ## Mapeamento JPA
 
 - `Company.legalName` → `company.legal_name`; `tradeName` → `company.trade_name`.
-- `Responsible` → `users`; `passwordHash` → `password` (a autenticação ainda não existe).
+- `Responsible` → `users`; `passwordHash` → `password` (hash seguro gerado com BCrypt via Spring Security).
 - `Attachment.name`, `contentType`, `size`, `storageKey` e `uploadedAt` → `file_name`, `content_type`, `file_size`, `file_path` e `uploaded_at`.
 - Relações para pais usam `ManyToOne(fetch = LAZY, optional = false)`; não há `OneToMany`, cascata de remoção ou `orphanRemoval`.
 
