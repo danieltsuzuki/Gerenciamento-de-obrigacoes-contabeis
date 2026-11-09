@@ -120,6 +120,17 @@ public class ObligationService {
         return obligationMapper.toDetailResponse(updated, count);
     }
 
+    public ObligationDetailResponse updateStatus(Long id, ObligationStatus newStatus) {
+        Obligation obligation = obligationRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Obrigação", id));
+
+        obligation.changeStatus(newStatus, clock);
+
+        Obligation updated = obligationRepository.save(obligation);
+        long count = attachmentRepository.countByObligationId(id);
+        return obligationMapper.toDetailResponse(updated, count);
+    }
+
     private Company requireActiveCompany(Long companyId) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new NotFoundException("Empresa", companyId));

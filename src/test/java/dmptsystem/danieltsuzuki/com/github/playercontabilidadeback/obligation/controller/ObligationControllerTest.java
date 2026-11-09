@@ -205,5 +205,85 @@ class ObligationControllerTest {
         mockMvc.perform(delete("/api/obligations/10"))
                 .andExpect(status().isMethodNotAllowed());
     }
+
+    @Test
+    @DisplayName("PATCH /api/obligations/{id}/status atualiza status com sucesso -> 200 OK")
+    void shouldUpdateStatusSuccessfully() throws Exception {
+        ObligationDetailResponse response = new ObligationDetailResponse(
+                10L, companySummary, responsibleSummary, "DEFIS 2026", "Descrição",
+                ObligationStatus.IN_PROGRESS, LocalDate.of(2026, 3, 31), 0L, null, LocalDateTime.now(), LocalDateTime.now()
+        );
+
+        when(obligationService.updateStatus(eq(10L), eq(ObligationStatus.IN_PROGRESS))).thenReturn(response);
+
+        String body = """
+                {
+                    "status": "IN_PROGRESS"
+                }
+                """;
+
+        mockMvc.perform(patch("/api/obligations/10/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/obligations/{id}/status com transição inválida retorna 422 INVALID_STATUS_TRANSITION")
+    void shouldReturn422OnInvalidStatusTransition() throws Exception {
+        when(obligationService.updateStatus(eq(10L), eq(ObligationStatus.COMPLETED)))
+                .thenThrow(new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.exception.InvalidStatusTransitionException(
+                        ObligationStatus.PENDING, ObligationStatus.COMPLETED
+                ));
+
+        String body = """
+                {
+                    "status": "COMPLETED"
+                }
+                """;
+
+        mockMvc.perform(patch("/api/obligations/10/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_STATUS_TRANSITION"));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/obligations/{id}/status com status ausente retorna 400 VALIDATION_ERROR")
+    void shouldReturn400WhenStatusNull() throws Exception {
+        String body = """
+                {
+                    "status": null
+                }
+                """;
+
+        mockMvc.perform(patch("/api/obligations/10/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/obligations/{id}/status em obrigação inexistente retorna 404 NOT_FOUND")
+    void shouldReturn404WhenNotFoundOnUpdateStatus() throws Exception {
+        when(obligationService.updateStatus(eq(999L), eq(ObligationStatus.IN_PROGRESS)))
+                .thenThrow(new NotFoundException("Obrigação", 999L));
+
+        String body = """
+                {
+                    "status": "IN_PROGRESS"
+                }
+                """;
+
+        mockMvc.perform(patch("/api/obligations/999/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+    }
 }
 

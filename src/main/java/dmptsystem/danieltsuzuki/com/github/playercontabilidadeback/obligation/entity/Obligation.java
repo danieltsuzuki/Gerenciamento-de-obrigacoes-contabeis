@@ -72,7 +72,7 @@ public class Obligation {
     }
 
     public void changeStatus(ObligationStatus next, Clock clock) {
-        if (!status.canTransitionTo(next)) {
+        if (next == null || !status.canTransitionTo(next)) {
             throw new InvalidStatusTransitionException(status, next);
         }
         this.status = next;

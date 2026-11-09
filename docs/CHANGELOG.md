@@ -11,7 +11,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - `GET /api/obligations`: listagem paginada com suporte a filtros por `companyId`, `responsibleId` e `status`, retornando dados completos de exibição: empresa resumida, responsável resumido, status, contagem de anexos (`attachmentCount`) e data de criação (`createdAt`). Acesso anônimo permitido.
   - `GET /api/obligations/{id}`: busca detalhada de obrigação por ID com empresa, responsável, contagem de anexos e data de conclusão (`completedAt`). Acesso anônimo permitido.
   - `PUT /api/obligations/{id}`: atualização de título, descrição, prazo (`dueDate`), empresa/responsável (com validação RN-006 se alterados) e transição de status segundo a máquina de estados (RN-008). Requer autenticação.
-- DTOs de request e response de obrigação: `CreateObligationRequest`, `UpdateObligationRequest`, `ObligationListItemResponse`, `ObligationDetailResponse`, `ObligationWithAttachmentCount`, `CompanySummaryResponse` e `ResponsibleSummaryResponse`.
+  - `PATCH /api/obligations/{id}/status`: operação explícita para transição de status da obrigação seguindo a máquina de estados (RN-008), garantindo bloqueio de saltos, regressões, transições a partir de `COMPLETED` e preenchimento de `completedAt`. Requer autenticação.
+- DTOs de request e response de obrigação: `CreateObligationRequest`, `UpdateObligationRequest`, `UpdateObligationStatusRequest`, `ObligationListItemResponse`, `ObligationDetailResponse`, `ObligationWithAttachmentCount`, `CompanySummaryResponse` e `ResponsibleSummaryResponse`.
 - Exceção de negócio `BusinessRuleException` para violação de regras como empresa/responsável inativo (status HTTP 422).
 - Camada de mapeamento `ObligationMapper` e camada de serviço `ObligationService`.
 - Atualização em `AttachmentRepository` com consulta `countByObligationId(Long obligationId)`.

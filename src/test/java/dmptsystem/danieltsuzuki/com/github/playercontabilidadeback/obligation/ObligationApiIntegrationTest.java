@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -257,60 +258,79 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.content[0].status").value("PENDING"))
                 .andExpect(jsonPath("$.content[0].attachmentCount").value(1));
 
-        // 10. PUT sem autenticação deve retornar 401 UNAUTHORIZED
+        // 10. PATCH /api/obligations/{id}/status sem autenticação -> 401 UNAUTHORIZED
+        mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\": \"IN_PROGRESS\"}"))
+                .andExpect(status().isUnauthorized());
+
+        // 11. PATCH com salto PENDING -> COMPLETED rejeitado pelo domínio (RN-008) -> 422 INVALID_STATUS_TRANSITION
+        mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
+                        .header("Authorization", authHeader)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\": \"COMPLETED\"}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_STATUS_TRANSITION"));
+
+        // 12. PATCH com transição válida PENDING -> IN_PROGRESS -> 200 OK (completedAt deve continuar null)
+        mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
+                        .header("Authorization", authHeader)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\": \"IN_PROGRESS\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(obligationId))
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.completedAt").isEmpty())
+                .andExpect(jsonPath("$.attachmentCount").value(1));
+
+        // 13. PATCH com regressão IN_PROGRESS -> PENDING rejeitada (RN-008) -> 422 INVALID_STATUS_TRANSITION
+        mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
+                        .header("Authorization", authHeader)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\": \"PENDING\"}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_STATUS_TRANSITION"));
+
+        // 14. PATCH para o mesmo status IN_PROGRESS -> IN_PROGRESS rejeitado -> 422 INVALID_STATUS_TRANSITION
+        mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
+                        .header("Authorization", authHeader)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\": \"IN_PROGRESS\"}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_STATUS_TRANSITION"));
+
+        // 15. PATCH com transição válida IN_PROGRESS -> COMPLETED -> 200 OK (completedAt preenchido)
+        mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
+                        .header("Authorization", authHeader)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\": \"COMPLETED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(obligationId))
+                .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.completedAt").isNotEmpty());
+
+        // 16. PATCH a partir de COMPLETED (terminal) tentando reabrir para IN_PROGRESS ou PENDING -> 422
+        mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
+                        .header("Authorization", authHeader)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\": \"IN_PROGRESS\"}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_STATUS_TRANSITION"));
+
+        mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
+                        .header("Authorization", authHeader)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\": \"PENDING\"}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_STATUS_TRANSITION"));
+
+        // 17. PUT de atualização cadastral (sem alterar status)
         String updatePayload = """
                 {
                     "companyId": %d,
                     "responsibleId": %d,
-                    "title": "DCTF Retificadora",
+                    "title": "DCTF Retificadora Finalizada",
                     "description": "Atualizada com sucesso",
-                    "dueDate": "%s",
-                    "status": "IN_PROGRESS"
-                }
-                """.formatted(activeCompanyId, activeUserId, futureDueDate);
-
-        mockMvc.perform(put("/api/obligations/{id}", obligationId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(updatePayload))
-                .andExpect(status().isUnauthorized());
-
-        // 11. PUT autenticado com transição válida (PENDING -> IN_PROGRESS) -> 200 OK
-        mockMvc.perform(put("/api/obligations/{id}", obligationId)
-                        .header("Authorization", authHeader)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(updatePayload))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(obligationId))
-                .andExpect(jsonPath("$.title").value("DCTF Retificadora"))
-                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
-                .andExpect(jsonPath("$.attachmentCount").value(1));
-
-        // 12. PUT autenticado com transição inválida (IN_PROGRESS -> PENDING) (RN-008) -> 422
-        String invalidTransitionPayload = """
-                {
-                    "companyId": %d,
-                    "responsibleId": %d,
-                    "title": "DCTF Retificadora",
-                    "description": "Tentativa transição inválida",
-                    "dueDate": "%s",
-                    "status": "PENDING"
-                }
-                """.formatted(activeCompanyId, activeUserId, futureDueDate);
-
-        mockMvc.perform(put("/api/obligations/{id}", obligationId)
-                        .header("Authorization", authHeader)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(invalidTransitionPayload))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.code").value("INVALID_STATUS_TRANSITION"));
-
-        // 13. PUT autenticado completando a obrigação (IN_PROGRESS -> COMPLETED) -> 200 OK com completedAt preenchido
-        String completePayload = """
-                {
-                    "companyId": %d,
-                    "responsibleId": %d,
-                    "title": "DCTF Retificadora",
-                    "description": "Finalizada",
                     "dueDate": "%s",
                     "status": "COMPLETED"
                 }
@@ -319,12 +339,12 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(put("/api/obligations/{id}", obligationId)
                         .header("Authorization", authHeader)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(completePayload))
+                        .content(updatePayload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"))
-                .andExpect(jsonPath("$.completedAt").isNotEmpty());
+                .andExpect(jsonPath("$.title").value("DCTF Retificadora Finalizada"))
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
 
-        // 14. DELETE /api/obligations/{id} sem autenticação -> 401 UNAUTHORIZED; com autenticação -> 405 METHOD_NOT_ALLOWED
+        // 18. DELETE /api/obligations/{id} sem autenticação -> 401 UNAUTHORIZED; com autenticação -> 405 METHOD_NOT_ALLOWED
         mockMvc.perform(delete("/api/obligations/{id}", obligationId))
                 .andExpect(status().isUnauthorized());
 
@@ -332,12 +352,26 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
                         .header("Authorization", authHeader))
                 .andExpect(status().isMethodNotAllowed());
 
-        // 15. Garantir que o registro NUNCA é removido fisicamente do banco de dados
+        // 19. Garantir que o registro NUNCA é removido fisicamente e que status/completed_at foram persistidos
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM obligation WHERE id = ?",
                 Integer.class,
                 obligationId
         );
         assertThat(count).isEqualTo(1);
+
+        String persistedStatus = jdbcTemplate.queryForObject(
+                "SELECT status FROM obligation WHERE id = ?",
+                String.class,
+                obligationId
+        );
+        assertThat(persistedStatus).isEqualTo("COMPLETED");
+
+        java.sql.Timestamp persistedCompletedAt = jdbcTemplate.queryForObject(
+                "SELECT completed_at FROM obligation WHERE id = ?",
+                java.sql.Timestamp.class,
+                obligationId
+        );
+        assertThat(persistedCompletedAt).isNotNull();
     }
 }
