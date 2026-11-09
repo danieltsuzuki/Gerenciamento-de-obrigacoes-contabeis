@@ -1,17 +1,17 @@
-# Pendências e perguntas em aberto
+# Pendências e Perguntas em Aberto
 
-## Pendências e perguntas herdadas
+## Perguntas de Negócio para Fases Futuras (Pós-MVP)
 
-- Pode remover ou substituir anexos de uma obrigação `COMPLETED`?
-- Existe perfil/autorização (ex.: só o responsável avança o status) ou só autenticação básica?
-- A obrigação tem periodicidade/recorrência automática (mensal, anual) ou cada uma é avulsa?
-- Haverá status derivado "atrasada" (prazo vencido) calculado em consulta, sem novo valor no enum?
-- Limite de tamanho e tipos MIME aceitos para anexos.
-- CNPJ alfanumérico da Receita Federal: manter validação extensível quando for implementada.
+- **Anexos em Obrigações Concluídas:** Pode remover ou substituir anexos de uma obrigação no status `COMPLETED`, ou o histórico torna-se 100% imutável?
+- **Autorização por Perfil (RBAC):** Haverá diferenciação de permissões (ex.: perfil Administrador vs Operador, ou validação se apenas o responsável atribuído pode avançar o status da obrigação) ou mantém-se apenas autenticação JWT?
+- **Recorrência de Obrigações:** A obrigação terá suporte a periodicidade automática (mensal, trimestral, anual gerada por job agendado) ou cada obrigação continuará sendo avulsa?
+- **Status Derivado "Atrasada":** Haverá exibição visual no frontend destacando prazo vencido calculado dinamicamente em consulta (`dueDate < hoje` e status != `COMPLETED`), sem necessidade de novo valor no enum?
+- **CNPJ Alfanumérico da Receita Federal:** A especificação atual exige apenas números (14 dígitos). Quando o formato alfanumérico da Receita Federal entrar em vigor, o validador isolado `Cnpj` deverá ser estendido.
 
-## Pendências e perguntas desta tarefa
+## Itens Técnicos Resolvidos no MVP
 
-- A autenticação ainda não existe; a coluna `users.password` recebe `passwordHash` e o hash será tratado em tarefa futura.
-- Validadores de CNPJ, e-mail e demais regras de entrada serão implementados em services futuros.
-- Definir se a busca por intervalo de vencimento deve aceitar limites inclusivos diferentes de `dueFrom`/`dueTo`.
-- Confirmar a estratégia de testes em ambientes sem Docker, pois os testes de integração dependem de Testcontainers MySQL 8.
+- **Autenticação:** Resolvida via Spring Security e JJWT (tokens Bearer stateless, BCrypt para senhas e rotas de login/registro).
+- **Validações:** Resolvidas com Bean Validation e classes de domínio dedicadas (`Cnpj`, `@ValidCnpj`, `@Email`).
+- **Filtros de Vencimento:** Resolvidos com parâmetros de consulta inclusivos `dueFrom` e `dueTo` (`LocalDate`).
+- **Arquitetura de Anexos:** Resolvida com `LocalFileSystemStorage`, prevenção de *Path Traversal*, limite de 10MB e compensação transacional.
+- **Estratégia de Testes:** Resolvida com testes de unidade rápidos e testes de integração com Testcontainers MySQL 8.

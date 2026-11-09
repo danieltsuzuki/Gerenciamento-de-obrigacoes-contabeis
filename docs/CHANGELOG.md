@@ -6,6 +6,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Não lançado]
 
 ### Adicionado
+- Formalização e conclusão da SPEC-001 (Arquitetura, Escopo do MVP e Convenções):
+  - Criação do documento mestre `docs/arquitetura.md` definindo os limites do MVP (o que está dentro e fora do escopo), organização em camadas e *Package-by-Feature* no backend e *Feature-First / Clean Architecture* no frontend Flutter.
+  - Documentação da estratégia de armazenamento local de anexos desacoplada (`FileStorage` + `LocalFileSystemStorage`), isolamento por UUID, proteção contra *Path Traversal* e compensação no filesystem em caso de falha de persistência no MySQL.
+  - Registro de convenções REST, JSON em camelCase, datas em ISO-8601, paginação via DTO e padronização uniforme de erros.
+  - Atualização completa do `README.md` raiz com visão geral, arquitetura, stack, instruções de execução, autenticação, Swagger UI e relatórios JaCoCo.
+  - Saneamento de pendências técnicas resolvidas em `docs/pendencias-e-perguntas-em-aberto.md` e atualização da rastreabilidade da SPEC-001 para Concluído.
 - Cobertura de testes automatizados com JaCoCo (`jacoco-maven-plugin` 0.8.12):
   - Geração automática de relatórios de cobertura em HTML (`target/site/jacoco/index.html`), CSV e XML a cada execução de `mvn test`.
   - Exclusão de classes utilitárias de infraestrutura (`ServletInitializer`, `PlayerContabilidadeBackApplication`, DTOs e classes de configuração) para focar a medição nas regras de negócio e contratos de API.
