@@ -6,6 +6,16 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Não lançado]
 
 ### Adicionado
+- Endpoints REST para gerenciamento de obrigações fiscais em `/api/obligations`:
+  - `POST /api/obligations`: cadastro de obrigação vinculando empresa e responsável (validação de existência e situação ativa via RN-006), definindo status padrão `PENDING` no servidor e data de criação automática. Requer autenticação.
+  - `GET /api/obligations`: listagem paginada com suporte a filtros por `companyId`, `responsibleId` e `status`, retornando dados completos de exibição: empresa resumida, responsável resumido, status, contagem de anexos (`attachmentCount`) e data de criação (`createdAt`). Acesso anônimo permitido.
+  - `GET /api/obligations/{id}`: busca detalhada de obrigação por ID com empresa, responsável, contagem de anexos e data de conclusão (`completedAt`). Acesso anônimo permitido.
+  - `PUT /api/obligations/{id}`: atualização de título, descrição, prazo (`dueDate`), empresa/responsável (com validação RN-006 se alterados) e transição de status segundo a máquina de estados (RN-008). Requer autenticação.
+- DTOs de request e response de obrigação: `CreateObligationRequest`, `UpdateObligationRequest`, `ObligationListItemResponse`, `ObligationDetailResponse`, `ObligationWithAttachmentCount`, `CompanySummaryResponse` e `ResponsibleSummaryResponse`.
+- Exceção de negócio `BusinessRuleException` para violação de regras como empresa/responsável inativo (status HTTP 422).
+- Camada de mapeamento `ObligationMapper` e camada de serviço `ObligationService`.
+- Atualização em `AttachmentRepository` com consulta `countByObligationId(Long obligationId)`.
+- Atualização em `ObligationRepository` com consulta otimizada `findWithAttachmentCountByFilters(...)` contendo subquery de contagem de anexos.
 - Autenticação e Segurança com Spring Security e JWT (JJWT):
   - `POST /api/auth/register`: rota pública para autocadastro / registro de usuários responsáveis sem necessidade de autenticação prévia.
   - `POST /api/auth/login`: autenticação por e-mail e senha, retornando token Bearer e dados do usuário responsável, com tempo de expiração padrão configurado para 30 minutos (1800s).
