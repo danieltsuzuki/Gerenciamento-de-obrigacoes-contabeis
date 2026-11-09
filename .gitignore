@@ -35,6 +35,9 @@ build/
 ### IA ###
 .agent
 
+### Uploads ###
+uploads/
+
 ### Environment Variables ###
 .env
 .env.*

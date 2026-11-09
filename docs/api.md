@@ -7,8 +7,9 @@ Documentação formal dos endpoints expostos pela API da aplicação **Player Co
 ## Convenções, Segurança e Tratamento de Erros
 
 ### Autenticação e Autorização (JWT)
-- **Operações Anônimas (`GET`):** Todos os endpoints de leitura (`GET /api/**`) estão abertos para consulta sem necessidade de autenticação.
-- **Operações Restritas (`POST`, `PUT`):** Endpoints de criação e alteração (`POST /api/**`, `PUT /api/**`, exceto `POST /api/auth/login`) exigem o cabeçalho `Authorization: Bearer <token-jwt>`. Requisições não autenticadas resultam em `401 Unauthorized`.
+- **Operações Anônimas (`GET`):** Os endpoints de leitura de empresas, responsáveis e obrigações (`GET /api/companies/**`, `GET /api/responsibles/**`, `GET /api/obligations/**` exceto `/attachments`) estão abertos para consulta pública sem necessidade de autenticação.
+- **Operações de Anexos (`/api/obligations/*/attachments/**`, `/api/attachments/**`):** Todas as operações de anexos (upload multipart, listagem e download) exigem token Bearer JWT (`Authorization: Bearer <token>`). Requisições anônimas resultam em `401 Unauthorized`.
+- **Operações Restritas (`POST`, `PUT`, `PATCH`):** Endpoints de criação e alteração (`POST /api/**`, `PUT /api/**`, `PATCH /api/**`, exceto `POST /api/auth/login` e `POST /api/auth/register`) exigem o cabeçalho `Authorization: Bearer <token-jwt>`. Requisições não autenticadas resultam em `401 Unauthorized`.
 - **Exclusão Física:** Operações de exclusão física (`DELETE /api/**`) são proibidas por arquitetura e retornam `405 Method Not Allowed`. O encerramento de ciclos é feito por inativação lógica via `PUT` (`active: false`).
 
 As respostas de erro seguem o padrão padronizado com corpo JSON contendo `code`, `message` e detalhes opcionais:
@@ -24,7 +25,7 @@ As respostas de erro seguem o padrão padronizado com corpo JSON contendo `code`
 
 | HTTP | Código (`code`) | Significado |
 |---|---|---|
-| 400 | `VALIDATION_ERROR` | Dados da requisição inválidos (Bean Validation ou formato incorreto) |
+| 400 | `VALIDATION_ERROR` | Dados da requisição inválidos (Bean Validation, arquivo vazio, tipo MIME não suportado ou tamanho excedido) |
 | 401 | `UNAUTHORIZED` / `BAD_CREDENTIALS` | Token ausente/inválido ou credenciais incorretas |
 | 404 | `NOT_FOUND` | Recurso solicitado não foi encontrado pelo identificador |
 | 409 | `DUPLICATE_CNPJ` | Conflito por tentativa de cadastrar ou alterar para CNPJ já existente |
@@ -32,6 +33,7 @@ As respostas de erro seguem o padrão padronizado com corpo JSON contendo `code`
 | 422 | `COMPANY_INACTIVE` / `USER_INACTIVE` | Violação de regra de negócio RN-006 (atribuição para empresa ou responsável inativo) |
 | 422 | `INVALID_STATUS_TRANSITION` | Violação do ciclo de vida de status da obrigação RN-008 |
 | 405 | — | Método HTTP não permitido (ex.: tentativa de `DELETE` físico) |
+| 500 | `STORAGE_ERROR` | Falha de infraestrutura ao armazenar ou recuperar arquivo em disco |
 
 ---
 
@@ -418,3 +420,59 @@ Operação explícita para transição de status da obrigação fiscal.
 | 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
 | 404 | `NOT_FOUND` | Obrigação informada não foi encontrada |
 | 422 | `INVALID_STATUS_TRANSITION` | Transição de status proibida pelo ciclo de vida (RN-008) |
+
+---
+
+## Endpoints de Anexos (`/api/obligations/{id}/attachments` e `/api/attachments`)
+
+### POST /api/obligations/{id}/attachments
+Realiza o upload de um arquivo anexo associado a uma obrigação fiscal via `multipart/form-data`.
+- Grava o arquivo físico em disco no diretório configurado, utilizando identificador único seguro (`{obligationId}/{uuid}.{ext}`) para proteção estrita contra *path traversal*.
+- Grava os metadados no MySQL (`Attachment`).
+- Executa exclusão de compensação caso a inserção no banco falhe.
+- Valida se a obrigação existe (`404 NOT_FOUND`).
+- Valida se o arquivo não é vazio, nome de arquivo e tipos MIME permitidos (`PDF`, imagens, `XML`, planilhas e compactados).
+- Requer autenticação JWT (`Authorization: Bearer <token>`).
+
+**Request (`multipart/form-data`)**
+- `file`: Arquivo binário a ser enviado (obrigatório).
+
+**Respostas**
+| HTTP | code | Quando |
+|---|---|---|
+| 201 | — | Anexo enviado e registrado com sucesso |
+| 400 | `VALIDATION_ERROR` | Arquivo ausente, vazio, tipo MIME não suportado ou limite de tamanho excedido |
+| 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
+| 404 | `NOT_FOUND` | Obrigação informada não existe |
+| 500 | `STORAGE_ERROR` | Falha ao gravar arquivo em disco |
+
+---
+
+### GET /api/obligations/{id}/attachments
+Lista todos os anexos vinculados a uma obrigação fiscal.
+- Retorna os metadados de cada anexo: `id`, `obligationId`, `name` (nome original), `contentType`, `size` (em bytes) e `uploadedAt`.
+- Requer autenticação JWT (`Authorization: Bearer <token>`).
+
+**Respostas**
+| HTTP | code | Quando |
+|---|---|---|
+| 200 | — | Lista de anexos retornada com sucesso |
+| 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
+| 404 | `NOT_FOUND` | Obrigação informada não existe |
+
+---
+
+### GET /api/attachments/{attachmentId}/download
+Realiza o download seguro do arquivo físico associado a um anexo.
+- Busca o registro do anexo pelo identificador numérico.
+- Carrega o arquivo do armazenamento local seguro.
+- Retorna o fluxo binário com `Content-Type` do arquivo e cabeçalho `Content-Disposition: attachment; filename="..."` devidamente sanitizado.
+- Requer autenticação JWT (`Authorization: Bearer <token>`).
+
+**Respostas**
+| HTTP | code | Quando |
+|---|---|---|
+| 200 | — | Arquivo binário retornado para download com sucesso |
+| 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
+| 404 | `NOT_FOUND` | Registro do anexo ou arquivo físico não encontrado |
+| 500 | `STORAGE_ERROR` | Falha de I/O ao ler o arquivo |
