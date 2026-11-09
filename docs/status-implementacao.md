@@ -19,6 +19,15 @@ Atualizado em: 2026-11-08
 - **Em andamento:** 0
 - **Planejado:** 0
 
+## Cobertura de Testes (JaCoCo)
+- **Plugin:** `org.jacoco:jacoco-maven-plugin:0.8.12`
+- **Relatório HTML:** `target/site/jacoco/index.html`
+- **Métricas Atuais:**
+  - **Controllers:** 100% de linhas cobertas (`AuthController`, `CompanyController`, `ResponsibleController`, `ObligationController`, `AttachmentController`).
+  - **Services:** > 92% de linhas cobertas (`CompanyService`: 97.1%, `ResponsibleService`: 100%, `ObligationService`: 93%, `AttachmentService`: 90.7%, `AuthService`: 94.7%).
+  - **Segurança & Validadores:** `JwtService`/`JwtAuthenticationFilter`: 98%, `Cnpj`: 94.7%, `ObligationStatus`: 100%.
+  - **Geral do Projeto:** > 86% de cobertura de linhas com 154 testes automatizados.
+
 ## Pendências e perguntas em aberto
 - Pode remover ou substituir anexos de uma obrigação `COMPLETED`?
 - Existe perfil/autorização (ex.: só o responsável avança o status) ou só autenticação básica?

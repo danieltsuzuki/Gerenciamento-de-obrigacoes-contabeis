@@ -1,0 +1,7 @@
+jwt:
+  secret: player-contabilidade-back-secret-key-jwt-must-be-very-long-32-bytes-minimum
+  expiration-ms: 1800000
+
+storage:
+  location: target/test-uploads
+
