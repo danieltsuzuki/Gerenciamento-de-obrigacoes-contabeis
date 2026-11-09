@@ -7,7 +7,7 @@
 | Card | [Adicionar testes do backend](https://trello.com/c/Ai2NCneJ) |
 | Status no Trello (09/11/2026) | Concluído |
 | Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Situação da especificação | Concluído — implementado e testado |
 
 ## 1. Objetivo
 
@@ -15,14 +15,14 @@ Cobrir regras de domínio, serviços, controllers, persistência, autenticação
 
 ## 2. Escopo funcional
 
-- [ ] Testar serviços e domínio.
-- [ ] Testar controllers e contratos HTTP.
-- [ ] Testar migrations e persistência MySQL.
-- [ ] Testar CNPJ/e-mail duplicados/inválidos.
-- [ ] Testar empresa/responsável inexistente ou inativo.
-- [ ] Testar criação PENDING e transições de status.
-- [ ] Testar anexos, limite de tamanho e obrigação inexistente.
-- [ ] Gerar relatório de cobertura com JaCoCo.
+- [x] Testar serviços e domínio.
+- [x] Testar controllers e contratos HTTP.
+- [x] Testar migrations e persistência MySQL.
+- [x] Testar CNPJ/e-mail duplicados/inválidos.
+- [x] Testar empresa/responsável inexistente ou inativo.
+- [x] Testar criação PENDING e transições de status.
+- [x] Testar anexos, limite de tamanho e obrigação inexistente.
+- [x] Gerar relatório de cobertura com JaCoCo.
 
 ## 3. Regras de negócio e restrições
 
@@ -38,10 +38,10 @@ Cobrir regras de domínio, serviços, controllers, persistência, autenticação
 
 ## 5. Critérios de aceitação
 
-- [ ] `mvn test` executa suíte.
-- [ ] Regras críticas possuem cobertura.
-- [ ] Relatório JaCoCo é gerado.
-- [ ] Falhas de teste são corrigidas antes do merge.
+- [x] `mvn test` executa suíte.
+- [x] Regras críticas possuem cobertura.
+- [x] Relatório JaCoCo é gerado.
+- [x] Falhas de teste são corrigidas antes do merge.
 
 ## 6. Cenários de teste
 
