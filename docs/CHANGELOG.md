@@ -6,6 +6,17 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Não lançado]
 
 ### Adicionado
+- Cobertura de testes automatizados com JaCoCo (`jacoco-maven-plugin` 0.8.12):
+  - Geração automática de relatórios de cobertura em HTML (`target/site/jacoco/index.html`), CSV e XML a cada execução de `mvn test`.
+  - Exclusão de classes utilitárias de infraestrutura (`ServletInitializer`, `PlayerContabilidadeBackApplication`, DTOs e classes de configuração) para focar a medição nas regras de negócio e contratos de API.
+  - Alcance de mais de 86% de cobertura de linhas no projeto geral e 100% de cobertura nos controllers da aplicação.
+- Documentação interativa da API com Swagger UI / OpenAPI 3 (`springdoc-openapi-starter-webmvc-ui` 2.8.5):
+  - Interface visual disponível em `/swagger-ui.html` e `/swagger-ui/index.html`.
+  - Contrato OpenAPI 3.0 disponível em `/v3/api-docs`.
+  - Suporte completo a autenticação Bearer JWT no Swagger UI via esquema de segurança `bearerAuth`, permitindo autorizar o client com o token gerado em `/api/auth/login` e testar operações restritas diretamente pelo navegador.
+  - Anotações OpenAPI detalhadas (`@Tag`, `@Operation`, `@ApiResponses`, `@Parameter`, `@Schema`) em todos os controllers e DTOs (`AuthController`, `CompanyController`, `ResponsibleController`, `ObligationController`, `AttachmentController`).
+  - Liberação pública das rotas de documentação no `SecurityConfig` sem necessidade de login.
+  - Testes de integração automatizados em `OpenApiIntegrationTest`.
 - Endpoints REST para gerenciamento de anexos de obrigações fiscais:
   - `POST /api/obligations/{id}/attachments`: upload multipart (`multipart/form-data`) de arquivos vinculados à obrigação, com validação de tipo MIME seguro, nome e tamanho máximo (10MB), gerando identificador interno seguro contra path traversal e gravando metadados no MySQL. Requer autenticação JWT.
   - `GET /api/obligations/{id}/attachments`: listagem dos anexos vinculados a uma obrigação com dados completos de metadados. Requer autenticação JWT.

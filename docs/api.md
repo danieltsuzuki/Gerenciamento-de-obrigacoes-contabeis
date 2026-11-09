@@ -12,6 +12,17 @@ Documentação formal dos endpoints expostos pela API da aplicação **Player Co
 - **Operações Restritas (`POST`, `PUT`, `PATCH`):** Endpoints de criação e alteração (`POST /api/**`, `PUT /api/**`, `PATCH /api/**`, exceto `POST /api/auth/login` e `POST /api/auth/register`) exigem o cabeçalho `Authorization: Bearer <token-jwt>`. Requisições não autenticadas resultam em `401 Unauthorized`.
 - **Exclusão Física:** Operações de exclusão física (`DELETE /api/**`) são proibidas por arquitetura e retornam `405 Method Not Allowed`. O encerramento de ciclos é feito por inativação lógica via `PUT` (`active: false`).
 
+### Documentação Interativa com Swagger / OpenAPI
+A aplicação disponibiliza a interface interativa do Swagger UI e o contrato OpenAPI 3.0:
+- **Swagger UI:** `http://localhost:8080/swagger-ui.html` (ou `/swagger-ui/index.html`)
+- **OpenAPI v3 JSON:** `http://localhost:8080/v3/api-docs`
+
+#### Autenticação no Swagger UI:
+1. Obtenha o token JWT através de `POST /api/auth/login` (ou `POST /api/auth/register`).
+2. Clique no botão **Authorize** (ícone de cadeado no canto superior direito do Swagger UI).
+3. No campo do esquema **bearerAuth**, informe o token JWT e confirme em **Authorize**.
+4. As chamadas aos endpoints protegidos (`POST /api/**`, `PUT /api/**`, `PATCH /api/**`, upload/download de anexos) incluirão automaticamente o cabeçalho `Authorization: Bearer <token>`.
+
 As respostas de erro seguem o padrão padronizado com corpo JSON contendo `code`, `message` e detalhes opcionais:
 
 ```json
