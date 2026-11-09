@@ -1,10 +1,25 @@
-# Player Contabilidade Back
+# Player Contabilidade
 
-API REST backend para gerenciamento de obrigações contábeis e fiscais, empresas clientes, responsáveis e controle de prazos e anexos comprobatórios.
+Sistema completo para gerenciamento de obrigações contábeis e fiscais, empresas clientes, responsáveis e controle de prazos e anexos comprobatórios.
 
 ---
 
-## Funcionalidades Implementadas
+## Estrutura do Repositório
+
+O projeto adota estrutura monorepo separando claramente as responsabilidades de backend, frontend e documentação técnica unificada:
+
+```text
+├── backend/            # API REST em Java 21, Spring Boot, MySQL e Flyway
+├── frontend/           # Aplicação frontend em Flutter (Web, Desktop, Mobile)
+├── docs/               # Documentação técnica compartilhada, contratos de API e modelos
+├── .agent/             # Regras, especificações (SPECs) e skills de desenvolvimento
+├── docker-compose.yml  # Orquestração de serviços de infraestrutura (MySQL)
+└── README.md           # Guia geral do projeto
+```
+
+---
+
+## Funcionalidades Implementadas (Backend)
 
 - **Autenticação e Segurança (JWT):** Autenticação stateless via `POST /api/auth/login` e autocadastro público em `POST /api/auth/register`, emitindo tokens Bearer JWT com senhas protegidas via `BCrypt`.
 - **API de Empresas (`/api/companies`):** Cadastro com validação estrita de dígitos verificadores de CNPJ e unicidade, listagem paginada com filtro por situação (`active`), busca por identificador e inativação lógica (*soft delete*).
@@ -52,8 +67,9 @@ Consulte a especificação arquitetural completa em [`docs/arquitetura.md`](docs
 - **Git**
 
 ### 1. Configuração de Variáveis de Ambiente
-Crie seu arquivo `.env` a partir do modelo fictício:
+Navegue até a pasta `backend/` e crie seu arquivo `.env` a partir do modelo fictício:
 ```bash
+cd backend
 cp .env.example .env
 ```
 
@@ -70,11 +86,13 @@ cp .env.example .env
 | `STORAGE_LOCATION` | Diretório no disco para anexos | `uploads` |
 
 ### 2. Subir o Banco de Dados MySQL
+Na raiz do projeto:
 ```bash
 docker compose up -d
 ```
 
 ### 3. Executar o Backend
+A partir do diretório `backend/`:
 ```bash
 # Windows
 .\mvnw.cmd spring-boot:run
@@ -83,7 +101,7 @@ docker compose up -d
 ./mvnw spring-boot:run
 ```
 
-### 4. Executar os Testes Automatizados (com Testcontainers e JaCoCo)
+### 4. Executar os Testes Automatizados (Backend)
 ```bash
 # Windows
 .\mvnw.cmd test

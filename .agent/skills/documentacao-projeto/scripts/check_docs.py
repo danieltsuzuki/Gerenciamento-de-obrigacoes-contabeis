@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+backend_root = root / "backend" if (root / "backend" / "src").exists() else root
 docs = root / "docs"
 
 MAPPING = re.compile(
@@ -34,7 +35,7 @@ def norm(path: str) -> str:
 
 def code_endpoints():
     found = set()
-    for java in (root / "src" / "main").rglob("*.java"):
+    for java in (backend_root / "src" / "main").rglob("*.java"):
         text = java.read_text(encoding="utf-8", errors="ignore")
         if "@RestController" not in text and "@Controller" not in text:
             continue
@@ -57,7 +58,7 @@ def doc_endpoints():
 
 def code_tables():
     found = set()
-    mig = root / "src" / "main" / "resources" / "db" / "migration"
+    mig = backend_root / "src" / "main" / "resources" / "db" / "migration"
     if mig.exists():
         for sql in mig.glob("*.sql"):
             found.update(CREATE_TABLE.findall(sql.read_text(encoding="utf-8", errors="ignore")))

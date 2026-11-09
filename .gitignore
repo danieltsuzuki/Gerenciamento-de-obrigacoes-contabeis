@@ -42,3 +42,14 @@ uploads/
 .env
 .env.*
 !.env.example
+
+### Frontend (Flutter / Dart) ###
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+frontend/build/
+frontend/.dart_tool/
+
