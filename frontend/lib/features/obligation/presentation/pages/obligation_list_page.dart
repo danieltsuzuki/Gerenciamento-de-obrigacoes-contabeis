@@ -41,7 +41,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
         status: _selectedStatusFilter,
       );
       setState(() {
-        _obligations = result;
+        _obligations = result.content;
         _isLoading = false;
       });
     } catch (e) {

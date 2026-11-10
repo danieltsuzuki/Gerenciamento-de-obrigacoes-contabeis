@@ -13,31 +13,43 @@ frontend/
 ├── lib/
 │   ├── core/                       # Infraestrutura transversal e design system
 │   │   ├── config/                 # AppConfig (gestão de ambiente dev/staging/prod e Base URL)
-│   │   ├── network/                # ApiClient (HTTP), ApiException (erros padronizados)
+│   │   ├── network/                # ApiClient (HTTP, multipart, download), ApiException, PageResponse, DownloadedFile
 │   │   ├── routing/                # AppRoutes (rotas nomeadas e injeção de dependências)
 │   │   ├── theme/                  # AppTheme (paleta Material 3 e estilização institucional)
 │   │   └── widgets/                # Widgets compartilhados (AppScaffold, Loading, Error, Empty)
 │   ├── features/                   # Módulos funcionais independentes
+│   │   ├── auth/                   # Autenticação e Registro
+│   │   │   ├── data/               # AuthRemoteDataSource, AuthRepositoryImpl, DTOs (Login/Register)
+│   │   │   └── domain/             # AuthSession (entidade), AuthRepository (contrato)
 │   │   ├── company/                # Domínio de Empresas Clientes
-│   │   │   ├── data/               # CompanyRemoteDataSource, CompanyRepositoryImpl
+│   │   │   ├── data/               # CompanyRemoteDataSource, CompanyRepositoryImpl, DTOs (Create/Update)
 │   │   │   ├── domain/             # Company (entidade), CompanyRepository (contrato)
 │   │   │   └── presentation/       # CompanyListPage
 │   │   ├── responsible/            # Domínio de Responsáveis Contábeis
-│   │   │   ├── data/               # ResponsibleRemoteDataSource, ResponsibleRepositoryImpl
+│   │   │   ├── data/               # ResponsibleRemoteDataSource, ResponsibleRepositoryImpl, DTOs (Create/Update)
 │   │   │   ├── domain/             # Responsible (entidade), ResponsibleRepository (contrato)
 │   │   │   └── presentation/       # ResponsibleListPage
-│   │   └── obligation/             # Domínio de Obrigações Fiscais
-│   │       ├── data/               # ObligationRemoteDataSource, ObligationRepositoryImpl
-│   │       ├── domain/             # Obligation (entidade com máquina de estados), ObligationRepository
-│   │       └── presentation/       # ObligationListPage (filtros e chips por status)
+│   │   ├── obligation/             # Domínio de Obrigações Fiscais
+│   │   │   ├── data/               # ObligationRemoteDataSource, ObligationRepositoryImpl, DTOs (Create/Update/Status)
+│   │   │   ├── domain/             # Obligation (entidade com máquina de estados), ObligationRepository
+│   │   │   └── presentation/       # ObligationListPage (filtros e chips por status)
+│   │   └── attachment/             # Upload, Listagem e Download de Anexos
+│   │       ├── data/               # AttachmentRemoteDataSource, AttachmentRepositoryImpl
+│   │       └── domain/             # Attachment (entidade com formatação de tamanho), AttachmentRepository
 │   └── main.dart                   # Inicialização da aplicação e bootstrap do AppConfig
 ├── test/                           # Suíte de testes unitários, mocks e de widgets
 │   ├── core/
 │   │   ├── config/                 # Testes de inicialização e customização de AppConfig
-│   │   ├── network/                # Testes de ApiClient e mapeamento de ApiException
+│   │   ├── network/                # Testes de ApiClient, Download, Multipart, PageResponse e ApiException
 │   │   └── widgets/                # Testes de LoadingStateView, ErrorStateView e EmptyStateView
-│   └── features/                   # Testes de fluxo e navegação entre páginas (NavigationTest)
-├── pubspec.yaml                    # Dependências do projeto (http, etc.)
+│   └── features/                   # Testes de integração de rede e navegação
+│       ├── auth/                   # Testes de login, registro e tratamento de BAD_CREDENTIALS
+│       ├── company/                # Testes de listagem paginada, busca por id, criação e atualização
+│       ├── responsible/            # Testes de listagem paginada, busca por id, criação e atualização
+│       ├── obligation/             # Testes de paginação, filtros, máquina de estados e INVALID_STATUS_TRANSITION
+│       ├── attachment/             # Testes de upload multipart, listagem e download de fluxo binário
+│       └── navigation_test.dart    # Testes de fluxo e navegação entre páginas
+├── pubspec.yaml                    # Dependências do projeto (http, http_parser, etc.)
 └── analysis_options.yaml           # Regras do linter Dart/Flutter
 ```
 

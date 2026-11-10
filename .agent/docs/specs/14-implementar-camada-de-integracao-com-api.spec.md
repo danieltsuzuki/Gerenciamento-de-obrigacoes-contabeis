@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | 14 |
 | Card | [Implementar camada de integração com API](https://trello.com/c/V7l7sJPV) |
-| Status no Trello (09/11/2026) | A Fazer |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Status no Trello (09/11/2026) | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluído — implementado e testado |
 
 ## 1. Objetivo
 
@@ -15,31 +15,33 @@ Implementar a camada Flutter responsável por comunicação HTTP com os endpoint
 
 ## 2. Escopo funcional
 
-- [ ] Criar clients para empresas, responsáveis, obrigações e anexos.
-- [ ] Criar models/DTOs para requests e responses.
-- [ ] Criar repositories por feature.
-- [ ] Centralizar tratamento de falhas e conversão de respostas.
-- [ ] Integrar autenticação JWT às operações protegidas.
+- [x] Criar clients para empresas, responsáveis, obrigações e anexos.
+- [x] Criar models/DTOs para requests e responses.
+- [x] Criar repositories por feature.
+- [x] Centralizar tratamento de falhas e conversão de respostas.
+- [x] Integrar autenticação JWT às operações protegidas.
 
 ## 3. Regras de negócio e restrições
 
 - Widgets não devem executar chamadas HTTP diretamente.
 - Estados de carregamento, sucesso e erro devem ser expostos à camada de apresentação.
-- Base URL deve vir de configuração por ambiente.
-- Token deve ser enviado como Bearer nas rotas protegidas.
+- Base URL deve vir de configuração por ambiente (`AppConfig`).
+- Token deve ser enviado como Bearer nas rotas protegidas (`ApiClient.setAuthToken`).
 
 ## 4. Contratos e decisões técnicas
 
-- Consumir contratos em docs/api.md: /api/companies, /api/responsibles, /api/obligations, /api/attachments e /api/auth.
-- Paginação Spring Data: page, size, sort.
-- Erros: code, message, details e timestamp.
+- Consumir contratos em docs/api.md: `/api/companies`, `/api/responsibles`, `/api/obligations`, `/api/attachments` e `/api/auth`.
+- Paginação Spring Data deserializada genericamente via `PageResponse<T>` (`content`, `totalElements`, `totalPages`, `size`, `number`, `first`, `last`, `empty`).
+- Erros da API mapeados via `ApiException` estruturada (`code`, `message`, `details`, `timestamp`, `statusCode`).
+- Upload multipart com token Bearer via `ApiClient.multipartRequest`.
+- Download de arquivo com extração do header `Content-Disposition` via `ApiClient.download` retornando `DownloadedFile`.
 
 ## 5. Critérios de aceitação
 
-- [ ] Requests/responses são mapeados sem acoplar UI aos detalhes HTTP.
-- [ ] Falhas de rede, timeout, 4xx e 5xx são tratadas.
-- [ ] Token JWT é anexado às requisições protegidas.
-- [ ] URL configurável fora do código-fonte.
+- [x] Requests/responses são mapeados sem acoplar UI aos detalhes HTTP.
+- [x] Falhas de rede, timeout, 4xx e 5xx são tratadas.
+- [x] Token JWT é anexado às requisições protegidas.
+- [x] URL configurável fora do código-fonte.
 
 ## 6. Cenários de teste
 

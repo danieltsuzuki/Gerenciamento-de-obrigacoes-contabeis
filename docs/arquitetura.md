@@ -114,14 +114,14 @@ frontend/lib/
 │   │   ├── data/               # ObligationRemoteDataSource, ObligationRepositoryImpl
 │   │   ├── domain/             # Obligation (entidade com regras de transição), ObligationRepository
 │   │   └── presentation/       # ObligationListPage (filtros combinados e chips de status)
-│   ├── auth/                   # [Planejado - SPEC-014/015] Autenticação e Registro
-│   │   ├── data/               # AuthRemoteDataSource, AuthRepositoryImpl
-│   │   ├── domain/             # User (entidade), AuthRepository
-│   │   └── presentation/       # LoginPage, RegisterPage
-│   └── attachment/             # [Planejado - SPEC-022] Upload, Listagem e Abertura de Anexos
+│   ├── auth/                   # Autenticação e Registro (Data e Domain implementados)
+│   │   ├── data/               # AuthRemoteDataSource, AuthRepositoryImpl, DTOs (Login/Register)
+│   │   ├── domain/             # AuthSession (entidade), AuthRepository (contrato)
+│   │   └── presentation/       # [Planejado - SPEC-015+] LoginPage, RegisterPage
+│   └── attachment/             # Upload, Listagem e Download de Anexos (Data e Domain implementados)
 │       ├── data/               # AttachmentRemoteDataSource, AttachmentRepositoryImpl
-│       ├── domain/             # Attachment (entidade), AttachmentRepository
-│       └── presentation/       # AttachmentListWidget, UploadAttachmentDialog
+│       ├── domain/             # Attachment (entidade com sizeFormatted), AttachmentRepository
+│       └── presentation/       # [Planejado - SPEC-021/022] AttachmentListWidget, UploadAttachmentDialog
 └── main.dart                   # Inicialização da aplicação e bootstrap de configurações
 ```
 

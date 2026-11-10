@@ -1,6 +1,9 @@
+import '../../../../core/network/page_response.dart';
 import '../../domain/entities/obligation.dart';
 import '../../domain/repositories/obligation_repository.dart';
 import '../datasources/obligation_remote_datasource.dart';
+import '../models/create_obligation_request.dart';
+import '../models/update_obligation_request.dart';
 
 class ObligationRepositoryImpl implements ObligationRepository {
   final ObligationRemoteDataSource _remoteDataSource;
@@ -8,23 +11,21 @@ class ObligationRepositoryImpl implements ObligationRepository {
   ObligationRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<List<Obligation>> getObligations({
+  Future<PageResponse<Obligation>> getObligations({
     int? companyId,
     int? responsibleId,
     ObligationStatus? status,
-    DateTime? dueFrom,
-    DateTime? dueTo,
     int page = 0,
     int size = 20,
+    String sort = 'dueDate,asc',
   }) {
     return _remoteDataSource.getObligations(
       companyId: companyId,
       responsibleId: responsibleId,
       status: status,
-      dueFrom: dueFrom,
-      dueTo: dueTo,
       page: page,
       size: size,
+      sort: sort,
     );
   }
 
@@ -34,42 +35,17 @@ class ObligationRepositoryImpl implements ObligationRepository {
   }
 
   @override
-  Future<Obligation> createObligation({
-    required int companyId,
-    required int responsibleId,
-    required String title,
-    String? description,
-    required DateTime dueDate,
-  }) {
-    return _remoteDataSource.createObligation({
-      'companyId': companyId,
-      'responsibleId': responsibleId,
-      'title': title,
-      if (description != null && description.isNotEmpty) 'description': description,
-      'dueDate': dueDate.toIso8601String().split('T').first,
-    });
+  Future<Obligation> createObligation(CreateObligationRequest request) {
+    return _remoteDataSource.createObligation(request);
   }
 
   @override
-  Future<Obligation> updateStatus(int id, ObligationStatus newStatus) {
-    return _remoteDataSource.updateStatus(id, newStatus);
+  Future<Obligation> updateObligation(int id, UpdateObligationRequest request) {
+    return _remoteDataSource.updateObligation(id, request);
   }
 
   @override
-  Future<Obligation> updateObligation({
-    required int id,
-    required int companyId,
-    required int responsibleId,
-    required String title,
-    String? description,
-    required DateTime dueDate,
-  }) {
-    return _remoteDataSource.updateObligation(id, {
-      'companyId': companyId,
-      'responsibleId': responsibleId,
-      'title': title,
-      if (description != null && description.isNotEmpty) 'description': description,
-      'dueDate': dueDate.toIso8601String().split('T').first,
-    });
+  Future<Obligation> updateObligationStatus(int id, ObligationStatus newStatus) {
+    return _remoteDataSource.updateObligationStatus(id, newStatus);
   }
 }

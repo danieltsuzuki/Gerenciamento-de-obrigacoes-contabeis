@@ -92,12 +92,22 @@ class Obligation {
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'] as String)
           : null,
-      company: ObligationParticipantSummary.fromJson(
-        json['company'] as Map<String, dynamic>,
-      ),
-      responsible: ObligationParticipantSummary.fromJson(
-        json['responsible'] as Map<String, dynamic>,
-      ),
+      company: json['company'] != null
+          ? ObligationParticipantSummary.fromJson(
+              json['company'] as Map<String, dynamic>,
+            )
+          : ObligationParticipantSummary(
+              id: json['companyId'] as int? ?? 0,
+              name: '',
+            ),
+      responsible: json['responsible'] != null
+          ? ObligationParticipantSummary.fromJson(
+              json['responsible'] as Map<String, dynamic>,
+            )
+          : ObligationParticipantSummary(
+              id: json['responsibleId'] as int? ?? 0,
+              name: '',
+            ),
       attachmentCount: json['attachmentCount'] as int? ?? 0,
     );
   }

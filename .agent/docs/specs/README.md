@@ -34,8 +34,8 @@ As SPECs preservam as decisões das fontes. Pontos não definidos ou contraditó
 | [SPEC-010](./10-implementar-upload-e-listagem-de-anexos-api.spec.md) | [Implementar upload e listagem de anexos (API)](https://trello.com/c/LU2iFUy2) | Concluído |
 | [SPEC-011](./11-padronizar-dtos-validacoes-e-tratamento-de-excecoes.spec.md) | [Padronizar DTOs, validações e tratamento de exceções](https://trello.com/c/OARCmyxB) | Concluído |
 | [SPEC-012](./12-adicionar-testes-do-backend.spec.md) | [Adicionar testes do backend](https://trello.com/c/Ai2NCneJ) | Concluído |
-| [SPEC-013](./13-criar-estrutura-e-navegacao-do-flutter.spec.md) | [Criar estrutura e navegação do Flutter](https://trello.com/c/gap9zScy) | A Fazer |
-| [SPEC-014](./14-implementar-camada-de-integracao-com-api.spec.md) | [Implementar camada de integração com API](https://trello.com/c/V7l7sJPV) | A Fazer |
+| [SPEC-013](./13-criar-estrutura-e-navegacao-do-flutter.spec.md) | [Criar estrutura e navegação do Flutter](https://trello.com/c/gap9zScy) | Concluído |
+| [SPEC-014](./14-implementar-camada-de-integracao-com-api.spec.md) | [Implementar camada de integração com API](https://trello.com/c/V7l7sJPV) | Concluído |
 | [SPEC-015](./15-criar-tela-de-listagem-de-obrigacoes.spec.md) | [Criar tela de listagem de obrigações](https://trello.com/c/3wpXjbhp) | A Fazer |
 | [SPEC-016](./16-criar-listagem-e-formulario-de-empresas.spec.md) | [Criar listagem e formulário de empresas](https://trello.com/c/qiztV9zZ) | A Fazer |
 | [SPEC-017](./17-criar-listagem-e-formulario-de-responsaveis.spec.md) | [Criar listagem e formulário de responsáveis](https://trello.com/c/ru5UKQDg) | A Fazer |
