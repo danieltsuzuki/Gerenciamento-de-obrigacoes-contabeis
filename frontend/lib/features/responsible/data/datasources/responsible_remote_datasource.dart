@@ -1,15 +1,24 @@
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/page_response.dart';
 import '../../domain/entities/responsible.dart';
+import '../models/create_responsible_request.dart';
+import '../models/update_responsible_request.dart';
 
 class ResponsibleRemoteDataSource {
   final ApiClient _apiClient;
 
   ResponsibleRemoteDataSource(this._apiClient);
 
-  Future<List<Responsible>> getResponsibles({bool? active, int page = 0, int size = 20}) async {
+  Future<PageResponse<Responsible>> getResponsibles({
+    bool? active,
+    int page = 0,
+    int size = 20,
+    String sort = 'id,asc',
+  }) async {
     final queryParams = <String, dynamic>{
       'page': page,
       'size': size,
+      'sort': sort,
     };
     if (active != null) {
       queryParams['active'] = active;
@@ -20,13 +29,34 @@ class ResponsibleRemoteDataSource {
       queryParameters: queryParams,
     );
 
-    if (response is Map<String, dynamic> && response['content'] is List) {
-      final list = response['content'] as List;
-      return list.map((item) => Responsible.fromJson(item as Map<String, dynamic>)).toList();
+    if (response is Map<String, dynamic>) {
+      return PageResponse<Responsible>.fromJson(response, Responsible.fromJson);
     } else if (response is List) {
-      return response.map((item) => Responsible.fromJson(item as Map<String, dynamic>)).toList();
+      final items = response
+          .whereType<Map<String, dynamic>>()
+          .map(Responsible.fromJson)
+          .toList();
+      return PageResponse<Responsible>(
+        content: items,
+        totalElements: items.length,
+        totalPages: 1,
+        size: items.length,
+        number: 0,
+        first: true,
+        last: true,
+        empty: items.isEmpty,
+      );
     }
-    return [];
+    return const PageResponse<Responsible>(
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: 0,
+      number: 0,
+      first: true,
+      last: true,
+      empty: true,
+    );
   }
 
   Future<Responsible> getResponsibleById(int id) async {
@@ -34,13 +64,19 @@ class ResponsibleRemoteDataSource {
     return Responsible.fromJson(response as Map<String, dynamic>);
   }
 
-  Future<Responsible> createResponsible(Map<String, dynamic> payload) async {
-    final response = await _apiClient.post('/api/responsibles', body: payload);
+  Future<Responsible> createResponsible(CreateResponsibleRequest request) async {
+    final response = await _apiClient.post(
+      '/api/responsibles',
+      body: request.toJson(),
+    );
     return Responsible.fromJson(response as Map<String, dynamic>);
   }
 
-  Future<Responsible> updateResponsible(int id, Map<String, dynamic> payload) async {
-    final response = await _apiClient.put('/api/responsibles/$id', body: payload);
+  Future<Responsible> updateResponsible(int id, UpdateResponsibleRequest request) async {
+    final response = await _apiClient.put(
+      '/api/responsibles/$id',
+      body: request.toJson(),
+    );
     return Responsible.fromJson(response as Map<String, dynamic>);
   }
 }

@@ -38,7 +38,7 @@ class _CompanyListPageState extends State<CompanyListPage> {
     try {
       final result = await widget.repository.getCompanies();
       setState(() {
-        _companies = result;
+        _companies = result.content;
         _isLoading = false;
       });
     } catch (e) {
@@ -97,7 +97,18 @@ class _CompanyListPageState extends State<CompanyListPage> {
                   company.displayName,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text('CNPJ: ${company.cnpj}'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (company.tradeName != null &&
+                        company.tradeName!.isNotEmpty &&
+                        company.tradeName != company.legalName)
+                      Text(company.legalName,
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.black54)),
+                    Text('CNPJ: ${company.cnpj}'),
+                  ],
+                ),
                 trailing: Chip(
                   label: Text(
                     company.active ? 'Ativa' : 'Inativa',

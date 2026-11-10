@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../features/attachment/data/datasources/attachment_remote_datasource.dart';
+import '../../features/attachment/data/repositories/attachment_repository_impl.dart';
+import '../../features/attachment/domain/repositories/attachment_repository.dart';
+import '../../features/auth/data/datasources/auth_remote_datasource.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/company/data/datasources/company_remote_datasource.dart';
 import '../../features/company/data/repositories/company_repository_impl.dart';
 import '../../features/company/domain/repositories/company_repository.dart';
@@ -20,6 +26,19 @@ class AppRoutes {
   static const String obligations = '/obligations';
   static const String companies = '/companies';
   static const String responsibles = '/responsibles';
+
+  static AuthRepository createAuthRepository(ApiClient apiClient) {
+    return AuthRepositoryImpl(
+      remoteDataSource: AuthRemoteDataSourceImpl(apiClient),
+      apiClient: apiClient,
+    );
+  }
+
+  static AttachmentRepository createAttachmentRepository(ApiClient apiClient) {
+    return AttachmentRepositoryImpl(
+      AttachmentRemoteDataSourceImpl(apiClient),
+    );
+  }
 
   static Route<dynamic> onGenerateRoute(
     RouteSettings settings, {

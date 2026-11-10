@@ -23,6 +23,20 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-014 (Implementar camada de integração com API):
+  - Camada de rede estendida com suporte a paginação genérica do Spring Data (`PageResponse<T>`) e manipulação de arquivos binários com download (`DownloadedFile`) e extração do cabeçalho `Content-Disposition`.
+  - Cliente HTTP (`ApiClient`) atualizado com suporte a requisições `multipartRequest` autenticadas com Bearer JWT para upload de arquivos e `download` para obtenção segura de fluxos binários.
+  - Mapeamento e criação dos DTOs de requisição e resposta para todas as entidades de domínio:
+    - Auth: `LoginRequest`, `LoginResponse`, `RegisterRequest`, `AuthSession`.
+    - Company: `CreateCompanyRequest`, `UpdateCompanyRequest`.
+    - Responsible: `CreateResponsibleRequest`, `UpdateResponsibleRequest`.
+    - Obligation: `CreateObligationRequest`, `UpdateObligationRequest`, `UpdateObligationStatusRequest`.
+    - Attachment: `Attachment` (entidade com `sizeFormatted`).
+  - Implementação completa de DataSources e Repositories (`CompanyRemoteDataSource`, `ResponsibleRemoteDataSource`, `ObligationRemoteDataSource`, `AttachmentRemoteDataSource`, `AuthRemoteDataSource`, e suas respectivas implementações de Repository).
+  - Suporte completo a transições de status com validação no backend (`PATCH /api/obligations/{id}/status`), filtros por status, empresa e responsável.
+  - Tratamento centralizado de erros REST via `ApiException` capturando códigos padronizados (`VALIDATION_ERROR`, `INVALID_STATUS_TRANSITION`, `BAD_CREDENTIALS`, `NOT_FOUND`, etc.).
+  - Integração das páginas de listagem com a nova resposta paginada `PageResponse<T>`.
+  - Suíte completa de testes automatizados unitários e de integração de rede no Flutter, totalizando 33 testes com 100% de sucesso e zero alertas no `flutter analyze`.
 - Configuração de Cross-Origin Resource Sharing (CORS) no backend Spring Boot:
   - Habilitação de suporte a CORS no `SecurityConfig` via bean `CorsConfigurationSource` e liberação pública de requisições pre-flight `OPTIONS /**`.
   - Configuração parametrizável através da propriedade `cors.allowed-origin-patterns` e variável de ambiente `CORS_ALLOWED_ORIGIN_PATTERNS` (padrão: `http://localhost:*,http://127.0.0.1:*`), viabilizando a integração direta com clientes web como Flutter Web.

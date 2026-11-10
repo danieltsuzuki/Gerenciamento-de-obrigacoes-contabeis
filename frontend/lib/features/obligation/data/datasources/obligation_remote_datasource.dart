@@ -1,46 +1,65 @@
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/page_response.dart';
 import '../../domain/entities/obligation.dart';
+import '../models/create_obligation_request.dart';
+import '../models/update_obligation_request.dart';
+import '../models/update_obligation_status_request.dart';
 
 class ObligationRemoteDataSource {
   final ApiClient _apiClient;
 
   ObligationRemoteDataSource(this._apiClient);
 
-  Future<List<Obligation>> getObligations({
+  Future<PageResponse<Obligation>> getObligations({
     int? companyId,
     int? responsibleId,
     ObligationStatus? status,
-    DateTime? dueFrom,
-    DateTime? dueTo,
     int page = 0,
     int size = 20,
+    String sort = 'dueDate,asc',
   }) async {
     final queryParams = <String, dynamic>{
       'page': page,
       'size': size,
+      'sort': sort,
     };
     if (companyId != null) queryParams['companyId'] = companyId;
     if (responsibleId != null) queryParams['responsibleId'] = responsibleId;
     if (status != null) queryParams['status'] = status.code;
-    if (dueFrom != null) {
-      queryParams['dueFrom'] = dueFrom.toIso8601String().split('T').first;
-    }
-    if (dueTo != null) {
-      queryParams['dueTo'] = dueTo.toIso8601String().split('T').first;
-    }
 
     final response = await _apiClient.get(
       '/api/obligations',
       queryParameters: queryParams,
     );
 
-    if (response is Map<String, dynamic> && response['content'] is List) {
-      final list = response['content'] as List;
-      return list.map((item) => Obligation.fromJson(item as Map<String, dynamic>)).toList();
+    if (response is Map<String, dynamic>) {
+      return PageResponse<Obligation>.fromJson(response, Obligation.fromJson);
     } else if (response is List) {
-      return response.map((item) => Obligation.fromJson(item as Map<String, dynamic>)).toList();
+      final items = response
+          .whereType<Map<String, dynamic>>()
+          .map(Obligation.fromJson)
+          .toList();
+      return PageResponse<Obligation>(
+        content: items,
+        totalElements: items.length,
+        totalPages: 1,
+        size: items.length,
+        number: 0,
+        first: true,
+        last: true,
+        empty: items.isEmpty,
+      );
     }
-    return [];
+    return const PageResponse<Obligation>(
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: 0,
+      number: 0,
+      first: true,
+      last: true,
+      empty: true,
+    );
   }
 
   Future<Obligation> getObligationById(int id) async {
@@ -48,21 +67,28 @@ class ObligationRemoteDataSource {
     return Obligation.fromJson(response as Map<String, dynamic>);
   }
 
-  Future<Obligation> createObligation(Map<String, dynamic> payload) async {
-    final response = await _apiClient.post('/api/obligations', body: payload);
-    return Obligation.fromJson(response as Map<String, dynamic>);
-  }
-
-  Future<Obligation> updateStatus(int id, ObligationStatus newStatus) async {
-    final response = await _apiClient.patch(
-      '/api/obligations/$id/status',
-      body: {'status': newStatus.code},
+  Future<Obligation> createObligation(CreateObligationRequest request) async {
+    final response = await _apiClient.post(
+      '/api/obligations',
+      body: request.toJson(),
     );
     return Obligation.fromJson(response as Map<String, dynamic>);
   }
 
-  Future<Obligation> updateObligation(int id, Map<String, dynamic> payload) async {
-    final response = await _apiClient.put('/api/obligations/$id', body: payload);
+  Future<Obligation> updateObligation(int id, UpdateObligationRequest request) async {
+    final response = await _apiClient.put(
+      '/api/obligations/$id',
+      body: request.toJson(),
+    );
+    return Obligation.fromJson(response as Map<String, dynamic>);
+  }
+
+  Future<Obligation> updateObligationStatus(int id, ObligationStatus newStatus) async {
+    final request = UpdateObligationStatusRequest(newStatus);
+    final response = await _apiClient.patch(
+      '/api/obligations/$id/status',
+      body: request.toJson(),
+    );
     return Obligation.fromJson(response as Map<String, dynamic>);
   }
 }

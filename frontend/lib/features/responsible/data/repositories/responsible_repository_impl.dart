@@ -1,6 +1,9 @@
+import '../../../../core/network/page_response.dart';
 import '../../domain/entities/responsible.dart';
 import '../../domain/repositories/responsible_repository.dart';
 import '../datasources/responsible_remote_datasource.dart';
+import '../models/create_responsible_request.dart';
+import '../models/update_responsible_request.dart';
 
 class ResponsibleRepositoryImpl implements ResponsibleRepository {
   final ResponsibleRemoteDataSource _remoteDataSource;
@@ -8,8 +11,18 @@ class ResponsibleRepositoryImpl implements ResponsibleRepository {
   ResponsibleRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<List<Responsible>> getResponsibles({bool? active, int page = 0, int size = 20}) {
-    return _remoteDataSource.getResponsibles(active: active, page: page, size: size);
+  Future<PageResponse<Responsible>> getResponsibles({
+    bool? active,
+    int page = 0,
+    int size = 20,
+    String sort = 'id,asc',
+  }) {
+    return _remoteDataSource.getResponsibles(
+      active: active,
+      page: page,
+      size: size,
+      sort: sort,
+    );
   }
 
   @override
@@ -18,31 +31,12 @@ class ResponsibleRepositoryImpl implements ResponsibleRepository {
   }
 
   @override
-  Future<Responsible> createResponsible({
-    required String name,
-    required String email,
-    required String password,
-    bool active = true,
-  }) {
-    return _remoteDataSource.createResponsible({
-      'name': name,
-      'email': email,
-      'password': password,
-      'active': active,
-    });
+  Future<Responsible> createResponsible(CreateResponsibleRequest request) {
+    return _remoteDataSource.createResponsible(request);
   }
 
   @override
-  Future<Responsible> updateResponsible({
-    required int id,
-    required String name,
-    required String email,
-    required bool active,
-  }) {
-    return _remoteDataSource.updateResponsible(id, {
-      'name': name,
-      'email': email,
-      'active': active,
-    });
+  Future<Responsible> updateResponsible(int id, UpdateResponsibleRequest request) {
+    return _remoteDataSource.updateResponsible(id, request);
   }
 }

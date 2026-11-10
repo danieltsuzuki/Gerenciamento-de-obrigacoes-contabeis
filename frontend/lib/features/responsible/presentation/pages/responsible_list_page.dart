@@ -38,7 +38,7 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
     try {
       final result = await widget.repository.getResponsibles();
       setState(() {
-        _responsibles = result;
+        _responsibles = result.content;
         _isLoading = false;
       });
     } catch (e) {

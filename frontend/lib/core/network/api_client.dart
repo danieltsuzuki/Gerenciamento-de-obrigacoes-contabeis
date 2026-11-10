@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import '../config/app_config.dart';
 import 'api_exception.dart';
+import 'downloaded_file.dart';
 
 class ApiClient {
   final http.Client _httpClient;
@@ -23,6 +25,8 @@ class ApiClient {
   void clearAuthToken() {
     _authToken = null;
   }
+
+  String? get authToken => _authToken;
 
   bool get isAuthenticated => _authToken != null && _authToken!.isNotEmpty;
 
@@ -157,15 +161,101 @@ class ApiClient {
     }
   }
 
-  dynamic _processResponse(http.Response response) {
-    dynamic decodedBody;
-    if (response.body.isNotEmpty) {
-      try {
-        decodedBody = jsonDecode(utf8.decode(response.bodyBytes));
-      } catch (_) {
-        decodedBody = null;
+  Future<dynamic> multipartRequest(
+    String path, {
+    required String fieldName,
+    required String filename,
+    required List<int> bytes,
+    String? contentType,
+    Map<String, String>? fields,
+    Map<String, String>? headers,
+  }) async {
+    final uri = _buildUri(path);
+    try {
+      final request = http.MultipartRequest('POST', uri);
+
+      if (_authToken != null) {
+        request.headers['Authorization'] = 'Bearer $_authToken';
       }
+      request.headers['Accept'] = 'application/json';
+      if (headers != null) {
+        request.headers.addAll(headers);
+      }
+
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
+
+      MediaType? parsedMediaType;
+      if (contentType != null && contentType.isNotEmpty) {
+        try {
+          parsedMediaType = MediaType.parse(contentType);
+        } catch (_) {}
+      }
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          fieldName,
+          bytes,
+          filename: filename,
+          contentType: parsedMediaType,
+        ),
+      );
+
+      final streamedResponse = await _httpClient
+          .send(request)
+          .timeout(AppConfig.instance.connectTimeout);
+      final response = await http.Response.fromStream(streamedResponse);
+      return _processResponse(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException.networkError(e);
     }
+  }
+
+  Future<DownloadedFile> download(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
+  }) async {
+    final uri = _buildUri(path, queryParameters);
+    try {
+      final requestHeaders = <String, String>{};
+      if (_authToken != null) {
+        requestHeaders['Authorization'] = 'Bearer $_authToken';
+      }
+      if (headers != null) {
+        requestHeaders.addAll(headers);
+      }
+
+      final response = await _httpClient
+          .get(uri, headers: requestHeaders)
+          .timeout(AppConfig.instance.connectTimeout);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final filename = DownloadedFile.extractFilenameFromHeader(
+          response.headers['content-disposition'],
+        );
+        return DownloadedFile(
+          filename: filename,
+          bytes: response.bodyBytes,
+          contentType: response.headers['content-type'] ?? 'application/octet-stream',
+        );
+      }
+
+      final decodedBody = _parseResponseBody(response);
+      if (decodedBody is Map<String, dynamic>) {
+        throw ApiException.fromResponse(response.statusCode, decodedBody);
+      }
+      throw ApiException.fromResponse(response.statusCode, null);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException.networkError(e);
+    }
+  }
+
+  dynamic _processResponse(http.Response response) {
+    final decodedBody = _parseResponseBody(response);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return decodedBody;
@@ -176,5 +266,18 @@ class ApiClient {
     }
 
     throw ApiException.fromResponse(response.statusCode, null);
+  }
+
+  dynamic _parseResponseBody(http.Response response) {
+    if (response.body.isEmpty) return null;
+    try {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } catch (_) {
+      try {
+        return jsonDecode(response.body);
+      } catch (_) {
+        return null;
+      }
+    }
   }
 }
