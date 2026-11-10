@@ -23,6 +23,20 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-017 (Criar listagem, formulário e detalhes de responsáveis):
+  - Separação de comportamento na listagem `ResponsibleListPage`: o clique no card navega para a tela de detalhes do responsável (`ResponsibleDetailPage`), enquanto o clique no ícone de edição aciona diretamente o formulário de edição (`ResponsibleFormPage`).
+  - Criação da tela `ResponsibleDetailPage` exibindo avatar, nome completo, e-mail corporativo, identificador do sistema (`#ID`), situação operacional detalhada e botão de edição com recarregamento integrado.
+  - Ocultação dos botões de edição de responsável na tela de detalhes para usuários anônimos / não autenticados.
+  - Formulário unificado `ResponsibleFormPage` para cadastro (`POST /api/responsibles`) e edição (`PUT /api/responsibles/{id}`) de contadores e analistas fiscais.
+  - Validação síncrona inline: nome completo obrigatório (máx. 255), formato de e-mail corporativo válido via expressão regular (máx. 255), e senha inicial obrigatória no cadastro (mín. 6, máx. 100 caracteres).
+  - Omissão segura do campo de senha no modo de edição com mensagem informativa para os usuários, respeitando o contrato seguro de atualização.
+  - Alternância de visibilidade de senha (ícone de olho) no cadastro.
+  - Suporte a inativação lógica através do switch cadastral (`active=false`), sem exclusão física (RN-005).
+  - Tratamento semântico de conflitos de negócio com feedback visual para `409 DUPLICATE_EMAIL` (RN-003).
+  - Aprimoramento da tela de listagem `ResponsibleListPage` com avatar dinâmico com letra inicial, chips rápidos de filtro (`Todos`, `Ativos`, `Inativos`), badge de status colorido e ação de edição rápida.
+  - Proteção de criação e edição com `requireAuth`.
+  - Registro das rotas nomeadas `AppRoutes.responsibles` (`/responsibles`), `AppRoutes.responsibleDetails` (`/responsibles/details`), `AppRoutes.responsibleCreate` (`/responsibles/create`) e `AppRoutes.responsibleEdit` (`/responsibles/edit`).
+  - Suítes de testes automatizados em `responsible_detail_page_test.dart`, `responsible_form_page_test.dart` e `responsible_list_page_test.dart` (107 testes aprovados no frontend).
 - Implementação e validação da SPEC-026 (Implementar autenticação e tela de login no Flutter):
   - Camada de persistência segura de sessão com `AuthSessionStorage` (`SecureAuthSessionStorage` baseado em `flutter_secure_storage` e `InMemoryAuthSessionStorage` para testes sem dependência de canal nativo).
   - Gerenciador de ciclo de vida de sessão `AuthSessionController` (`ChangeNotifier`) com restauração na inicialização, login com credenciais, autocadastro com auto-login imediato, logout limpo e tratamento de sessão expirada/inválida (`401 UNAUTHORIZED`).
