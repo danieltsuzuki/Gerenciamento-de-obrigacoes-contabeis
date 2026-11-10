@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | 20 |
 | Card | [Implementar fluxo de alteração de status no Flutter](https://trello.com/c/gChKmU1v) |
-| Status no Trello (09/11/2026) | A Fazer |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Status no Trello (10/11/2026) | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluída e testada |
 
 ## 1. Objetivo
 
@@ -15,12 +15,13 @@ Implementar na interface a progressão de status da obrigação de acordo com a 
 
 ## 2. Escopo funcional
 
-- [ ] PENDING: apresentar ação iniciar e solicitar IN_PROGRESS.
-- [ ] IN_PROGRESS: apresentar ação concluir e solicitar COMPLETED.
-- [ ] COMPLETED: não apresentar ação de alteração.
-- [ ] Solicitar confirmação quando apropriado.
-- [ ] Atualizar estado com a resposta do servidor.
-- [ ] Tratar conflito/regra inválida.
+- [x] PENDING: apresentar ação iniciar e solicitar IN_PROGRESS.
+- [x] IN_PROGRESS: apresentar ação concluir e solicitar COMPLETED.
+- [x] COMPLETED: não apresentar ação de alteração.
+- [x] Solicitar confirmação quando apropriado.
+- [x] Atualizar estado com a resposta do servidor.
+- [x] Tratar conflito/regra inválida (422 INVALID_STATUS_TRANSITION).
+- [x] Ações visíveis apenas para usuários autenticados.
 
 ## 3. Regras de negócio e restrições
 
@@ -37,9 +38,9 @@ Implementar na interface a progressão de status da obrigação de acordo com a 
 
 ## 5. Critérios de aceitação
 
-- [ ] Cada status apresenta apenas a próxima ação permitida.
-- [ ] Ação chama API e atualiza tela somente após sucesso.
-- [ ] Erros do servidor são comunicados sem corromper estado local.
+- [x] Cada status apresenta apenas a próxima ação permitida.
+- [x] Ação chama API e atualiza tela somente após sucesso.
+- [x] Erros do servidor são comunicados sem corromper estado local.
 
 ## 6. Cenários de teste
 

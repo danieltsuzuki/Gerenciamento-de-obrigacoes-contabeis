@@ -38,7 +38,7 @@ frontend/
 │   │       ├── data/               # AttachmentRemoteDataSource, AttachmentRepositoryImpl
 │   │       └── domain/             # Attachment (entidade com formatação de tamanho), AttachmentRepository
 │   └── main.dart                   # Inicialização da aplicação e bootstrap do AppConfig
-├── test/                           # Suíte de testes unitários, mocks e de widgets (122 testes aprovados)
+├── test/                           # Suíte de testes unitários, mocks e de widgets (128 testes aprovados)
 │   ├── core/
 │   │   ├── config/                 # Testes de inicialização e customização de AppConfig
 │   │   ├── network/                # Testes de ApiClient, Download, Multipart, PageResponse e ApiException
@@ -48,7 +48,7 @@ frontend/
 │       ├── auth/                   # Testes de AuthSessionStorage, AuthSessionController, LoginPage, RegisterPage e AuthGuard
 │       ├── company/                # Testes de listagem, filtros, tela de detalhes, formulário de criação/edição e validação de CNPJ
 │       ├── responsible/            # Testes de listagem, filtros, formulário de criação/edição, tela de detalhes e integração
-│       ├── obligation/             # Testes de integração (DataSource/Repo) e de widgets (listagem, detalhes e formulário)
+│       ├── obligation/             # Testes de integração (DataSource/Repo) e de widgets (listagem, detalhes, formulário e transições de status)
 │       ├── attachment/             # Testes de upload multipart, listagem e download de fluxo binário
 │       └── navigation_test.dart    # Testes de fluxo e navegação entre páginas
 ├── pubspec.yaml                    # Dependências do projeto (http, http_parser, etc.)
