@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | 21 |
 | Card | [Implementar seleção e envio de anexos no Flutter](https://trello.com/c/CauV2GQ2) |
-| Status no Trello (09/11/2026) | A Fazer |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Status no Trello (10/11/2026) | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluída e testada |
 
 ## 1. Objetivo
 
@@ -15,17 +15,17 @@ Permitir selecionar arquivo local e enviá-lo para uma obrigação, atualizando 
 
 ## 2. Escopo funcional
 
-- [ ] Permitir seleção de arquivo.
-- [ ] Enviar arquivo para a obrigação selecionada.
-- [ ] Atualizar lista e contador após sucesso.
-- [ ] Exibir nome, tipo, tamanho e data de envio.
-- [ ] Tratar permissões, cancelamento, limite de tamanho e falhas de rede.
-- [ ] Exibir feedback claro.
+- [x] Permitir seleção de arquivo via `FilePickerService`.
+- [x] Enviar arquivo para a obrigação selecionada via `POST /api/obligations/{id}/attachments`.
+- [x] Atualizar lista e contador após sucesso.
+- [x] Exibir nome, tipo, tamanho formatado e data de envio.
+- [x] Tratar permissões, cancelamento, limite de tamanho (máx. 10 MB), arquivo vazio e falhas de rede.
+- [x] Exibir feedback claro.
 
 ## 3. Regras de negócio e restrições
 
 - Arquivo deve estar associado à obrigação correta.
-- Não enviar arquivo vazio ou maior que limite aceito.
+- Não enviar arquivo vazio ou maior que limite aceito (10 MB).
 - API valida MIME/tipo e tamanho; cliente deve orientar o usuário, sem substituir validação do servidor.
 - Upload exige JWT.
 
@@ -37,10 +37,10 @@ Permitir selecionar arquivo local e enviá-lo para uma obrigação, atualizando 
 
 ## 5. Critérios de aceitação
 
-- [ ] Usuário seleciona e envia arquivo.
-- [ ] Sucesso atualiza lista e contador.
-- [ ] Cancelamento/permissão/rede/validação apresentam feedback.
-- [ ] Metadados exibidos correspondem à resposta da API.
+- [x] Usuário seleciona e envia arquivo.
+- [x] Sucesso atualiza lista e contador.
+- [x] Cancelamento/permissão/rede/validação apresentam feedback.
+- [x] Metadados exibidos correspondem à resposta da API.
 
 ## 6. Cenários de teste
 

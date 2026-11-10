@@ -4,6 +4,7 @@ import '../../../../core/widgets/error_state_view.dart';
 import '../../../../core/widgets/loading_state_view.dart';
 import '../../../attachment/domain/entities/attachment.dart';
 import '../../../attachment/domain/repositories/attachment_repository.dart';
+import '../../../attachment/domain/services/file_picker_service.dart';
 import '../../../auth/presentation/controllers/auth_session_controller.dart';
 import '../../../auth/presentation/widgets/auth_guard.dart';
 import '../../../company/domain/repositories/company_repository.dart';
@@ -15,6 +16,7 @@ import 'obligation_form_page.dart';
 class ObligationDetailPage extends StatefulWidget {
   final ObligationRepository repository;
   final AttachmentRepository? attachmentRepository;
+  final FilePickerService? filePickerService;
   final CompanyRepository? companyRepository;
   final ResponsibleRepository? responsibleRepository;
   final int obligationId;
@@ -25,6 +27,7 @@ class ObligationDetailPage extends StatefulWidget {
     super.key,
     required this.repository,
     this.attachmentRepository,
+    this.filePickerService,
     this.companyRepository,
     this.responsibleRepository,
     required this.obligationId,
@@ -42,6 +45,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
   bool _isLoadingObligation = false;
   bool _isLoadingAttachments = false;
   bool _isUpdatingStatus = false;
+  bool _isUploadingAttachment = false;
   String? _errorMessage;
   String? _attachmentErrorMessage;
   bool _hasMutated = false;
@@ -241,6 +245,94 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Falha ao atualizar status: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleUploadAttachment() async {
+    if (_obligation == null || _isUploadingAttachment) return;
+    if (widget.attachmentRepository == null) return;
+
+    if (widget.authController != null && !widget.authController!.isAuthenticated) {
+      final allowed = await requireAuth(
+        context,
+        authController: widget.authController!,
+        reason: 'Para anexar documentos, realize o login.',
+      );
+      if (!allowed || !mounted) return;
+    }
+
+    final picker = widget.filePickerService ?? DefaultFilePickerService();
+    final selected = await picker.pickFile(context: context);
+    if (selected == null || !mounted) return;
+
+    // Validação de arquivo vazio
+    if (selected.bytes.isEmpty || selected.size == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não é permitido enviar arquivo vazio (0 bytes).'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
+    // Validação de limite máximo de 10 MB (10 * 1024 * 1024 bytes)
+    const maxSizeBytes = 10 * 1024 * 1024;
+    if (selected.size > maxSizeBytes || selected.bytes.length > maxSizeBytes) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('O arquivo excede o limite máximo permitido de 10 MB (${selected.size} bytes).'),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isUploadingAttachment = true);
+
+    try {
+      final uploaded = await widget.attachmentRepository!.uploadAttachment(
+        obligationId: _obligation!.id,
+        filename: selected.filename,
+        bytes: selected.bytes,
+        contentType: selected.mimeType,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _attachments.insert(0, uploaded);
+        _obligation = _obligation!.copyWith(
+          attachmentCount: _attachments.length,
+        );
+        _isUploadingAttachment = false;
+        _hasMutated = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Documento "${uploaded.name}" anexado com sucesso!'),
+          backgroundColor: const Color(0xFF16A34A),
+        ),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploadingAttachment = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Falha ao enviar anexo: ${e.message}'),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploadingAttachment = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao enviar anexo: $e'),
           backgroundColor: const Color(0xFFDC2626),
         ),
       );
@@ -811,14 +903,35 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
               children: [
                 const Icon(Icons.attach_file, size: 20, color: Color(0xFF1E3A8A)),
                 const SizedBox(width: 8),
-                Text(
-                  'Documentos Anexados (${_isAuthenticated ? _attachments.length : obligation.attachmentCount})',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
+                Expanded(
+                  child: Text(
+                    'Documentos Anexados (${_isAuthenticated ? _attachments.length : obligation.attachmentCount})',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
                   ),
                 ),
+                if (_isAuthenticated && widget.attachmentRepository != null)
+                  ElevatedButton.icon(
+                    key: const Key('obligation-detail-add-attachment-button'),
+                    onPressed: _isUploadingAttachment ? null : _handleUploadAttachment,
+                    icon: _isUploadingAttachment
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.upload_file, size: 16),
+                    label: Text(_isUploadingAttachment ? 'Enviando...' : 'Anexar Arquivo'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E3A8A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 16),

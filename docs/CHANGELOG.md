@@ -23,6 +23,15 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-021 (Implementar seleção e envio de anexos no Flutter):
+  - Camada de seleção de documentos desacoplada com `FilePickerService` e `SelectedFile`, incluindo implementação padrão `DefaultFilePickerService` com suporte a tipos MIME suportados (`PDF`, `PNG`, `JPEG`, `XML`, `XLSX`).
+  - Suporte completo a seleção direta de arquivos reais do computador (`platform_file_picker_io.dart` via PowerShell STA `OpenFileDialog` no Windows Desktop e `platform_file_picker_web.dart` via `FileUploadInputElement` na Web) acionado imediatamente ao clicar em "Anexar Arquivo" na página de detalhes, eliminando a necessidade de modal intermediário.
+  - Botão de ação "Anexar Arquivo" integrado ao cabeçalho do card de anexos em `ObligationDetailPage`, visível exclusivamente para usuários autenticados.
+  - Validação síncrona contra arquivos vazios (0 bytes) e verificação do limite máximo permitido de 10 MB antes de qualquer chamada à API.
+  - Integração do upload multipart com `POST /api/obligations/{id}/attachments`, atualizando reativamente a listagem de anexos e o contador da obrigação (`obligation.attachmentCount`).
+  - Tratamento semântico de erros de validação e indisponibilidade do storage (`500 STORAGE_ERROR`), cancelamento seguro pelo usuário e feedback visual via SnackBar.
+  - Implementação de `Obligation.copyWith` para atualização fluida e imutável de propriedades no frontend.
+  - Suíte de testes automatizados dedicada em `attachment_upload_test.dart` com 7 cenários aprovados (135 testes aprovados no frontend).
 - Implementação e validação da SPEC-020 (Implementar fluxo de alteração de status no Flutter):
   - Integração do fluxo de ciclo de vida de status com o endpoint `PATCH /api/obligations/{id}/status`.
   - Transições estritas conforme máquina de estados do domínio (RN-008):
