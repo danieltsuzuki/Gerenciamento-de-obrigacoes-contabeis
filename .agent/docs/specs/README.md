@@ -36,7 +36,7 @@ As SPECs preservam as decisões das fontes. Pontos não definidos ou contraditó
 | [SPEC-012](./12-adicionar-testes-do-backend.spec.md) | [Adicionar testes do backend](https://trello.com/c/Ai2NCneJ) | Concluído |
 | [SPEC-013](./13-criar-estrutura-e-navegacao-do-flutter.spec.md) | [Criar estrutura e navegação do Flutter](https://trello.com/c/gap9zScy) | Concluído |
 | [SPEC-014](./14-implementar-camada-de-integracao-com-api.spec.md) | [Implementar camada de integração com API](https://trello.com/c/V7l7sJPV) | Concluído |
-| [SPEC-015](./15-criar-tela-de-listagem-de-obrigacoes.spec.md) | [Criar tela de listagem de obrigações](https://trello.com/c/3wpXjbhp) | A Fazer |
+| [SPEC-015](./15-criar-tela-de-listagem-de-obrigacoes.spec.md) | [Criar tela de listagem de obrigações](https://trello.com/c/3wpXjbhp) | Concluído |
 | [SPEC-016](./16-criar-listagem-e-formulario-de-empresas.spec.md) | [Criar listagem e formulário de empresas](https://trello.com/c/qiztV9zZ) | A Fazer |
 | [SPEC-017](./17-criar-listagem-e-formulario-de-responsaveis.spec.md) | [Criar listagem e formulário de responsáveis](https://trello.com/c/ru5UKQDg) | A Fazer |
 | [SPEC-018](./18-criar-formulario-de-cadastro-e-edicao-de-obrigacoes.spec.md) | [Criar formulário de cadastro e edição de obrigações](https://trello.com/c/DlkBtqch) | A Fazer |

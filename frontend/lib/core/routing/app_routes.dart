@@ -11,6 +11,7 @@ import '../../features/company/domain/repositories/company_repository.dart';
 import '../../features/company/presentation/pages/company_list_page.dart';
 import '../../features/obligation/data/datasources/obligation_remote_datasource.dart';
 import '../../features/obligation/data/repositories/obligation_repository_impl.dart';
+import '../../features/obligation/domain/entities/obligation.dart';
 import '../../features/obligation/domain/repositories/obligation_repository.dart';
 import '../../features/obligation/presentation/pages/obligation_list_page.dart';
 import '../../features/responsible/data/datasources/responsible_remote_datasource.dart';
@@ -24,6 +25,7 @@ class AppRoutes {
 
   static const String initial = '/';
   static const String obligations = '/obligations';
+  static const String obligationDetails = '/obligations/details';
   static const String companies = '/companies';
   static const String responsibles = '/responsibles';
 
@@ -70,6 +72,40 @@ class AppRoutes {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => ResponsibleListPage(repository: effectiveResponsibleRepo),
+        );
+      case obligationDetails:
+        final obligation = settings.arguments is Obligation
+            ? settings.arguments as Obligation
+            : null;
+        final obligationId = settings.arguments is int
+            ? settings.arguments as int
+            : obligation?.id;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => Scaffold(
+            appBar: AppBar(
+              title: Text(obligation?.title ?? 'Detalhes da Obrigação'),
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Identificador: #${obligationId ?? "—"}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  if (obligation != null) ...[
+                    const SizedBox(height: 8),
+                    Text('Status: ${obligation.status.label}'),
+                    Text('Empresa: ${obligation.company.name}'),
+                    Text('Responsável: ${obligation.responsible.name}'),
+                    Text('Anexos: ${obligation.attachmentCount}'),
+                  ],
+                ],
+              ),
+            ),
+          ),
         );
       default:
         return MaterialPageRoute(
