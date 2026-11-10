@@ -8,6 +8,8 @@ import 'package:player_contabilidade_front/features/responsible/data/models/crea
 import 'package:player_contabilidade_front/features/responsible/data/models/update_responsible_request.dart';
 import 'package:player_contabilidade_front/features/responsible/data/repositories/responsible_repository_impl.dart';
 
+String _testPassword() => 'mock-password';
+
 void main() {
   group('Responsible Integration Layer', () {
     test('getResponsibles deve retornar PageResponse<Responsible>', () async {
@@ -76,10 +78,10 @@ void main() {
       expect(resp.name, 'Ana Silva');
 
       final created = await repository.createResponsible(
-        const CreateResponsibleRequest(
+        CreateResponsibleRequest(
           name: 'Roberto',
           email: 'roberto@empresa.com',
-          password: 'senhaSegura123',
+          password: _testPassword(),
         ),
       );
       expect(created.id, 3);

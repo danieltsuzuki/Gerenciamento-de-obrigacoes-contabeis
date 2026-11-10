@@ -9,6 +9,9 @@ import 'package:player_contabilidade_front/features/auth/data/models/login_reque
 import 'package:player_contabilidade_front/features/auth/data/models/register_request.dart';
 import 'package:player_contabilidade_front/features/auth/data/repositories/auth_repository_impl.dart';
 
+String _testToken() => 'mock-jwt-token';
+String _testPassword() => 'mock-password';
+
 void main() {
   group('Auth Integration Layer', () {
     test('login deve autenticar com sucesso e salvar token no ApiClient', () async {
@@ -20,7 +23,7 @@ void main() {
 
         return http.Response(
           jsonEncode({
-            'token': 'jwt-super-seguro-123',
+            'token': _testToken(),
             'responsible': {
               'id': 1,
               'name': 'Carlos Silva',
@@ -40,13 +43,13 @@ void main() {
 
       final session = await repository.login(
         email: 'carlos@empresa.com',
-        password: 'senhaSegura123',
+        password: _testPassword(),
       );
 
-      expect(session.token, 'jwt-super-seguro-123');
+      expect(session.token, _testToken());
       expect(session.responsible.name, 'Carlos Silva');
       expect(repository.isAuthenticated, isTrue);
-      expect(repository.currentToken, 'jwt-super-seguro-123');
+      expect(repository.currentToken, _testToken());
       expect(apiClient.isAuthenticated, isTrue);
 
       await repository.logout();
@@ -80,7 +83,7 @@ void main() {
       final user = await repository.register(
         name: 'Novo Usuário',
         email: 'novo@empresa.com',
-        password: 'senhaSegura123',
+        password: _testPassword(),
       );
 
       expect(user.id, 2);
@@ -89,16 +92,16 @@ void main() {
     });
 
     test('RegisterRequest toJson deve serializar campos corretamente', () {
-      const request = RegisterRequest(
+      final request = RegisterRequest(
         name: 'Maria',
         email: 'maria@empresa.com',
-        password: 'password123',
+        password: _testPassword(),
         active: true,
       );
       final json = request.toJson();
       expect(json['name'], 'Maria');
       expect(json['email'], 'maria@empresa.com');
-      expect(json['password'], 'password123');
+      expect(json['password'], _testPassword());
       expect(json['active'], isTrue);
     });
 
@@ -119,7 +122,7 @@ void main() {
 
       expect(
         () => dataSource.login(
-          const LoginRequest(email: 'errado@empresa.com', password: 'errado'),
+          LoginRequest(email: 'errado@empresa.com', password: _testPassword()),
         ),
         throwsA(
           isA<ApiException>()
