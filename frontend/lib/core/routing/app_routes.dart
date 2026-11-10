@@ -86,6 +86,7 @@ class AppRoutes {
     CompanyRepository? companyRepository,
     ResponsibleRepository? responsibleRepository,
     ObligationRepository? obligationRepository,
+    AttachmentRepository? attachmentRepository,
   }) {
     final effectiveAuthRepo = authRepository ?? createAuthRepository(apiClient);
     final effectiveAuthController = authController ??
@@ -99,6 +100,8 @@ class AppRoutes {
         ResponsibleRepositoryImpl(ResponsibleRemoteDataSource(apiClient));
     final effectiveObligationRepo = obligationRepository ??
         ObligationRepositoryImpl(ObligationRemoteDataSource(apiClient));
+    final effectiveAttachmentRepo = attachmentRepository ??
+        createAttachmentRepository(apiClient);
 
     switch (settings.name) {
       case initial:
@@ -213,6 +216,7 @@ class AppRoutes {
           settings: settings,
           builder: (_) => ObligationDetailPage(
             repository: effectiveObligationRepo,
+            attachmentRepository: effectiveAttachmentRepo,
             companyRepository: effectiveCompanyRepo,
             responsibleRepository: effectiveResponsibleRepo,
             obligationId: obligationId,

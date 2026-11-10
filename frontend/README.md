@@ -38,7 +38,7 @@ frontend/
 │   │       ├── data/               # AttachmentRemoteDataSource, AttachmentRepositoryImpl
 │   │       └── domain/             # Attachment (entidade com formatação de tamanho), AttachmentRepository
 │   └── main.dart                   # Inicialização da aplicação e bootstrap do AppConfig
-├── test/                           # Suíte de testes unitários, mocks e de widgets (119 testes aprovados)
+├── test/                           # Suíte de testes unitários, mocks e de widgets (122 testes aprovados)
 │   ├── core/
 │   │   ├── config/                 # Testes de inicialização e customização de AppConfig
 │   │   ├── network/                # Testes de ApiClient, Download, Multipart, PageResponse e ApiException

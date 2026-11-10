@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | 19 |
 | Card | [Criar tela de detalhes da obrigação](https://trello.com/c/82pKQj1o) |
-| Status no Trello (09/11/2026) | A Fazer |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Status no Trello (10/11/2026) | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluída e testada |
 
 ## 1. Objetivo
 
@@ -15,18 +15,21 @@ Exibir os dados completos de uma obrigação e disponibilizar ações compatíve
 
 ## 2. Escopo funcional
 
-- [ ] Exibir título e descrição.
-- [ ] Exibir empresa e responsável.
-- [ ] Exibir status, data de criação e anexos.
-- [ ] Disponibilizar ações compatíveis com status atual.
-- [ ] Carregar dados reais da API.
-- [ ] Exibir loading e erro.
-- [ ] Atualizar a tela após ações.
+- [x] Exibir título e descrição.
+- [x] Exibir empresa e responsável.
+- [x] Exibir status e data de criação.
+- [x] Disponibilizar ações compatíveis com status atual (Iniciar / Concluir) visíveis exclusivamente para usuários autenticados.
+- [x] Card de anexos na parte inferior visível exclusivamente para usuários autenticados.
+- [x] Carregar dados reais da API.
+- [x] Exibir loading e erro.
+- [x] Atualizar a tela após ações.
 
 ## 3. Regras de negócio e restrições
 
-- Ações disponíveis devem respeitar máquina de estados.
-- COMPLETED não permite alteração de status.
+- Ações disponíveis devem respeitar máquina de estados (RN-008).
+- Botões de alteração de status só podem ser visíveis se o usuário estiver autenticado.
+- Card de anexos inferior só pode ser visível se o usuário estiver autenticado.
+- COMPLETED não permite alteração de status nem edição cadastral (RN-009).
 - Anexos devem ser exibidos vinculados à obrigação.
 - A tela não deve simular sucesso antes da resposta do servidor.
 
@@ -38,10 +41,10 @@ Exibir os dados completos de uma obrigação e disponibilizar ações compatíve
 
 ## 5. Critérios de aceitação
 
-- [ ] Tela exibe dados reais e estados loading/erro.
-- [ ] Ações são coerentes com status.
-- [ ] Após ação, detalhes/status/anexos são atualizados.
-- [ ] Item pode ser aberto a partir da listagem.
+- [x] Tela exibe dados reais e estados loading/erro.
+- [x] Ações são coerentes com status.
+- [x] Após ação, detalhes/status/anexos são atualizados.
+- [x] Item pode ser aberto a partir da listagem.
 
 ## 6. Cenários de teste
 

@@ -462,32 +462,7 @@ class _ObligationFormPageState extends State<ObligationFormPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
-                  if (!widget.isEditing) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFCBD5E1)),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.info_outline, size: 20, color: Color(0xFF475569)),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Toda obrigação recém-cadastrada inicia automaticamente com status Pendente no servidor (RN-008).',
-                              style: TextStyle(fontSize: 12, color: Color(0xFF334155)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ] else ...[
-                    const SizedBox(height: 8),
-                  ],
+                  const SizedBox(height: 24),
                   Row(
                     children: [
                       Expanded(
