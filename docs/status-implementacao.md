@@ -1,5 +1,7 @@
 # Status de implementação
-Atualizado em: 2026-11-08
+Atualizado em: 2026-11-09
+
+## Regras de Negócio do Backend
 
 | Regra | Descrição | Estado | Implementação | Teste |
 |---|---|---|---|---|
@@ -12,6 +14,12 @@ Atualizado em: 2026-11-08
 | RN-007 | Senha com hash seguro e fora dos DTOs de resposta | Testado | `BCryptPasswordEncoder`, `Responsible.passwordHash`, `ResponsibleResponse`, `AuthService` | `ResponsibleServiceTest`, `ResponsibleApiIntegrationTest`, `AuthControllerTest` |
 | RN-008 | Ciclo de vida de status e preenchimento de `completed_at` | Testado | `ObligationStatus`, `Obligation#changeStatus`, `ObligationService#updateStatus`, `ObligationController#updateStatus` (`PATCH /api/obligations/{id}/status`) | `ObligationStatusTest`, `ObligationChangeStatusTest`, `ObligationServiceTest`, `ObligationControllerTest`, `ObligationApiIntegrationTest` |
 | RN-009 | Armazenamento de arquivo fora do banco com metadados em `attachment` | Testado | `Attachment`, `AttachmentRepository`, `FileStorage`, `LocalFileSystemStorage`, `AttachmentService`, `AttachmentController` | `LocalFileSystemStorageTest`, `AttachmentServiceTest`, `AttachmentControllerTest`, `AttachmentApiIntegrationTest` |
+
+## Módulos e Especificações do Frontend (Flutter)
+
+| SPEC | Descrição | Estado | Implementação | Teste |
+|---|---|---|---|---|
+| SPEC-013 | Criar estrutura e navegação do Flutter | Testado | `core/config/app_config.dart`, `core/network/api_client.dart`, `core/network/api_exception.dart`, `core/routing/app_routes.dart`, `core/theme/app_theme.dart`, `core/widgets/app_scaffold.dart`, `features/company/`, `features/responsible/`, `features/obligation/` | `test/core/config/app_config_test.dart`, `test/core/network/api_client_test.dart`, `test/core/network/api_exception_test.dart`, `test/core/widgets/state_views_test.dart`, `test/features/navigation_test.dart` (14 testes aprovados) |
 
 ## Resumo
 - **Testado:** 10

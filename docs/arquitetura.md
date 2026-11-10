@@ -91,44 +91,50 @@ src/main/java/dmptsystem/.../playercontabilidadeback/
 
 ## 3. Arquitetura do Frontend (Flutter)
 
-O frontend em Flutter foi projetado para seguir a organização **Feature-First** combinada com **Clean Architecture** (Data / Domain / Presentation), espelhando com fidelidade as especificações funcionais (SPECs 13 a 23).
+O frontend em Flutter foi estruturado com base em **Feature-First** combinada com **Clean Architecture** (Data / Domain / Presentation), estabelecido na **SPEC-013** e servindo de base para o desenvolvimento das próximas especificações (SPECs 14 a 23).
 
-```
-lib/
+```text
+frontend/lib/
 ├── core/                       # Infraestrutura e utilitários transversais
-│   ├── error/                  # Falhas e exceções mapeadas da API
-│   ├── network/                # Cliente HTTP (Dio/Http) com interceptor JWT e base URL dinâmica
-│   ├── routing/                # Definição de rotas da aplicação
-│   ├── theme/                  # Design System, cores, tipografia e componentes comuns
-│   └── utils/                  # Formatadores de CNPJ, datas ISO e máscaras
-├── features/                   # Módulos funcionais independentes
-│   ├── auth/                   # Autenticação e Registro
-│   │   ├── data/               # AuthRemoteDataSource, AuthRepositoryImpl, UserModel
-│   │   ├── domain/             # UserEntity, LoginUseCase, RegisterUseCase
-│   │   └── presentation/       # LoginPage, RegisterPage, AuthBloc / AuthNotifier
-│   ├── company/                # Gestão de Empresas
-│   │   ├── data/               # CompanyRemoteDataSource, CompanyRepositoryImpl, CompanyModel
-│   │   ├── domain/             # CompanyEntity, GetCompaniesUseCase, SaveCompanyUseCase
-│   │   └── presentation/       # CompanyListPage, CompanyFormPage, CompanyBloc
-│   ├── responsible/            # Gestão de Responsáveis
+│   ├── config/                 # AppConfig (ambientes dev/staging/prod e injeção dinâmica de Base URL)
+│   ├── network/                # ApiClient (HTTP desacoplado) e ApiException (mapeamento de erros do backend)
+│   ├── routing/                # AppRoutes (rotas nomeadas e injeção de dependências)
+│   ├── theme/                  # AppTheme (paleta corporativa Material 3 e tipografia)
+│   └── widgets/                # Widgets compartilhados (AppScaffold responsivo, Loading, Error, Empty)
+├── features/                   # Módulos funcionais independentes (Clean Architecture)
+│   ├── company/                # Domínio de Empresas Clientes
+│   │   ├── data/               # CompanyRemoteDataSource, CompanyRepositoryImpl
+│   │   ├── domain/             # Company (entidade), CompanyRepository (contrato)
+│   │   └── presentation/       # CompanyListPage
+│   ├── responsible/            # Domínio de Responsáveis Contábeis
 │   │   ├── data/               # ResponsibleRemoteDataSource, ResponsibleRepositoryImpl
-│   │   ├── domain/             # ResponsibleEntity, GetResponsiblesUseCase
-│   │   └── presentation/       # ResponsibleListPage, ResponsibleFormPage
-│   ├── obligation/             # Gestão de Obrigações Fiscais e Ciclo de Vida
+│   │   ├── domain/             # Responsible (entidade), ResponsibleRepository (contrato)
+│   │   └── presentation/       # ResponsibleListPage
+│   ├── obligation/             # Domínio de Obrigações Fiscais e Máquina de Estados
 │   │   ├── data/               # ObligationRemoteDataSource, ObligationRepositoryImpl
-│   │   ├── domain/             # ObligationEntity, ChangeStatusUseCase, GetObligationsUseCase
-│   │   └── presentation/       # ObligationListPage, ObligationDetailPage, ObligationFormPage
-│   └── attachment/             # Upload, Listagem e Abertura de Anexos
+│   │   ├── domain/             # Obligation (entidade com regras de transição), ObligationRepository
+│   │   └── presentation/       # ObligationListPage (filtros combinados e chips de status)
+│   ├── auth/                   # [Planejado - SPEC-014/015] Autenticação e Registro
+│   │   ├── data/               # AuthRemoteDataSource, AuthRepositoryImpl
+│   │   ├── domain/             # User (entidade), AuthRepository
+│   │   └── presentation/       # LoginPage, RegisterPage
+│   └── attachment/             # [Planejado - SPEC-022] Upload, Listagem e Abertura de Anexos
 │       ├── data/               # AttachmentRemoteDataSource, AttachmentRepositoryImpl
-│       ├── domain/             # AttachmentEntity, UploadAttachmentUseCase, DownloadAttachmentUseCase
+│       ├── domain/             # Attachment (entidade), AttachmentRepository
 │       └── presentation/       # AttachmentListWidget, UploadAttachmentDialog
-└── main.dart                   # Inicialização da aplicação e injeção de dependências
+└── main.dart                   # Inicialização da aplicação e bootstrap de configurações
 ```
 
-### 3.1. Diretrizes de Integração Frontend <-> Backend
-- **Armazenamento de Token:** O token JWT retornado no login deve ser persistido em armazenamento seguro local (ex.: `flutter_secure_storage`).
-- **Interceptor HTTP:** Todas as requisições para `/api/**` (exceto `/api/auth/**`) adicionam automaticamente o cabeçalho `Authorization: Bearer <token>`. Em caso de resposta `401 Unauthorized`, o cliente deve limpar a sessão e redirecionar para a tela de Login.
-- **Tratamento de Erros:** O cliente deve interpretar o JSON de erro padronizado (`code`, `message`, `details`) e apresentar mensagens amigáveis ao usuário para erros 400 (validação), 422 (regras de negócio como empresa inativa ou transição inválida) e 404 (não encontrado).
+### 3.1. Responsabilidade das Camadas no Frontend
+1. **Data:** Responsável pela comunicação com a API REST (`RemoteDataSource`), mapeamento de payloads JSON e implementação dos contratos de repositório (`RepositoryImpl`).
+2. **Domain:** Entidades de negócio puras (sem dependência de framework de UI ou pacotes de transporte) e contratos abstratos de repositório (`Repository`). Regras puras da interface, como validação de transições de status da obrigação, residem na entidade de domínio.
+3. **Presentation:** Telas, formulários e componentes visuais. **Regra estrita:** a camada de apresentação nunca realiza chamadas HTTP diretamente, consumindo unicamente as abstrações de repositório/casos de uso.
+4. **Core:** Componentes transversais reutilizáveis, incluindo layout responsivo adaptativo (`AppScaffold`), telas padronizadas para estados de `Loading`, `Error` e `Empty`, além de cliente HTTP (`ApiClient`) e tratamento de exceções (`ApiException`).
+
+### 3.2. Diretrizes de Integração Frontend <-> Backend
+- **Configuração de Base URL:** A URL da API nunca deve estar *hardcoded*. O `AppConfig` permite injeção via parâmetro `--dart-define=API_URL=...` ou variáveis de ambiente.
+- **Armazenamento de Token:** O token JWT retornado no login deve ser gerenciado de forma segura e injetado via cabeçalho `Authorization: Bearer <token>` em todas as requisições autenticadas.
+- **Tratamento de Erros:** O cliente HTTP traduz as respostas de erro para `ApiException`, mapeando os campos padronizados (`code`, `message`, `details`) definidos em [`docs/api.md`](api.md). Em caso de `401 Unauthorized`, a aplicação deve desautenticar o usuário e redirecionar para a tela de autenticação.
 
 ---
 
@@ -188,6 +194,15 @@ Todas as exceções tratadas pelo `GlobalExceptionHandler` retornam um corpo JSO
 | **405** | — | Tentativa de utilizar método não suportado (ex.: `DELETE`) |
 | **422** | `COMPANY_INACTIVE` / `USER_INACTIVE` / `INVALID_STATUS_TRANSITION` | Violação de regra de negócio (RN-006 inatividade ou RN-008 transição ilegal) |
 | **500** | `STORAGE_ERROR` / `INTERNAL_SERVER_ERROR` | Falha interna de infraestrutura de disco ou erro inesperado |
+
+### 5.5. Política de Cross-Origin Resource Sharing (CORS)
+Para permitir que o frontend Flutter (executando via web browser em portas locais dinâmicas ou domínios de desenvolvimento) consuma a API REST com segurança:
+- **Origens Permitidas:** Configuradas através da propriedade `cors.allowed-origin-patterns` (variável de ambiente `CORS_ALLOWED_ORIGIN_PATTERNS`), aceitando padrões com wildcard como `http://localhost:*` e `http://127.0.0.1:*`.
+- **Métodos Permitidos:** `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `HEAD`.
+- **Cabeçalhos Permitidos:** `*` (qualquer cabeçalho na requisição).
+- **Cabeçalhos Expostos:** `Authorization`, `Content-Disposition`, `Location`.
+- **Credenciais:** `allowCredentials: true` para suporte a autenticação e cookies.
+- **Requisições Pre-flight (OPTIONS):** Permitidas globalmente (`/**`) com tempo de cache (`maxAge`) de 3600 segundos (1 hora).
 
 ---
 

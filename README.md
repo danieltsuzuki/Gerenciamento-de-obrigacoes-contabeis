@@ -21,8 +21,9 @@ O projeto adota estrutura monorepo separando claramente as responsabilidades de 
 
 ---
 
-## Funcionalidades Implementadas (Backend)
+## Funcionalidades Implementadas
 
+### Backend (API REST)
 - **Autenticação e Segurança (JWT):** Autenticação stateless via `POST /api/auth/login` e autocadastro público em `POST /api/auth/register`, emitindo tokens Bearer JWT com senhas protegidas via `BCrypt`.
 - **API de Empresas (`/api/companies`):** Cadastro com validação estrita de dígitos verificadores de CNPJ e unicidade, listagem paginada com filtro por situação (`active`), busca por identificador e inativação lógica (*soft delete*).
 - **API de Responsáveis (`/api/responsibles`):** Gestão de responsáveis contábeis com e-mail único, listagem paginada com filtros e inativação lógica. Senhas nunca são expostas em DTOs.
@@ -36,10 +37,19 @@ O projeto adota estrutura monorepo separando claramente as responsabilidades de 
 - **Documentação Interativa (OpenAPI 3 / Swagger UI):** Interface gráfica com suporte completo a autenticação Bearer JWT via botão **Authorize**.
 - **Cobertura de Testes (JaCoCo):** Relatórios automáticos de cobertura de código com mais de 86% de cobertura de linhas geral e 100% nos controllers.
 
+### Frontend (Flutter - SPEC-013)
+- **Estrutura Modular por Features:** Arquitetura limpa organizada em camadas (`data`, `domain`, `presentation`) para `company`, `responsible` e `obligation`.
+- **Configuração de Ambiente e Base URL:** Gerenciamento centralizado via `AppConfig` com suporte a `--dart-define=API_URL=...` para alternar entre ambientes (`dev`, `staging`, `prod`) sem hardcoding.
+- **Cliente HTTP Desacoplado:** `ApiClient` com injeção automática de Bearer JWT, tratamento de timeouts e tradução padronizada de falhas para `ApiException` (alinhada aos contratos do backend).
+- **Design System Material 3:** Paleta institucional configurada em `AppTheme` e componentes visuais reutilizáveis para feedback: `LoadingStateView`, `ErrorStateView` (com retry) e `EmptyStateView`.
+- **Layout Responsivo Adaptativo:** `AppScaffold` com alternância automática entre `NavigationRail` (telas largas / Desktop / Web) e `Drawer` / `NavigationBar` (telas menores / Mobile).
+- **Navegação e Telas Iniciais:** Rotas nomeadas configuradas para `/` (Obrigações), `/companies` e `/responsibles`, com listagens iniciais e chips temáticos de status.
+
 ---
 
 ## Stack Tecnológica
 
+### Backend
 - **Linguagem:** Java 21 LTS
 - **Framework:** Spring Boot 3.x / 4.x (WebMvc, Data JPA, Security, Validation)
 - **Segurança:** JJWT (`io.jsonwebtoken` 0.12.6) e `BCryptPasswordEncoder`
@@ -47,6 +57,13 @@ O projeto adota estrutura monorepo separando claramente as responsabilidades de 
 - **Documentação de API:** SpringDoc OpenAPI 2.8.5 (Swagger UI 3.0)
 - **Métricas de Qualidade:** JaCoCo 0.8.12
 - **Testes Automatizados:** JUnit 5, Mockito, Spring Test e Testcontainers (MySQL 8)
+
+### Frontend
+- **Framework:** Flutter 3.29.1
+- **Linguagem:** Dart 3.7.0
+- **Design System:** Material 3
+- **Comunicação:** `http` 1.3.0 desacoplado em Clean Architecture
+- **Testes Automatizados:** `flutter_test` (unitários, mocks e widget tests)
 
 ---
 
@@ -65,6 +82,7 @@ Consulte a especificação arquitetural completa em [`docs/arquitetura.md`](docs
 
 ### Pré-requisitos
 - **JDK 21** instalado e configurado no PATH
+- **Flutter SDK 3.29+** e **Dart 3.7+**
 - **Docker** e **Docker Compose** em execução
 - **Git**
 
@@ -85,6 +103,7 @@ cp .env.example .env
 | `JWT_SECRET` | Chave secreta HMAC-SHA (mín. 32 bytes) | `sua-chave-secreta-jwt-muito-longa-e-segura-32-bytes` |
 | `JWT_EXPIRATION_MS`| Tempo de validade do token (ms) | `1800000` (30 minutos) |
 | `STORAGE_LOCATION` | Diretório no disco para anexos | `uploads` |
+| `CORS_ALLOWED_ORIGIN_PATTERNS` | Padrões de origens CORS permitidas (separadas por vírgula) | `http://localhost:*,http://127.0.0.1:*` |
 | `API_URL` | URL base da API consumida pelo frontend | `http://localhost:8080` |
 
 ### 2. Subir o Banco de Dados MySQL
@@ -104,12 +123,36 @@ A partir do diretório `backend/`:
 ```
 
 ### 4. Executar os Testes Automatizados (Backend)
+A partir do diretório `backend/`:
 ```bash
 # Windows
 .\mvnw.cmd test
 
 # Linux / macOS
 ./mvnw test
+```
+
+### 5. Executar o Frontend (Flutter)
+A partir do diretório `frontend/`:
+```bash
+# Instalar dependências
+flutter pub get
+
+# Executar na Web (Chrome) apontando para a API local
+flutter run -d chrome --dart-define=API_URL=http://localhost:8080
+
+# Ou executar na plataforma Desktop (Windows)
+flutter run -d windows --dart-define=API_URL=http://localhost:8080
+```
+
+### 6. Executar os Testes Automatizados (Frontend)
+A partir do diretório `frontend/`:
+```bash
+# Executar a suíte de testes unitários e de widgets
+flutter test
+
+# Executar análise estática de código
+flutter analyze
 ```
 
 ---

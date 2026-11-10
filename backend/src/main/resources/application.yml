@@ -29,6 +29,9 @@ jwt:
   secret: ${JWT_SECRET:player-contabilidade-back-secret-key-jwt-must-be-very-long-32-bytes-minimum}
   expiration-ms: ${JWT_EXPIRATION_MS:1800000}
 
+cors:
+  allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*,https://localhost:*,https://127.0.0.1:*}
+
 storage:
   location: ${STORAGE_LOCATION:uploads}
 

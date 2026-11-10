@@ -12,6 +12,13 @@ Documentação formal dos endpoints expostos pela API da aplicação **Player Co
 - **Operações Restritas (`POST`, `PUT`, `PATCH`):** Endpoints de criação e alteração (`POST /api/**`, `PUT /api/**`, `PATCH /api/**`, exceto `POST /api/auth/login` e `POST /api/auth/register`) exigem o cabeçalho `Authorization: Bearer <token-jwt>`. Requisições não autenticadas resultam em `401 Unauthorized`.
 - **Exclusão Física:** Operações de exclusão física (`DELETE /api/**`) são proibidas por arquitetura e retornam `405 Method Not Allowed`. O encerramento de ciclos é feito por inativação lógica via `PUT` (`active: false`).
 
+### Política de CORS (Cross-Origin Resource Sharing)
+A API suporta requisições cross-origin para integração com clientes web (ex.: Flutter Web):
+- **Origens Permitidas:** Configurável via `CORS_ALLOWED_ORIGIN_PATTERNS` (padrão: `http://localhost:*,http://127.0.0.1:*,https://localhost:*,https://127.0.0.1:*`).
+- **Métodos Permitidos:** `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `HEAD`.
+- **Pre-flight:** Requisições `OPTIONS` são liberadas publicamente sem autenticação, retornando status `200 OK` e cabeçalhos CORS (`Access-Control-Allow-Origin`, `Access-Control-Allow-Credentials: true`, `Access-Control-Max-Age: 3600`).
+- **Cabeçalhos Expostos:** `Authorization`, `Content-Disposition`, `Location`.
+
 ### Documentação Interativa com Swagger / OpenAPI
 A aplicação disponibiliza a interface interativa do Swagger UI e o contrato OpenAPI 3.0:
 - **Swagger UI:** `http://localhost:8080/swagger-ui.html` (ou `/swagger-ui/index.html`)
