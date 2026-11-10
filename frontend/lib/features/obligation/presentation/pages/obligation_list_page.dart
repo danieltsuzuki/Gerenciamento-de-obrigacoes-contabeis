@@ -7,17 +7,24 @@ import '../../../../core/widgets/error_state_view.dart';
 import '../../../../core/widgets/loading_state_view.dart';
 import '../../../auth/presentation/controllers/auth_session_controller.dart';
 import '../../../auth/presentation/widgets/auth_guard.dart';
+import '../../../company/domain/repositories/company_repository.dart';
+import '../../../responsible/domain/repositories/responsible_repository.dart';
 import '../../domain/entities/obligation.dart';
 import '../../domain/repositories/obligation_repository.dart';
+import 'obligation_form_page.dart';
 
 class ObligationListPage extends StatefulWidget {
   final ObligationRepository repository;
+  final CompanyRepository? companyRepository;
+  final ResponsibleRepository? responsibleRepository;
   final void Function(Obligation obligation)? onObligationTap;
   final AuthSessionController? authController;
 
   const ObligationListPage({
     super.key,
     required this.repository,
+    this.companyRepository,
+    this.responsibleRepository,
     this.onObligationTap,
     this.authController,
   });
@@ -88,6 +95,71 @@ class _ObligationListPageState extends State<ObligationListPage> {
     );
 
     if (hasChanges == true && mounted) {
+      _loadObligations();
+    }
+  }
+
+  Future<void> _openCreateForm() async {
+    if (widget.authController != null) {
+      final allowed = await requireAuth(
+        context,
+        authController: widget.authController!,
+        reason: 'Para cadastrar uma nova obrigação, realize o login.',
+      );
+      if (!allowed || !mounted) return;
+    }
+
+    if (widget.companyRepository == null || widget.responsibleRepository == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Repositórios de apoio não configurados.')),
+      );
+      return;
+    }
+
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ObligationFormPage(
+          obligationRepository: widget.repository,
+          companyRepository: widget.companyRepository!,
+          responsibleRepository: widget.responsibleRepository!,
+        ),
+      ),
+    );
+
+    if (created == true && mounted) {
+      _loadObligations();
+    }
+  }
+
+  Future<void> _openEditForm(Obligation obligation) async {
+    if (widget.authController != null) {
+      final allowed = await requireAuth(
+        context,
+        authController: widget.authController!,
+        reason: 'Para editar a obrigação, realize o login.',
+      );
+      if (!allowed || !mounted) return;
+    }
+
+    if (widget.companyRepository == null || widget.responsibleRepository == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Repositórios de apoio não configurados.')),
+      );
+      return;
+    }
+
+    final updated = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ObligationFormPage(
+          obligationRepository: widget.repository,
+          companyRepository: widget.companyRepository!,
+          responsibleRepository: widget.responsibleRepository!,
+          obligation: obligation,
+        ),
+      ),
+    );
+
+    if (updated == true && mounted) {
       _loadObligations();
     }
   }
@@ -188,11 +260,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
             ? 'Não há obrigações com o filtro selecionado.'
             : 'Cadastre a primeira obrigação contábil para começar o acompanhamento.',
         actionLabel: 'Nova Obrigação',
-        onAction: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Formulário de cadastro em desenvolvimento.')),
-          );
-        },
+        onAction: _openCreateForm,
       );
     }
 
@@ -264,6 +332,17 @@ class _ObligationListPageState extends State<ObligationListPage> {
                             ],
                           ),
                         ),
+                        if (item.status != ObligationStatus.completed) ...[
+                          const SizedBox(width: 4),
+                          IconButton(
+                            key: Key('obligation-edit-button-${item.id}'),
+                            icon: const Icon(Icons.edit_outlined, size: 20),
+                            tooltip: 'Editar obrigação',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => _openEditForm(item),
+                          ),
+                        ],
                       ],
                     ),
                     if (item.description != null && item.description!.isNotEmpty) ...[
@@ -417,20 +496,8 @@ class _ObligationListPageState extends State<ObligationListPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          if (widget.authController != null) {
-            final allowed = await requireAuth(
-              context,
-              authController: widget.authController!,
-              reason: 'Para cadastrar uma obrigação, realize o login.',
-            );
-            if (!allowed) return;
-          }
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Formulário de cadastro em desenvolvimento.')),
-          );
-        },
+        key: const Key('new-obligation-fab'),
+        onPressed: _openCreateForm,
         icon: const Icon(Icons.add),
         label: const Text('Nova Obrigação'),
       ),

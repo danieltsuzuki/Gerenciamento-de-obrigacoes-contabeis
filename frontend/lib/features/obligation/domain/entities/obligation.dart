@@ -43,7 +43,7 @@ class ObligationParticipantSummary {
 
   factory ObligationParticipantSummary.fromJson(Map<String, dynamic> json) {
     return ObligationParticipantSummary(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       name: (json['legalName'] ?? json['name'] ?? '') as String,
     );
   }
@@ -78,7 +78,7 @@ class Obligation {
 
   factory Obligation.fromJson(Map<String, dynamic> json) {
     return Obligation(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       title: json['title'] as String,
       description: json['description'] as String?,
       status: ObligationStatus.fromCode(json['status'] as String?),
@@ -97,7 +97,7 @@ class Obligation {
               json['company'] as Map<String, dynamic>,
             )
           : ObligationParticipantSummary(
-              id: json['companyId'] as int? ?? 0,
+              id: ((json['companyId'] as num?) ?? 0).toInt(),
               name: '',
             ),
       responsible: json['responsible'] != null
@@ -105,10 +105,10 @@ class Obligation {
               json['responsible'] as Map<String, dynamic>,
             )
           : ObligationParticipantSummary(
-              id: json['responsibleId'] as int? ?? 0,
+              id: ((json['responsibleId'] as num?) ?? 0).toInt(),
               name: '',
             ),
-      attachmentCount: json['attachmentCount'] as int? ?? 0,
+      attachmentCount: ((json['attachmentCount'] as num?) ?? 0).toInt(),
     );
   }
 

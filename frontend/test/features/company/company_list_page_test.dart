@@ -7,6 +7,7 @@ import 'package:player_contabilidade_front/features/company/data/models/create_c
 import 'package:player_contabilidade_front/features/company/data/models/update_company_request.dart';
 import 'package:player_contabilidade_front/features/company/domain/entities/company.dart';
 import 'package:player_contabilidade_front/features/company/domain/repositories/company_repository.dart';
+import 'package:player_contabilidade_front/features/company/presentation/pages/company_detail_page.dart';
 import 'package:player_contabilidade_front/features/company/presentation/pages/company_form_page.dart';
 import 'package:player_contabilidade_front/features/company/presentation/pages/company_list_page.dart';
 
@@ -169,6 +170,20 @@ void main() {
 
       expect(find.byType(CompanyFormPage), findsOneWidget);
       expect(find.text('Nova Empresa'), findsOneWidget);
+    });
+
+    testWidgets('deve abrir CompanyDetailPage ao tocar no card da empresa', (tester) async {
+      final repository = MockCompanyListRepository()..items = [company1];
+
+      await tester.pumpWidget(createWidgetUnderTest(repository: repository));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Alpha Tech'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CompanyDetailPage), findsOneWidget);
+      expect(find.text('Detalhes da Empresa'), findsOneWidget);
+      expect(find.text('#1'), findsOneWidget);
     });
 
     testWidgets('deve abrir formulário de edição ao tocar no botão de editar', (tester) async {
