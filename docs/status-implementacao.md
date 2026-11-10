@@ -22,9 +22,10 @@ Atualizado em: 2026-11-10
 | SPEC-013 | Criar estrutura e navegação do Flutter | Testado | `core/config/app_config.dart`, `core/network/api_client.dart`, `core/network/api_exception.dart`, `core/routing/app_routes.dart`, `core/theme/app_theme.dart`, `core/widgets/app_scaffold.dart`, `features/company/`, `features/responsible/`, `features/obligation/` | `test/core/config/app_config_test.dart`, `test/core/network/api_client_test.dart`, `test/core/network/api_exception_test.dart`, `test/core/widgets/state_views_test.dart`, `test/features/navigation_test.dart` (14 testes aprovados) |
 | SPEC-014 | Implementar camada de integração com API | Testado | `core/network/page_response.dart`, `core/network/downloaded_file.dart`, `core/network/api_client.dart` (multipart + download), `features/auth/`, `features/company/data/`, `features/responsible/data/`, `features/obligation/data/`, `features/attachment/data/` | `test/core/network/api_client_test.dart`, `test/features/auth/auth_integration_test.dart`, `test/features/company/company_integration_test.dart`, `test/features/responsible/responsible_integration_test.dart`, `test/features/obligation/obligation_integration_test.dart`, `test/features/attachment/attachment_integration_test.dart` (33 testes aprovados) |
 | SPEC-015 | Criar tela de listagem de obrigações | Testado | `features/obligation/presentation/pages/obligation_list_page.dart`, `core/routing/app_routes.dart` | `test/features/obligation/obligation_list_page_test.dart`, `test/features/navigation_test.dart` (40 testes aprovados) |
+| SPEC-016 | Criar listagem e formulário de empresas | Testado | `core/utils/cnpj_validator.dart`, `features/company/presentation/pages/company_form_page.dart`, `features/company/presentation/pages/company_list_page.dart` | `test/core/utils/cnpj_validator_test.dart`, `test/features/company/company_form_page_test.dart`, `test/features/company/company_list_page_test.dart` (57 testes aprovados) |
 
 ## Resumo
-- **Testado:** 12
+- **Testado:** 13
 - **Implementado:** 0
 - **Em andamento:** 0
 - **Planejado:** 0

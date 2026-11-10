@@ -7,7 +7,9 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/company/data/datasources/company_remote_datasource.dart';
 import '../../features/company/data/repositories/company_repository_impl.dart';
+import '../../features/company/domain/entities/company.dart';
 import '../../features/company/domain/repositories/company_repository.dart';
+import '../../features/company/presentation/pages/company_form_page.dart';
 import '../../features/company/presentation/pages/company_list_page.dart';
 import '../../features/obligation/data/datasources/obligation_remote_datasource.dart';
 import '../../features/obligation/data/repositories/obligation_repository_impl.dart';
@@ -27,6 +29,8 @@ class AppRoutes {
   static const String obligations = '/obligations';
   static const String obligationDetails = '/obligations/details';
   static const String companies = '/companies';
+  static const String companyCreate = '/companies/create';
+  static const String companyEdit = '/companies/edit';
   static const String responsibles = '/responsibles';
 
   static AuthRepository createAuthRepository(ApiClient apiClient) {
@@ -67,6 +71,22 @@ class AppRoutes {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => CompanyListPage(repository: effectiveCompanyRepo),
+        );
+      case companyCreate:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => CompanyFormPage(repository: effectiveCompanyRepo),
+        );
+      case companyEdit:
+        final company = settings.arguments is Company
+            ? settings.arguments as Company
+            : null;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => CompanyFormPage(
+            repository: effectiveCompanyRepo,
+            company: company,
+          ),
         );
       case responsibles:
         return MaterialPageRoute(
