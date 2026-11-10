@@ -25,20 +25,20 @@ frontend/
 │   │   ├── company/                # Domínio de Empresas Clientes
 │   │   │   ├── data/               # CompanyRemoteDataSource, CompanyRepositoryImpl, DTOs (Create/Update)
 │   │   │   ├── domain/             # Company (entidade), CompanyRepository (contrato)
-│   │   │   └── presentation/       # CompanyListPage, CompanyFormPage (cadastro e edição com validação de CNPJ)
+│   │   │   └── presentation/       # CompanyListPage, CompanyDetailPage, CompanyFormPage (cadastro e edição com validação de CNPJ)
 │   │   ├── responsible/            # Domínio de Responsáveis Contábeis
 │   │   │   ├── data/               # ResponsibleRemoteDataSource, ResponsibleRepositoryImpl, DTOs (Create/Update)
 │   │   │   ├── domain/             # Responsible (entidade), ResponsibleRepository (contrato)
-│   │   │   └── presentation/       # ResponsibleListPage
+│   │   │   └── presentation/       # ResponsibleListPage, ResponsibleDetailPage, ResponsibleFormPage
 │   │   ├── obligation/             # Domínio de Obrigações Fiscais
 │   │   │   ├── data/               # ObligationRemoteDataSource, ObligationRepositoryImpl, DTOs (Create/Update/Status)
 │   │   │   ├── domain/             # Obligation (entidade com máquina de estados), ObligationRepository
-│   │   │   └── presentation/       # ObligationListPage (filtros e chips por status)
+│   │   │   └── presentation/       # ObligationListPage, ObligationDetailPage, ObligationFormPage (cadastro e edição com restrições RN-006 a RN-009)
 │   │   └── attachment/             # Upload, Listagem e Download de Anexos
 │   │       ├── data/               # AttachmentRemoteDataSource, AttachmentRepositoryImpl
 │   │       └── domain/             # Attachment (entidade com formatação de tamanho), AttachmentRepository
 │   └── main.dart                   # Inicialização da aplicação e bootstrap do AppConfig
-├── test/                           # Suíte de testes unitários, mocks e de widgets (107 testes aprovados)
+├── test/                           # Suíte de testes unitários, mocks e de widgets (119 testes aprovados)
 │   ├── core/
 │   │   ├── config/                 # Testes de inicialização e customização de AppConfig
 │   │   ├── network/                # Testes de ApiClient, Download, Multipart, PageResponse e ApiException
@@ -46,9 +46,9 @@ frontend/
 │   │   └── widgets/                # Testes de AppScaffold (botão de login), Loading, Error e EmptyStateView
 │   └── features/                   # Testes de integração de rede, telas e navegação
 │       ├── auth/                   # Testes de AuthSessionStorage, AuthSessionController, LoginPage, RegisterPage e AuthGuard
-│       ├── company/                # Testes de listagem, filtros, formulário de criação/edição e validação de CNPJ
+│       ├── company/                # Testes de listagem, filtros, tela de detalhes, formulário de criação/edição e validação de CNPJ
 │       ├── responsible/            # Testes de listagem, filtros, formulário de criação/edição, tela de detalhes e integração
-│       ├── obligation/             # Testes de integração (DataSource/Repo) e de widgets (ObligationListPageTest)
+│       ├── obligation/             # Testes de integração (DataSource/Repo) e de widgets (listagem, detalhes e formulário)
 │       ├── attachment/             # Testes de upload multipart, listagem e download de fluxo binário
 │       └── navigation_test.dart    # Testes de fluxo e navegação entre páginas
 ├── pubspec.yaml                    # Dependências do projeto (http, http_parser, etc.)

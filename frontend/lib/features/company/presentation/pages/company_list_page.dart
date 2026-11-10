@@ -9,6 +9,7 @@ import '../../../auth/presentation/controllers/auth_session_controller.dart';
 import '../../../auth/presentation/widgets/auth_guard.dart';
 import '../../domain/entities/company.dart';
 import '../../domain/repositories/company_repository.dart';
+import 'company_detail_page.dart';
 import 'company_form_page.dart';
 
 class CompanyListPage extends StatefulWidget {
@@ -91,6 +92,22 @@ class _CompanyListPageState extends State<CompanyListPage> {
       ),
     );
     if (created == true && mounted) {
+      _loadCompanies();
+    }
+  }
+
+  Future<void> _openDetails(Company company) async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => CompanyDetailPage(
+          repository: widget.repository,
+          companyId: company.id,
+          initialCompany: company,
+          authController: widget.authController,
+        ),
+      ),
+    );
+    if (changed == true && mounted) {
       _loadCompanies();
     }
   }
@@ -191,7 +208,7 @@ class _CompanyListPageState extends State<CompanyListPage> {
             ),
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              onTap: () => _openEditForm(company),
+              onTap: () => _openDetails(company),
               leading: CircleAvatar(
                 backgroundColor: company.active
                     ? const Color(0xFFDBEAFE)

@@ -23,6 +23,20 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-018 (Criar formulário de cadastro e edição de obrigações):
+  - Formulário unificado `ObligationFormPage` para cadastro (`POST /api/obligations`) e edição (`PUT /api/obligations/{id}`) de obrigações contábeis e fiscais.
+  - Seletores dropdown reativos de empresa (`companyId`) e responsável (`responsibleId`) filtrando apenas registros em situação Ativa (`active=true`), em conformidade estrita com as regras de negócio RN-006 e RN-007.
+  - Seletor de data de entrega (`dueDate`) via `DatePicker` formatado em padrão brasileiro (`dd/MM/yyyy`) e convertido no payload REST ISO (`YYYY-MM-DD`).
+  - Restrição de ciclo de vida (RN-008): aviso informativo no cadastro indicando que toda nova obrigação inicia obrigatoriamente com status Pendente (`PENDING`) gerado pelo servidor, impedindo alteração arbitrária no formulário de criação.
+  - Bloqueio terminal de edição (RN-009): quando a obrigação atinge o status Concluída (`COMPLETED`), o formulário desabilita todos os campos e botões de submissão, exibindo aviso de segurança contextual ao usuário.
+  - Validações inline para campos obrigatórios: título (até 255 caracteres), obrigatoriedade de seleção de empresa e responsável, e preenchimento de data de vencimento.
+  - Tratamento semântico de exceções da API: mapeamento de `400 VALIDATION_ERROR`, `422 COMPANY_INACTIVE`/`USER_INACTIVE` e redirecionamento de autenticação com `401 UNAUTHORIZED`.
+  - Telas de detalhes e separação de ação de clique e edição nas listagens (SPEC-015 e SPEC-016):
+    - Criação da tela `CompanyDetailPage` para visualização pública/anônima de Razão Social, Nome Fantasia, CNPJ formatado e situação cadastral, ocultando o botão de edição quando o usuário não estiver autenticado.
+    - Criação da tela `ObligationDetailPage` para visualização dos detalhes completos da obrigação, empresa associada, responsável técnico, prazo e badge de status, ocultando o botão de edição para usuários anônimos ou para obrigações com status Concluída (`COMPLETED`).
+    - Separação dos cliques nos cards de `CompanyListPage` e `ObligationListPage`: o toque no card abre os detalhes do item correspondente, enquanto o toque no botão de editar (quando autenticado) abre diretamente a tela de formulário.
+  - Registro das rotas nomeadas `AppRoutes.companyDetails` (`/companies/details`), `AppRoutes.obligationDetails` (`/obligations/details`), `AppRoutes.obligationCreate` (`/obligations/create`) e `AppRoutes.obligationEdit` (`/obligations/edit`).
+  - Suíte de testes automatizados em `obligation_form_page_test.dart`, `obligation_detail_page_test.dart`, `company_detail_page_test.dart`, `company_list_page_test.dart` e `obligation_list_page_test.dart` (119 testes aprovados no frontend).
 - Implementação e validação da SPEC-017 (Criar listagem, formulário e detalhes de responsáveis):
   - Separação de comportamento na listagem `ResponsibleListPage`: o clique no card navega para a tela de detalhes do responsável (`ResponsibleDetailPage`), enquanto o clique no ícone de edição aciona diretamente o formulário de edição (`ResponsibleFormPage`).
   - Criação da tela `ResponsibleDetailPage` exibindo avatar, nome completo, e-mail corporativo, identificador do sistema (`#ID`), situação operacional detalhada e botão de edição com recarregamento integrado.
