@@ -17,9 +17,9 @@ class Responsible {
 
   factory Responsible.fromJson(Map<String, dynamic> json) {
     return Responsible(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      email: json['email'] as String,
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String? ?? '',
+      email: json['email'] as String? ?? '',
       active: json['active'] as bool? ?? true,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)

@@ -47,7 +47,7 @@ As SPECs preservam as decisões das fontes. Pontos não definidos ou contraditó
 | [SPEC-023](./23-adicionar-testes-do-flutter.spec.md) | [Adicionar testes do Flutter](https://trello.com/c/JN4XYhU1) | A Fazer |
 | [SPEC-024](./24-documentar-execucao-arquitetura-e-api.spec.md) | [Documentar execução, arquitetura e API](https://trello.com/c/c3Ti7JGA) | A Fazer |
 | [SPEC-025](./25-preparar-entrega-revisao-e-pull-request.spec.md) | [Preparar entrega, revisão e Pull Request](https://trello.com/c/dK9X0JMO) | Backlog |
-| [SPEC-026](./26-implementar-autenticacao-no-flutter.spec.md) | Implementar autenticação no Flutter (sem card; derivada das regras JWT do backend) | A Fazer |
+| [SPEC-026](./26-implementar-autenticacao-no-flutter.spec.md) | Implementar autenticação e tela de login no Flutter (sem card; unificada com a interface de login) | Concluído |
 
 ## Observações de consistência
 

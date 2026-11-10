@@ -5,16 +5,20 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/empty_state_view.dart';
 import '../../../../core/widgets/error_state_view.dart';
 import '../../../../core/widgets/loading_state_view.dart';
+import '../../../auth/presentation/controllers/auth_session_controller.dart';
+import '../../../auth/presentation/widgets/auth_guard.dart';
 import '../../domain/entities/company.dart';
 import '../../domain/repositories/company_repository.dart';
 import 'company_form_page.dart';
 
 class CompanyListPage extends StatefulWidget {
   final CompanyRepository repository;
+  final AuthSessionController? authController;
 
   const CompanyListPage({
     super.key,
     required this.repository,
+    this.authController,
   });
 
   @override
@@ -72,6 +76,15 @@ class _CompanyListPageState extends State<CompanyListPage> {
   }
 
   Future<void> _openCreateForm() async {
+    if (widget.authController != null) {
+      final allowed = await requireAuth(
+        context,
+        authController: widget.authController!,
+        reason: 'Para cadastrar uma nova empresa, realize o login.',
+      );
+      if (!allowed || !mounted) return;
+    }
+
     final created = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => CompanyFormPage(repository: widget.repository),
@@ -83,6 +96,15 @@ class _CompanyListPageState extends State<CompanyListPage> {
   }
 
   Future<void> _openEditForm(Company company) async {
+    if (widget.authController != null) {
+      final allowed = await requireAuth(
+        context,
+        authController: widget.authController!,
+        reason: 'Para editar os dados da empresa, realize o login.',
+      );
+      if (!allowed || !mounted) return;
+    }
+
     final updated = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => CompanyFormPage(
@@ -238,6 +260,7 @@ class _CompanyListPageState extends State<CompanyListPage> {
     return AppScaffold(
       title: 'Empresas',
       currentNavIndex: 1,
+      authController: widget.authController,
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh),

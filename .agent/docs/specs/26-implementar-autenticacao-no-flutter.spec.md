@@ -1,28 +1,29 @@
-# SPEC-026 — Implementar autenticação no Flutter
+# SPEC-026 — Implementar autenticação e tela de login no Flutter
 
 | Campo | Valor |
 |---|---|
 | Projeto | Gerenciador de Obrigações Contábeis |
-| ID Trello | — (sem card dedicado; derivada das regras de autenticação do backend) |
+| ID Trello | — (sem card dedicado; unificada com a especificação da tela de login) |
 | Card | — |
-| Status (10/11/2026) | A Fazer |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada de `docs/api.md`, `docs/arquitetura.md` e da camada de integração da SPEC-014 |
+| Status (10/11/2026) | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluído — implementada e testada (unificação das especificações de autenticação e tela de login) |
 
 ## 1. Objetivo
 
-Implementar no frontend Flutter o fluxo de autenticação JWT definido pelo backend: login, autocadastro, sessão do usuário, envio do token Bearer nas operações protegidas e tratamento de sessão inválida/expirada (`401`).
+Implementar no frontend Flutter o fluxo completo de autenticação JWT definido pelo backend: tela de login (`LoginPage`), botão de login no canto superior direito do AppBar (`AppScaffold`), tela de autocadastro (`RegisterPage`), gerenciador de sessão (`AuthSessionController`), persistência segura (`AuthSessionStorage`), injeção automática de token Bearer nas operações protegidas, guarda de rotas/ações (`requireAuth`) e tratamento semântico de erros e sessão expirada (`401 UNAUTHORIZED`).
 
 ## 2. Escopo funcional
 
-- [ ] Criar tela de login (`LoginPage`) com e-mail e senha.
-- [ ] Criar tela de autocadastro (`RegisterPage`) com nome, e-mail, senha e confirmação de senha.
-- [ ] Gerenciar a sessão autenticada (token + dados do responsável) em um controlador de sessão compartilhado.
-- [ ] Persistir a sessão localmente para manter o usuário autenticado entre reinicializações do app.
-- [ ] Injetar automaticamente o token no `ApiClient` (`Authorization: Bearer <token>`) após login e na restauração da sessão.
-- [ ] Exibir na interface o usuário autenticado e disponibilizar ação de logout.
-- [ ] Proteger ações de mutação (criar/editar/alterar status) e todas as operações de anexos, exigindo login antes de executá-las.
-- [ ] Tratar `401 UNAUTHORIZED` em qualquer requisição: limpar sessão e redirecionar para o login, preservando a navegação de leitura anônima.
+- [x] Construir a tela de login (`LoginPage`) com e-mail, senha, alternância de visibilidade de senha (ícone de olho), indicador de progresso e banner de erro amigável (`401 BAD_CREDENTIALS`).
+- [x] Adicionar botão de "Login" destacado no canto superior direito da tela (`AppScaffold`), visível tanto em modo anônimo quanto quando o controlador não for injetado.
+- [x] Criar tela de autocadastro (`RegisterPage`) com nome, e-mail, senha (6 a 100 caracteres), confirmação de senha e auto-login pós-cadastro.
+- [x] Gerenciar a sessão autenticada (token JWT + dados do responsável) em um controlador de sessão compartilhado (`AuthSessionController`).
+- [x] Persistir a sessão localmente de forma segura (`AuthSessionStorage` / `flutter_secure_storage`) para manter o usuário autenticado entre reinicializações.
+- [x] Injetar automaticamente o token no `ApiClient` (`Authorization: Bearer <token>`) após login e na restauração da sessão.
+- [x] Exibir na interface o usuário autenticado com avatar/primeiro nome e menu de opções contendo ação de logout.
+- [x] Proteger ações de mutação (criar/editar empresas, criar obrigações) e anexos via `requireAuth`, exigindo login antes de executá-las e retomando o fluxo após autenticação.
+- [x] Tratar `401 UNAUTHORIZED` em qualquer requisição autenticada: limpar sessão e redirecionar para o login, preservando a navegação de leitura anônima.
 
 ## 3. Regras de negócio e restrições
 
@@ -62,14 +63,20 @@ Restrições adicionais:
 - `LoginRequest`, `LoginResponse`, `RegisterRequest`, `AuthSession`.
 - `ApiClient.setAuthToken` / `clearAuthToken` e `ApiException.isUnauthorized`.
 
-### 4.3. Novos componentes previstos
+### 4.3. Novos componentes e interfaces de UI
 
-- `AuthSessionController` (`ChangeNotifier`): estado `unknown` → `unauthenticated` / `authenticated`; expõe `session`, `login`, `register`, `logout`, `restore` e `handleUnauthorized`.
-- `AuthSessionStorage` (contrato) + implementação local para persistir `token` e dados básicos do responsável.
-- Interceptação de `401`: `ApiClient` notifica um callback (`onUnauthorized`) registrado pelo `AuthSessionController`; não aplicar ao `401 BAD_CREDENTIALS` do próprio login.
+- `AuthSessionController` (`ChangeNotifier`): estado `unknown` → `unauthenticated` / `authenticated`; expõe `session`, `login`, `register`, `logout`, `initialize` e `handleUnauthorized`.
+- `AuthSessionStorage` (contrato) + `SecureAuthSessionStorage` (`flutter_secure_storage`) e `InMemoryAuthSessionStorage` (testes).
+- Interceptação de `401`: `ApiClient` notifica o callback `onUnauthorized` registrado pelo `AuthSessionController`; não aplicável ao `401 BAD_CREDENTIALS` do próprio formulário de login.
 - `AuthGuard` / helper `requireAuth(context)` que, sem sessão, abre o login e retorna `true` somente após autenticação bem-sucedida.
-- Rotas: `AppRoutes.login` (`/login`) e `AppRoutes.register` (`/register`).
-- `AppScaffold`: exibir nome do responsável autenticado e ação "Sair", ou ação "Entrar" quando anônimo.
+- Rotas nomeadas: `AppRoutes.login` (`/login`) e `AppRoutes.register` (`/register`).
+- `AppScaffold`:
+  - Botão de **Login** em destaque no canto superior direito do AppBar (`key: auth-login-button`).
+  - Menu de perfil do usuário (`key: auth-user-menu`) com nome, e-mail e ação "Sair" (`logout`) quando autenticado.
+- Chaves semânticas de teste (Keys):
+  - Formulário de Login: `login-email-input`, `login-password-input`, `login-toggle-password-button`, `login-submit-button`, `login-to-register-button`, `login-error-banner`.
+  - Formulário de Cadastro: `register-name-input`, `register-email-input`, `register-password-input`, `register-confirm-password-input`, `register-submit-button`, `register-error-banner`.
+  - Cabeçalho global: `auth-login-button`, `auth-user-menu`.
 
 ### 4.4. Fluxo pós-autocadastro
 
@@ -77,15 +84,15 @@ Como o contrato documenta resposta `201` com os dados do responsável (sem token
 
 ## 5. Critérios de aceitação
 
-- [ ] Usuário anônimo navega por listagens e detalhes sem ser obrigado a logar.
-- [ ] Login válido armazena sessão, injeta Bearer no `ApiClient` e exibe o usuário autenticado.
-- [ ] Credenciais inválidas ou usuário inativo exibem mensagem genérica sem detalhar a causa.
-- [ ] Autocadastro valida campos no cliente, trata `409 DUPLICATE_EMAIL` e autentica o usuário ao concluir.
-- [ ] Ações de mutação e operações de anexos exigem login e retomam a ação após autenticação.
-- [ ] Sessão é restaurada ao reiniciar o app.
-- [ ] Logout remove token do `ApiClient` e da persistência local.
-- [ ] Qualquer `401 UNAUTHORIZED` fora do login encerra a sessão e redireciona ao login com aviso.
-- [ ] Senha e token nunca são exibidos nem registrados em logs.
+- [x] Usuário anônimo navega por listagens e detalhes sem ser obrigado a logar.
+- [x] Login válido armazena sessão, injeta Bearer no `ApiClient` e exibe o usuário autenticado.
+- [x] Credenciais inválidas ou usuário inativo exibem mensagem genérica sem detalhar a causa.
+- [x] Autocadastro valida campos no cliente, trata `409 DUPLICATE_EMAIL` e autentica o usuário ao concluir.
+- [x] Ações de mutação e operações de anexos exigem login e retomam a ação após autenticação.
+- [x] Sessão é restaurada ao reiniciar o app.
+- [x] Logout remove token do `ApiClient` e da persistência local.
+- [x] Qualquer `401 UNAUTHORIZED` fora do login encerra a sessão e redireciona ao login com aviso.
+- [x] Senha e token nunca são exibidos nem registrados em logs.
 
 ## 6. Cenários de teste
 

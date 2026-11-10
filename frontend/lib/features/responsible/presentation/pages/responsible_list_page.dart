@@ -3,15 +3,18 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/loading_state_view.dart';
 import '../../../../core/widgets/error_state_view.dart';
 import '../../../../core/widgets/empty_state_view.dart';
+import '../../../auth/presentation/controllers/auth_session_controller.dart';
 import '../../domain/entities/responsible.dart';
 import '../../domain/repositories/responsible_repository.dart';
 
 class ResponsibleListPage extends StatefulWidget {
   final ResponsibleRepository repository;
+  final AuthSessionController? authController;
 
   const ResponsibleListPage({
     super.key,
     required this.repository,
+    this.authController,
   });
 
   @override
@@ -128,6 +131,7 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
     return AppScaffold(
       title: 'Responsáveis',
       currentNavIndex: 2,
+      authController: widget.authController,
       body: content,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {

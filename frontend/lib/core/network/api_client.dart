@@ -30,6 +30,8 @@ class ApiClient {
 
   bool get isAuthenticated => _authToken != null && _authToken!.isNotEmpty;
 
+  void Function()? onUnauthorized;
+
   Map<String, String> _buildHeaders([Map<String, String>? extraHeaders]) {
     final headers = <String, String>{
       'Content-Type': 'application/json',
@@ -243,6 +245,10 @@ class ApiClient {
         );
       }
 
+      if (response.statusCode == 401 && _authToken != null) {
+        onUnauthorized?.call();
+      }
+
       final decodedBody = _parseResponseBody(response);
       if (decodedBody is Map<String, dynamic>) {
         throw ApiException.fromResponse(response.statusCode, decodedBody);
@@ -259,6 +265,10 @@ class ApiClient {
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return decodedBody;
+    }
+
+    if (response.statusCode == 401 && _authToken != null) {
+      onUnauthorized?.call();
     }
 
     if (decodedBody is Map<String, dynamic>) {

@@ -23,6 +23,17 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-026 (Implementar autenticação e tela de login no Flutter):
+  - Camada de persistência segura de sessão com `AuthSessionStorage` (`SecureAuthSessionStorage` baseado em `flutter_secure_storage` e `InMemoryAuthSessionStorage` para testes sem dependência de canal nativo).
+  - Gerenciador de ciclo de vida de sessão `AuthSessionController` (`ChangeNotifier`) com restauração na inicialização, login com credenciais, autocadastro com auto-login imediato, logout limpo e tratamento de sessão expirada/inválida (`401 UNAUTHORIZED`).
+  - Interceptação automática de `401` autenticado no `ApiClient` via callback `onUnauthorized` com expiração de sessão e notificação do usuário.
+  - Tela de login `LoginPage` com validação de campos, mascaramento e alternância de visibilidade de senha, indicador de progresso, banner de erro semântico para `401 BAD_CREDENTIALS` e atalho para a tela de cadastro.
+  - Botão de "Login" destacado posicionado no canto superior direito do AppBar (`AppScaffold`), com suporte a estado anônimo e transição suave para o menu de perfil e logout quando autenticado.
+  - Tela de autocadastro `RegisterPage` com validação de nome, e-mail único, senha com restrição de 6 a 100 caracteres, confirmação de senha idêntica e feedback visual para `409 DUPLICATE_EMAIL`.
+  - Guard de autenticação `requireAuth(context)` que intercepta ações protegidas no frontend mantendo o suporte à consulta/leitura anônima nas listagens.
+  - Proteção de ações de mutação (cadastro e edição de empresas, cadastro de obrigações) integradas ao `requireAuth`.
+  - Registro das rotas nomeadas `AppRoutes.login` (`/login`) e `AppRoutes.register` (`/register`).
+  - Suítes de testes unitários e de widgets em `auth_session_storage_test.dart`, `auth_session_controller_test.dart`, `login_page_test.dart`, `register_page_test.dart`, `auth_guard_test.dart` e `app_scaffold_test.dart` (88 testes aprovados no frontend).
 - Implementação e validação da SPEC-016 (Criar listagem e formulário de empresas):
   - Utilitário dedicado `CnpjValidator` com stripping de caracteres não numéricos, validação completa dos dígitos verificadores (DV1 e DV2) segundo a regra RN-001, rejeição de sequências com dígitos repetidos e formatação visual padrão `XX.XXX.XXX/XXXX-XX`.
   - Formulário unificado `CompanyFormPage` para cadastro e edição de empresas com validação síncrona inline: Razão Social (`legalName`), Nome Fantasia (`tradeName`), CNPJ (`cnpj`) e Situação Cadastral (`active`).

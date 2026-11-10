@@ -3,6 +3,7 @@ import 'core/config/app_config.dart';
 import 'core/network/api_client.dart';
 import 'core/routing/app_routes.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/presentation/controllers/auth_session_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,16 +12,23 @@ void main() {
   AppConfig.initialize();
 
   final apiClient = ApiClient();
+  final authController = AppRoutes.createAuthSessionController(apiClient);
+  authController.initialize();
 
-  runApp(PlayerContabilidadeApp(apiClient: apiClient));
+  runApp(PlayerContabilidadeApp(
+    apiClient: apiClient,
+    authController: authController,
+  ));
 }
 
 class PlayerContabilidadeApp extends StatelessWidget {
   final ApiClient apiClient;
+  final AuthSessionController? authController;
 
   const PlayerContabilidadeApp({
     super.key,
     required this.apiClient,
+    this.authController,
   });
 
   @override
@@ -33,6 +41,7 @@ class PlayerContabilidadeApp extends StatelessWidget {
       onGenerateRoute: (settings) => AppRoutes.onGenerateRoute(
         settings,
         apiClient: apiClient,
+        authController: authController,
       ),
     );
   }

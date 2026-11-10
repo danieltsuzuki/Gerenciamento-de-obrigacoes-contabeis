@@ -58,6 +58,39 @@ void main() {
       expect(apiClient.isAuthenticated, isFalse);
     });
 
+    test('login deve desserializar resposta com chave user e tokenType/expiresIn', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'token': _testToken(),
+            'tokenType': 'Bearer',
+            'expiresIn': 1800000,
+            'user': {
+              'id': 1,
+              'name': 'Carlos Silva',
+              'email': 'carlos@empresa.com',
+              'active': true,
+            }
+          }),
+          200,
+        );
+      });
+
+      final apiClient = ApiClient(httpClient: mockClient, baseUrl: 'http://api.local');
+      final dataSource = AuthRemoteDataSourceImpl(apiClient);
+      final repository = AuthRepositoryImpl(remoteDataSource: dataSource, apiClient: apiClient);
+
+      final session = await repository.login(
+        email: 'carlos@empresa.com',
+        password: _testPassword(),
+      );
+
+      expect(session.token, _testToken());
+      expect(session.responsible.name, 'Carlos Silva');
+      expect(session.responsible.id, 1);
+      expect(session.responsible.active, isTrue);
+    });
+
     test('register deve cadastrar novo usuário público com sucesso', () async {
       final mockClient = MockClient((request) async {
         expect(request.method, 'POST');
