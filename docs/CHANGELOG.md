@@ -23,6 +23,16 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-020 (Implementar fluxo de alteração de status no Flutter):
+  - Integração do fluxo de ciclo de vida de status com o endpoint `PATCH /api/obligations/{id}/status`.
+  - Transições estritas conforme máquina de estados do domínio (RN-008):
+    - `PENDING` -> `IN_PROGRESS` através da ação "Iniciar" com diálogo de confirmação.
+    - `IN_PROGRESS` -> `COMPLETED` através da ação "Concluir" com diálogo de confirmação e alerta de irrevogabilidade.
+    - `COMPLETED`: estado final permanente sem botões de ação ou edição permitida (RN-009).
+  - Tratamento semântico de erro de negócio com feedback visual para `422 INVALID_STATUS_TRANSITION` sem corromper o estado local.
+  - Cancelamento em caixas de diálogo que mantém o estado local intacto e sem chamadas desnecessárias à API.
+  - Restrição de segurança: botões de alteração de status visíveis exclusivamente para usuários autenticados.
+  - Suíte de testes automatizados dedicada em `obligation_status_transition_test.dart` (128 testes aprovados no frontend).
 - Implementação e validação da SPEC-019 (Criar tela de detalhes da obrigação):
   - Exibição detalhada de metadados da obrigação em `ObligationDetailPage`: título, descrição, identificador (`#ID`), empresa contratante, responsável técnico atribuído, prazo de vencimento com alerta de atraso, data de criação e data de conclusão (`completedAt`).
   - Progressão de status conforme máquina de estados do backend (RN-008):

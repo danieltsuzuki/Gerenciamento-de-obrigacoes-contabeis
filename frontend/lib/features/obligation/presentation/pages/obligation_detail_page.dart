@@ -226,9 +226,12 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _isUpdatingStatus = false);
+      final errorMsg = e.code == 'INVALID_STATUS_TRANSITION'
+          ? 'Transição de status não permitida pelas regras de negócio (RN-008).'
+          : e.message;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message),
+          content: Text(errorMsg),
           backgroundColor: const Color(0xFFDC2626),
         ),
       );
