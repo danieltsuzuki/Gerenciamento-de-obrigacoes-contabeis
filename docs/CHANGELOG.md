@@ -6,6 +6,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Não lançado]
 
 ### Alterado
+- Atualização e alinhamento da documentação e READMEs:
+  - Expansão do `README.md` raiz detalhando a stack do frontend, comandos para executar a aplicação Flutter (`flutter run`), testes (`flutter test`) e análise estática (`flutter analyze`).
+  - Criação do `backend/README.md` com instruções específicas do módulo Spring Boot e integração com o `.env` na raiz.
+  - Reestruturação completa do `frontend/README.md` com arquitetura em camadas, Clean Architecture, injeção de parâmetros (`--dart-define=API_URL=...`) e guia de testes.
+  - Atualização do `docs/arquitetura.md` refletindo com precisão a estrutura de diretórios implementada na SPEC-013 e mapeamento das próximas features.
+  - Atualização do `docs/status-implementacao.md` incluindo o rastreamento formal das especificações e testes do Flutter.
 - Centralização dos arquivos de ambiente e contêineres na raiz do repositório:
   - Movimentação de `Dockerfile`, `.env` e `.env.example` para a raiz do projeto para compartilhamento entre backend e frontend.
   - Inclusão da variável `API_URL` no `.env.example` para configuração do cliente frontend Flutter.
@@ -17,6 +23,21 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Configuração de Cross-Origin Resource Sharing (CORS) no backend Spring Boot:
+  - Habilitação de suporte a CORS no `SecurityConfig` via bean `CorsConfigurationSource` e liberação pública de requisições pre-flight `OPTIONS /**`.
+  - Configuração parametrizável através da propriedade `cors.allowed-origin-patterns` e variável de ambiente `CORS_ALLOWED_ORIGIN_PATTERNS` (padrão: `http://localhost:*,http://127.0.0.1:*`), viabilizando a integração direta com clientes web como Flutter Web.
+  - Suporte a credenciais (`allowCredentials: true`), todos os métodos HTTP (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `HEAD`), cabeçalhos abertos (`*`), cabeçalhos expostos (`Authorization`, `Content-Disposition`, `Location`) e cache de pre-flight de 3600 segundos (1 hora).
+  - Criação da suíte de testes automatizados `CorsConfigurationTest` validando a correta instanciação e filtros de origens.
+  - Documentação em `docs/arquitetura.md`, `docs/api.md`, `README.md` e `backend/README.md`.
+- Implementação e validação da SPEC-013 (Criar estrutura e navegação do Flutter):
+  - Inicialização do projeto Flutter 3.29.1 / Dart 3.7.0 no diretório `/frontend`.
+  - Arquitetura limpa modular orientada a features (`features/company`, `features/responsible`, `features/obligation`) dividida estritamente em camadas `data`, `domain` e `presentation`.
+  - Configuração de ambiente dinâmica (`AppConfig`) com suporte a `--dart-define=API_URL=...` e ambientes dev/staging/prod sem hardcoding de URLs.
+  - Cliente HTTP customizado (`ApiClient`) desacoplado com tratamento de exceções mapeado para o contrato REST do backend (`ApiException`), suporte a token JWT Bearer e timeouts configuráveis.
+  - Design system Material 3 padronizado (`AppTheme`) com paleta institucional e componentes compartilhados para feedback visual: `LoadingStateView`, `ErrorStateView`, `EmptyStateView` e layout responsivo adaptativo com `AppScaffold` (`NavigationRail` para desktop/web e `Drawer`/`NavigationBar` para telas menores).
+  - Configuração de rotas nomeadas com injeção de dependências e páginas iniciais de listagem (`CompanyListPage`, `ResponsibleListPage`, `ObligationListPage` com filtro de status e chips temáticos).
+  - Cobertura com suíte de testes unitários e de widget no Flutter (`flutter test`), totalizando 14 testes com 100% de sucesso e zero alertas no `flutter analyze`.
+  - Fechamento formal dos critérios de aceite da SPEC-013.
 - Validação e formalização da SPEC-012 (Adicionar testes do backend):
   - Cobertura abrangente com suíte de testes automatizados cobrindo domínio, serviços, controllers, segurança, validações e persistência.
   - Execução de 149 testes unitários e de fatiamento WebMvc com 100% de sucesso.
@@ -144,17 +165,6 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - O lock otimista foi removido; o domínio não define controle de concorrência por versão.
 
 ## [0.1.0] - 2026-11-07
-
-### Alterado
-- Centralização dos arquivos de ambiente e contêineres na raiz do repositório:
-  - Movimentação de `Dockerfile`, `.env` e `.env.example` para a raiz do projeto para compartilhamento entre backend e frontend.
-  - Inclusão da variável `API_URL` no `.env.example` para configuração do cliente frontend Flutter.
-  - Atualização do `README.md` refletindo o fluxo de configuração unificado.
-- Reestruturação do repositório em formato monorepo:
-  - Movimentação do código da aplicação Spring Boot para a pasta `/backend` (`src`, `pom.xml`, wrappers Maven, `.env.example`, `Dockerfile`).
-  - Criação da pasta `/frontend` para a aplicação Flutter.
-  - Manutenção da documentação unificada (`/docs`) e das diretrizes e especificações do agente (`/.agent`) na raiz do repositório para atender a ambos os módulos.
-  - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
 - Configuração de ambiente Docker e Docker Compose (`docker-compose.yml` e `Dockerfile`) para instância MySQL 8.0.

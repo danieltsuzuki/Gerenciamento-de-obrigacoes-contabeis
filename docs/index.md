@@ -1,6 +1,6 @@
 # Documentação do Projeto
 
-Guia central de documentação da aplicação **Player Contabilidade Back**.
+Guia central de documentação da aplicação **Player Contabilidade** (Backend Spring Boot e Frontend Flutter).
 
 Última revisão geral: 2026-11-09
 

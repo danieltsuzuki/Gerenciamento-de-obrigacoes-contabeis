@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | 13 |
 | Card | [Criar estrutura e navegação do Flutter](https://trello.com/c/gap9zScy) |
-| Status no Trello (09/11/2026) | A Fazer |
+| Status no Trello (09/11/2026) | Concluído |
 | Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Situação da especificação | Concluído — implementado e testado |
 
 ## 1. Objetivo
 
@@ -15,12 +15,12 @@ Criar o aplicativo Flutter, sua estrutura por features e a navegação entre tel
 
 ## 2. Escopo funcional
 
-- [ ] Criar projeto Flutter e configurar ambientes.
-- [ ] Organizar features companies, responsibles e obligations.
-- [ ] Separar camadas data/domain/presentation.
-- [ ] Configurar roteamento, tema e componentes compartilhados.
-- [ ] Definir estados de loading, erro e vazio reutilizáveis.
-- [ ] Configurar cliente HTTP e base URL por ambiente.
+- [x] Criar projeto Flutter e configurar ambientes.
+- [x] Organizar features companies, responsibles e obligations.
+- [x] Separar camadas data/domain/presentation.
+- [x] Configurar roteamento, tema e componentes compartilhados.
+- [x] Definir estados de loading, erro e vazio reutilizáveis.
+- [x] Configurar cliente HTTP e base URL por ambiente.
 
 ## 3. Regras de negócio e restrições
 
@@ -30,16 +30,16 @@ Criar o aplicativo Flutter, sua estrutura por features e a navegação entre tel
 
 ## 4. Contratos e decisões técnicas
 
-- Flutter; organização por features; camadas data/domain/presentation.
+- Flutter 3.29+ / Dart 3.7+; organização por features; camadas data/domain/presentation.
 - Features iniciais: companies, responsibles, obligations.
-- Cliente HTTP configurado para backend Spring Boot.
+- Cliente HTTP configurado para backend Spring Boot com mapeamento de ApiException.
 
 ## 5. Critérios de aceitação
 
-- [ ] App inicia sem erros.
-- [ ] Navegação entre telas principais funciona.
-- [ ] Tema e componentes compartilhados estão configurados.
-- [ ] Base URL não está hardcoded em widgets.
+- [x] App inicia sem erros.
+- [x] Navegação entre telas principais funciona.
+- [x] Tema e componentes compartilhados estão configurados.
+- [x] Base URL não está hardcoded em widgets.
 
 ## 6. Cenários de teste
 
