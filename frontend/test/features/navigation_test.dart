@@ -167,12 +167,18 @@ void main() {
     expect(find.text('Obrigações Fiscais'), findsWidgets);
     expect(find.text('DAS Mensal'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.business_outlined));
+    await tester.tap(find.descendant(
+      of: find.byType(NavigationRail),
+      matching: find.byIcon(Icons.business_outlined),
+    ));
     await tester.pumpAndSettle();
     expect(find.text('Empresas'), findsWidgets);
     expect(find.text('Alpha Tech Ltda'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.people_outline));
+    await tester.tap(find.descendant(
+      of: find.byType(NavigationRail),
+      matching: find.byIcon(Icons.people_outline),
+    ));
     await tester.pumpAndSettle();
     expect(find.text('Responsáveis'), findsWidgets);
     expect(find.text('Carlos Contador'), findsOneWidget);

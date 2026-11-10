@@ -23,6 +23,13 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-015 (Criar tela de listagem de obrigações):
+  - Interface da listagem de obrigações conectada a dados reais da API com renderização completa de informações essenciais: título, descrição, empresa vinculada, responsável atribuído, status com badge temático e ícone semântico, quantidade de anexos, data de criação e data de vencimento com indicador visual de atraso (`isOverdue`).
+  - Barra de navegação rápida por filtros de status (`ChoiceChip`) permitindo alternar instantaneamente entre "Todas", "Pendentes", "Em Andamento" e "Concluídas".
+  - Feedback visual estruturado em todos os estados da tela: carregamento (`LoadingStateView`), erro de comunicação com opção de tentar novamente (`ErrorStateView`) e estado vazio informativo (`EmptyStateView`).
+  - Mecanismo de recarga e sincronização após ações via `RefreshIndicator` (pull-to-refresh), botão de recarregar na AppBar e recarregamento automático no retorno de telas de detalhe e cadastro.
+  - Suporte a seleção de itens e navegação para a rota de detalhes da obrigação (`AppRoutes.obligationDetails`) e callback `onObligationTap`.
+  - Suíte de testes de widgets automatizados em `obligation_list_page_test.dart` cobrindo exibição, estados visuais, filtros, seleção e recarga (40 testes totais aprovados no frontend).
 - Implementação e validação da SPEC-014 (Implementar camada de integração com API):
   - Camada de rede estendida com suporte a paginação genérica do Spring Data (`PageResponse<T>`) e manipulação de arquivos binários com download (`DownloadedFile`) e extração do cabeçalho `Content-Disposition`.
   - Cliente HTTP (`ApiClient`) atualizado com suporte a requisições `multipartRequest` autenticadas com Bearer JWT para upload de arquivos e `download` para obtenção segura de fluxos binários.

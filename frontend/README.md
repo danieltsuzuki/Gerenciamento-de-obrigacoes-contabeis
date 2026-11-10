@@ -46,7 +46,7 @@ frontend/
 │       ├── auth/                   # Testes de login, registro e tratamento de BAD_CREDENTIALS
 │       ├── company/                # Testes de listagem paginada, busca por id, criação e atualização
 │       ├── responsible/            # Testes de listagem paginada, busca por id, criação e atualização
-│       ├── obligation/             # Testes de paginação, filtros, máquina de estados e INVALID_STATUS_TRANSITION
+│       ├── obligation/             # Testes de integração (DataSource/Repo) e de widgets (ObligationListPageTest)
 │       ├── attachment/             # Testes de upload multipart, listagem e download de fluxo binário
 │       └── navigation_test.dart    # Testes de fluxo e navegação entre páginas
 ├── pubspec.yaml                    # Dependências do projeto (http, http_parser, etc.)
