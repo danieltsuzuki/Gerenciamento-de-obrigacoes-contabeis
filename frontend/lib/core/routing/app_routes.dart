@@ -22,7 +22,10 @@ import '../../features/obligation/domain/repositories/obligation_repository.dart
 import '../../features/obligation/presentation/pages/obligation_list_page.dart';
 import '../../features/responsible/data/datasources/responsible_remote_datasource.dart';
 import '../../features/responsible/data/repositories/responsible_repository_impl.dart';
+import '../../features/responsible/domain/entities/responsible.dart';
 import '../../features/responsible/domain/repositories/responsible_repository.dart';
+import '../../features/responsible/presentation/pages/responsible_detail_page.dart';
+import '../../features/responsible/presentation/pages/responsible_form_page.dart';
 import '../../features/responsible/presentation/pages/responsible_list_page.dart';
 import '../network/api_client.dart';
 
@@ -36,6 +39,9 @@ class AppRoutes {
   static const String companyCreate = '/companies/create';
   static const String companyEdit = '/companies/edit';
   static const String responsibles = '/responsibles';
+  static const String responsibleDetails = '/responsibles/details';
+  static const String responsibleCreate = '/responsibles/create';
+  static const String responsibleEdit = '/responsibles/edit';
   static const String login = '/login';
   static const String register = '/register';
 
@@ -128,6 +134,38 @@ class AppRoutes {
           builder: (_) => ResponsibleListPage(
             repository: effectiveResponsibleRepo,
             authController: effectiveAuthController,
+          ),
+        );
+      case responsibleDetails:
+        final responsible = settings.arguments is Responsible
+            ? settings.arguments as Responsible
+            : null;
+        final id = settings.arguments is int
+            ? settings.arguments as int
+            : (responsible?.id ?? 0);
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => ResponsibleDetailPage(
+            repository: effectiveResponsibleRepo,
+            responsibleId: id,
+            initialResponsible: responsible,
+            authController: effectiveAuthController,
+          ),
+        );
+      case responsibleCreate:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => ResponsibleFormPage(repository: effectiveResponsibleRepo),
+        );
+      case responsibleEdit:
+        final responsible = settings.arguments is Responsible
+            ? settings.arguments as Responsible
+            : null;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => ResponsibleFormPage(
+            repository: effectiveResponsibleRepo,
+            responsible: responsible,
           ),
         );
       case login:

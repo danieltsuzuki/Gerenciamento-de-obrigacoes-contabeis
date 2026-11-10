@@ -1,66 +1,92 @@
-# SPEC-017 — Criar listagem e formulário de responsáveis
+# SPEC-017 — Criar listagem, formulário e detalhes de responsáveis
 
 | Campo | Valor |
 |---|---|
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | 17 |
 | Card | [Criar listagem e formulário de responsáveis](https://trello.com/c/ru5UKQDg) |
-| Status no Trello (09/11/2026) | A Fazer |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Status no Trello (10/11/2026) | Concluído |
+| Versão da SPEC | 1.3 |
+| Situação da especificação | Concluída e testada |
 
 ## 1. Objetivo
 
-Implementar interface Flutter para listar, cadastrar e editar responsáveis.
+Implementar interface Flutter para listar, detalhar, cadastrar e editar responsáveis contábeis, integrada aos contratos REST da API (`GET /api/responsibles`, `GET /api/responsibles/{id}`, `POST /api/responsibles`, `PUT /api/responsibles/{id}`).
 
 ## 2. Escopo funcional
 
-- [ ] Exibir listagem de responsáveis.
-- [ ] Criar formulário de cadastro e edição.
-- [ ] Campos: nome, e-mail e situação.
-- [ ] Validar obrigatoriedade e formato do e-mail.
-- [ ] Apresentar erros junto aos campos.
-- [ ] Exibir feedback de sucesso e erro.
+- [x] Exibir listagem paginada de responsáveis com avatar inicial, nome, e-mail e badge de status.
+- [x] Filtros rápidos por situação cadastral: chips `Todos`, `Ativos` e `Inativos`.
+- [x] **Exibir detalhes de responsáveis (`ResponsibleDetailPage`)**:
+  - Exibe avatar de destaque, nome, e-mail, identificador do sistema (`#ID`) e situação operacional explicativa (se pode ou não receber novas obrigações).
+  - Consulta detalhada por ID (`GET /api/responsibles/{id}`), aberta para consulta anônima.
+  - Ação para navegar ao formulário de edição com recarregamento dos dados ao retornar.
+- [x] **Ocultação de ações de edição para usuários anônimos na tela de detalhes**:
+  - Os botões de editar responsável (tanto o ícone na AppBar quanto o botão de ação principal da tela) **não devem ser visíveis** caso o usuário não esteja logado.
+  - Ao autenticar, os botões tornam-se visíveis reativamente para permitir a edição.
+- [x] **Separação de ações na listagem**:
+  - Toque no card/ListTile: abre a tela de detalhes do responsável (`ResponsibleDetailPage`), permitindo consulta rápida sem exigir autenticação.
+  - Toque no ícone de editar (`IconButton` de edição no card): aciona diretamente o fluxo de edição (`ResponsibleFormPage`), protegido por `requireAuth`.
+- [x] Formulário de cadastro de novo responsável com campos: Nome completo, E-mail corporativo, Senha inicial (com alternância de visibilidade) e Situação cadastral (`active`).
+- [x] Formulário de edição de responsável existente com campos pré-preenchidos: Nome completo, E-mail corporativo e Situação cadastral (`active` para inativação lógica).
+- [x] Omissão segura de credenciais em modo de edição: a senha nunca é exposta nem editada pelo formulário de responsável.
+- [x] Validação inline: nome obrigatório (máx. 255), formato de e-mail corporativo válido via regex (máx. 255), senha inicial obrigatória no cadastro (mín. 6, máx. 100 caracteres).
+- [x] Tratamento de erros de domínio: captura de `409 DUPLICATE_EMAIL` com feedback explicativo (`RN-003`), erros de validação e falhas de conexão.
+- [x] Exibição de feedback visual com SnackBar de sucesso e recarregamento automático da listagem.
+- [x] Proteção de rotas e mutações via `requireAuth` / `AppRoutes`.
 
 ## 3. Regras de negócio e restrições
 
-- E-mail deve ser válido e único.
-- Responsáveis inativos não podem ser atribuídos a novas obrigações.
-- Inativação lógica por active=false; sem exclusão física.
-- Nunca exibir senha/hash em telas ou responses.
+- **RN-003**: E-mail do responsável deve ser corporativo, válido e único no sistema. Conflito `409 DUPLICATE_EMAIL` tratado.
+- **RN-005**: Responsáveis inativos não podem ser atribuídos a novas obrigações; a situação cadastral é facilmente alternada pelo switch.
+- Inativação lógica por `active=false`; sem exclusão física no banco de dados.
+- Segurança de credenciais: a senha é enviada via payload HTTPS seguro no cadastro com Bcrypt no backend e nunca exibida em telas ou listagens.
 
 ## 4. Contratos e decisões técnicas
 
-- GET /api/responsibles; POST /api/responsibles; PUT /api/responsibles/{id}.
-- Campos: name, email, active; o contrato de criação também possui password conforme docs/api.md.
-- GET aceita active, page, size e sort.
+- `GET /api/responsibles`: listagem com suporte ao query param `active` (`true`/`false`/`null`).
+- `GET /api/responsibles/{id}`: consulta detalhada de responsável por ID (aberto para acesso anônimo).
+- `POST /api/responsibles`: criação com payload `{ name, email, password, active }`.
+- `PUT /api/responsibles/{id}`: atualização com payload `{ name, email, active }`.
+- Rotas nomeadas:
+  - `AppRoutes.responsibles` (`/responsibles`)
+  - `AppRoutes.responsibleDetails` (`/responsibles/details`)
+  - `AppRoutes.responsibleCreate` (`/responsibles/create`)
+  - `AppRoutes.responsibleEdit` (`/responsibles/edit`)
 
 ## 5. Critérios de aceitação
 
-- [ ] Criar, editar e listar integrados à API.
-- [ ] E-mail inválido/duplicado é comunicado.
-- [ ] Situação é exibida e atualizada.
-- [ ] Erros e sucessos são apresentados claramente.
+- [x] Criar, editar, detalhar e listar responsáveis totalmente integrados à API e ao repositório Flutter.
+- [x] Toque no card abre a tela de detalhes; toque no botão de editar abre o formulário de edição.
+- [x] Botões de editar responsável na página de detalhes ficam estritamente ocultos para usuários não logados.
+- [x] Formato inválido de e-mail e e-mail duplicado são devidamente comunicados ao usuário.
+- [x] Situação cadastral (Ativo/Inativo) é exibida com destaque visual e atualizada via switch.
+- [x] Feedbacks de sucesso (SnackBar verde) e erro (banner e campos com erro) claros.
+- [x] Cobertura automatizada por testes de unidade e widgets (`responsible_detail_page_test.dart`, `responsible_form_page_test.dart` e `responsible_list_page_test.dart`).
 
 ## 6. Cenários de teste
 
-- **Sucesso:** validar o fluxo principal descrito nesta SPEC.
-- **Validação:** rejeitar dados obrigatórios ausentes ou inválidos.
-- **Falha de dependência:** apresentar erro apropriado quando API, banco ou storage não estiver disponível, quando aplicável.
-- **Regressão:** garantir que a funcionalidade não viole regras existentes do domínio.
+- **Sucesso - Listagem:** renderização de responsáveis com avatar, nome, e-mail e status chip.
+- **Sucesso - Detalhes:** navegação para a tela de detalhes ao clicar no card, exibindo ID, nome, e-mail e status.
+- **Sucesso - Filtros:** alternância entre filtros `Todos`, `Ativos` e `Inativos` com reload dinâmico.
+- **Sucesso - Cadastro:** preenchimento de nome, e-mail válido e senha segura resultando em `CreateResponsibleRequest`.
+- **Sucesso - Edição:** acionamento via ícone de edição, abertura pré-preenchida, inativação lógica via switch e envio de `UpdateResponsibleRequest`.
+- **Validação:** bloqueio de submissão com campos vazios, e-mail inválido ou senha menor que 6 caracteres.
+- **Conflito de negócio:** tratamento visual de `409 DUPLICATE_EMAIL`.
+- **Autenticação:** proteção com `requireAuth` nas ações de criação e edição.
 
 ## 7. Dependências
 
-- Especificações de arquitetura e domínio do projeto.
-- Contratos REST documentados em `docs/api.md`, quando aplicável.
-- Modelo de dados em `docs/modelo-de-dados.md`, quando aplicável.
-- Implementações anteriores das quais esta funcionalidade depende.
+- `docs/api.md` (contratos `/api/responsibles`).
+- `frontend/lib/features/responsible/domain/entities/responsible.dart`.
+- `frontend/lib/features/responsible/domain/repositories/responsible_repository.dart`.
+- `frontend/lib/features/auth/presentation/widgets/auth_guard.dart`.
 
 ## 8. Pendências e pontos a confirmar
 
-- O card não especifica como a senha será solicitada no cadastro/edição. A API de criação documenta password, mas o PUT não recebe senha. Definir experiência sem expor/editar credenciais indevidamente.
+- *Resolvido:* Ações separadas na listagem: o card abre os detalhes e o ícone abre o formulário de edição. No cadastro, a senha é solicitada (mín. 6 caracteres) com obscure toggle; na edição, a senha não é exposta nem editada.
 
 ## 9. Rastreabilidade
 
 - Card Trello: https://trello.com/c/ru5UKQDg
-- Documentação de referência: `docs/index.md`, `docs/api.md`, `docs/modelo-de-dados.md`, `docs/status-implementacao.md`, `docs/pendencias-e-perguntas-em-aberto.md`, `docs/CHANGELOG.md` e ADRs, conforme aplicável.
+- Documentação de referência: `docs/api.md`, `docs/status-implementacao.md`, `docs/CHANGELOG.md`.
