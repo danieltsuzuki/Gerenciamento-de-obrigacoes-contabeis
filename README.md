@@ -13,7 +13,9 @@ O projeto adota estrutura monorepo separando claramente as responsabilidades de 
 ├── frontend/           # Aplicação frontend em Flutter (Web, Desktop, Mobile)
 ├── docs/               # Documentação técnica compartilhada, contratos de API e modelos
 ├── .agent/             # Regras, especificações (SPECs) e skills de desenvolvimento
+├── .env.example        # Modelo de variáveis de ambiente compartilhado (Backend & Frontend)
 ├── docker-compose.yml  # Orquestração de serviços de infraestrutura (MySQL)
+├── Dockerfile          # Imagem Docker de suporte ao ambiente
 └── README.md           # Guia geral do projeto
 ```
 
@@ -67,9 +69,8 @@ Consulte a especificação arquitetural completa em [`docs/arquitetura.md`](docs
 - **Git**
 
 ### 1. Configuração de Variáveis de Ambiente
-Navegue até a pasta `backend/` e crie seu arquivo `.env` a partir do modelo fictício:
+Na raiz do projeto, crie seu arquivo `.env` unificado a partir do modelo fictício:
 ```bash
-cd backend
 cp .env.example .env
 ```
 
@@ -84,6 +85,7 @@ cp .env.example .env
 | `JWT_SECRET` | Chave secreta HMAC-SHA (mín. 32 bytes) | `sua-chave-secreta-jwt-muito-longa-e-segura-32-bytes` |
 | `JWT_EXPIRATION_MS`| Tempo de validade do token (ms) | `1800000` (30 minutos) |
 | `STORAGE_LOCATION` | Diretório no disco para anexos | `uploads` |
+| `API_URL` | URL base da API consumida pelo frontend | `http://localhost:8080` |
 
 ### 2. Subir o Banco de Dados MySQL
 Na raiz do projeto:

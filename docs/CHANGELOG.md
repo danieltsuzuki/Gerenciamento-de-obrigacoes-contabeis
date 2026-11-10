@@ -6,6 +6,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Não lançado]
 
 ### Alterado
+- Centralização dos arquivos de ambiente e contêineres na raiz do repositório:
+  - Movimentação de `Dockerfile`, `.env` e `.env.example` para a raiz do projeto para compartilhamento entre backend e frontend.
+  - Inclusão da variável `API_URL` no `.env.example` para configuração do cliente frontend Flutter.
+  - Atualização do `README.md` refletindo o fluxo de configuração unificado.
 - Reestruturação do repositório em formato monorepo:
   - Movimentação do código da aplicação Spring Boot para a pasta `/backend` (`src`, `pom.xml`, wrappers Maven, `.env.example`, `Dockerfile`).
   - Criação da pasta `/frontend` para a aplicação Flutter.
@@ -142,6 +146,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [0.1.0] - 2026-11-07
 
 ### Alterado
+- Centralização dos arquivos de ambiente e contêineres na raiz do repositório:
+  - Movimentação de `Dockerfile`, `.env` e `.env.example` para a raiz do projeto para compartilhamento entre backend e frontend.
+  - Inclusão da variável `API_URL` no `.env.example` para configuração do cliente frontend Flutter.
+  - Atualização do `README.md` refletindo o fluxo de configuração unificado.
 - Reestruturação do repositório em formato monorepo:
   - Movimentação do código da aplicação Spring Boot para a pasta `/backend` (`src`, `pom.xml`, wrappers Maven, `.env.example`, `Dockerfile`).
   - Criação da pasta `/frontend` para a aplicação Flutter.
