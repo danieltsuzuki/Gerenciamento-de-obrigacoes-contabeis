@@ -24,7 +24,7 @@ frontend/
 │   │   ├── company/                # Domínio de Empresas Clientes
 │   │   │   ├── data/               # CompanyRemoteDataSource, CompanyRepositoryImpl, DTOs (Create/Update)
 │   │   │   ├── domain/             # Company (entidade), CompanyRepository (contrato)
-│   │   │   └── presentation/       # CompanyListPage
+│   │   │   └── presentation/       # CompanyListPage, CompanyFormPage (cadastro e edição com validação de CNPJ)
 │   │   ├── responsible/            # Domínio de Responsáveis Contábeis
 │   │   │   ├── data/               # ResponsibleRemoteDataSource, ResponsibleRepositoryImpl, DTOs (Create/Update)
 │   │   │   ├── domain/             # Responsible (entidade), ResponsibleRepository (contrato)
@@ -44,7 +44,7 @@ frontend/
 │   │   └── widgets/                # Testes de LoadingStateView, ErrorStateView e EmptyStateView
 │   └── features/                   # Testes de integração de rede e navegação
 │       ├── auth/                   # Testes de login, registro e tratamento de BAD_CREDENTIALS
-│       ├── company/                # Testes de listagem paginada, busca por id, criação e atualização
+│       ├── company/                # Testes de listagem, filtros, formulário de criação/edição e validação de CNPJ
 │       ├── responsible/            # Testes de listagem paginada, busca por id, criação e atualização
 │       ├── obligation/             # Testes de integração (DataSource/Repo) e de widgets (ObligationListPageTest)
 │       ├── attachment/             # Testes de upload multipart, listagem e download de fluxo binário

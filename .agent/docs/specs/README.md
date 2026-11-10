@@ -37,7 +37,7 @@ As SPECs preservam as decisões das fontes. Pontos não definidos ou contraditó
 | [SPEC-013](./13-criar-estrutura-e-navegacao-do-flutter.spec.md) | [Criar estrutura e navegação do Flutter](https://trello.com/c/gap9zScy) | Concluído |
 | [SPEC-014](./14-implementar-camada-de-integracao-com-api.spec.md) | [Implementar camada de integração com API](https://trello.com/c/V7l7sJPV) | Concluído |
 | [SPEC-015](./15-criar-tela-de-listagem-de-obrigacoes.spec.md) | [Criar tela de listagem de obrigações](https://trello.com/c/3wpXjbhp) | Concluído |
-| [SPEC-016](./16-criar-listagem-e-formulario-de-empresas.spec.md) | [Criar listagem e formulário de empresas](https://trello.com/c/qiztV9zZ) | A Fazer |
+| [SPEC-016](./16-criar-listagem-e-formulario-de-empresas.spec.md) | [Criar listagem e formulário de empresas](https://trello.com/c/qiztV9zZ) | Concluído |
 | [SPEC-017](./17-criar-listagem-e-formulario-de-responsaveis.spec.md) | [Criar listagem e formulário de responsáveis](https://trello.com/c/ru5UKQDg) | A Fazer |
 | [SPEC-018](./18-criar-formulario-de-cadastro-e-edicao-de-obrigacoes.spec.md) | [Criar formulário de cadastro e edição de obrigações](https://trello.com/c/DlkBtqch) | A Fazer |
 | [SPEC-019](./19-criar-tela-de-detalhes-da-obrigacao.spec.md) | [Criar tela de detalhes da obrigação](https://trello.com/c/82pKQj1o) | A Fazer |
@@ -47,6 +47,7 @@ As SPECs preservam as decisões das fontes. Pontos não definidos ou contraditó
 | [SPEC-023](./23-adicionar-testes-do-flutter.spec.md) | [Adicionar testes do Flutter](https://trello.com/c/JN4XYhU1) | A Fazer |
 | [SPEC-024](./24-documentar-execucao-arquitetura-e-api.spec.md) | [Documentar execução, arquitetura e API](https://trello.com/c/c3Ti7JGA) | A Fazer |
 | [SPEC-025](./25-preparar-entrega-revisao-e-pull-request.spec.md) | [Preparar entrega, revisão e Pull Request](https://trello.com/c/dK9X0JMO) | Backlog |
+| [SPEC-026](./26-implementar-autenticacao-no-flutter.spec.md) | Implementar autenticação no Flutter (sem card; derivada das regras JWT do backend) | A Fazer |
 
 ## Observações de consistência
 

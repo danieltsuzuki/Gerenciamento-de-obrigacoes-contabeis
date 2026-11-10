@@ -23,6 +23,14 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-016 (Criar listagem e formulário de empresas):
+  - Utilitário dedicado `CnpjValidator` com stripping de caracteres não numéricos, validação completa dos dígitos verificadores (DV1 e DV2) segundo a regra RN-001, rejeição de sequências com dígitos repetidos e formatação visual padrão `XX.XXX.XXX/XXXX-XX`.
+  - Formulário unificado `CompanyFormPage` para cadastro e edição de empresas com validação síncrona inline: Razão Social (`legalName`), Nome Fantasia (`tradeName`), CNPJ (`cnpj`) e Situação Cadastral (`active`).
+  - Bloqueio de submissão enquanto inválido e gestão de inativação cadastral via switch em substituição a exclusão física (RN-004).
+  - Tratamento semântico de erros da API, incluindo duplicidade de CNPJ (`409 DUPLICATE_CNPJ` / RN-002) e mensagens de erro de validação.
+  - Aprimoramento da tela de listagem `CompanyListPage` com filtros por situação (`ChoiceChip`s), CNPJ formatado, chips temáticos, edição rápida e recarregamento automático.
+  - Registro das rotas nomeadas `AppRoutes.companyCreate` e `AppRoutes.companyEdit`.
+  - Suítes de testes automatizados unitários e de widgets em `cnpj_validator_test.dart`, `company_form_page_test.dart` e `company_list_page_test.dart` (57 testes aprovados no frontend).
 - Implementação e validação da SPEC-015 (Criar tela de listagem de obrigações):
   - Interface da listagem de obrigações conectada a dados reais da API com renderização completa de informações essenciais: título, descrição, empresa vinculada, responsável atribuído, status com badge temático e ícone semântico, quantidade de anexos, data de criação e data de vencimento com indicador visual de atraso (`isOverdue`).
   - Barra de navegação rápida por filtros de status (`ChoiceChip`) permitindo alternar instantaneamente entre "Todas", "Pendentes", "Em Andamento" e "Concluídas".

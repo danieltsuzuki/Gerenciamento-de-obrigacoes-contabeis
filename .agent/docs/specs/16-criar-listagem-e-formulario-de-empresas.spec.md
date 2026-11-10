@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | 16 |
 | Card | [Criar listagem e formulário de empresas](https://trello.com/c/qiztV9zZ) |
-| Status no Trello (09/11/2026) | A Fazer |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Status no Trello (09/11/2026) | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluído — implementado e testado |
 
 ## 1. Objetivo
 
@@ -15,33 +15,35 @@ Implementar interface Flutter para listar, cadastrar e editar empresas.
 
 ## 2. Escopo funcional
 
-- [ ] Exibir listagem de empresas.
-- [ ] Criar formulário de cadastro e edição.
-- [ ] Campos: razão social, nome fantasia, CNPJ e situação.
-- [ ] Validar campos obrigatórios e formato do CNPJ.
-- [ ] Apresentar mensagens de validação junto aos campos.
-- [ ] Exibir feedback de sucesso e erro.
+- [x] Exibir listagem de empresas.
+- [x] Criar formulário de cadastro e edição.
+- [x] Campos: razão social, nome fantasia, CNPJ e situação.
+- [x] Validar campos obrigatórios e formato do CNPJ.
+- [x] Apresentar mensagens de validação junto aos campos.
+- [x] Exibir feedback de sucesso e erro.
 
 ## 3. Regras de negócio e restrições
 
-- CNPJ deve ser validado no cliente para feedback e novamente pela API.
-- CNPJ é único.
-- Inativação é feita por situação; não existe exclusão física.
-- Não permitir envio enquanto campos obrigatórios estiverem inválidos.
+- CNPJ validado no cliente através de algoritmo com cálculo dos dois dígitos verificadores (`CnpjValidator` - RN-001) e revalidado pela API.
+- CNPJ é único: erros `409 DUPLICATE_CNPJ` são apresentados de forma clara (RN-002).
+- Inativação é feita por situação cadastral (`active: false`); não existe exclusão física (RN-004).
+- Não permitir envio enquanto campos obrigatórios ou formato de CNPJ estiverem inválidos.
 
 ## 4. Contratos e decisões técnicas
 
-- GET /api/companies; POST /api/companies; PUT /api/companies/{id}.
-- Request: legalName, tradeName, cnpj, active.
-- GET aceita active, page, size e sort.
-- Erros da API devem ser apresentados de forma compreensível.
+- `GET /api/companies` via `CompanyRepository.getCompanies` com filtro opcional por `active` (Todas, Ativas, Inativas).
+- `POST /api/companies` via `CompanyRepository.createCompany` com `CreateCompanyRequest(legalName, tradeName, cnpj, active)`.
+- `PUT /api/companies/{id}` via `CompanyRepository.updateCompany` com `UpdateCompanyRequest(legalName, tradeName, cnpj, active)`.
+- Validador `CnpjValidator` com stripping de máscara, validação de 14 dígitos, rejeição de repetidos, cálculo de DV1/DV2 e formatação visual `XX.XXX.XXX/XXXX-XX`.
+- `CompanyFormPage` com suporte dual a cadastro e edição, validação síncrona inline em `TextFormField`s, bloqueio de submissão duplicada com indicador de progresso e tratamento semântico de erros de duplicidade e validação.
+- `CompanyListPage` com `ChoiceChip`s de filtragem, formatação de dados, chips de situação e navegação para cadastro e edição.
 
 ## 5. Critérios de aceitação
 
-- [ ] Criar, editar e listar integrados à API.
-- [ ] CNPJ inválido/duplicado mostra erro apropriado.
-- [ ] Situação ativa/inativa é exibida e editável.
-- [ ] Sucesso e falha geram feedback ao usuário.
+- [x] Criar, editar e listar integrados à API.
+- [x] CNPJ inválido/duplicado mostra erro apropriado.
+- [x] Situação ativa/inativa é exibida e editável.
+- [x] Sucesso e falha geram feedback ao usuário.
 
 ## 6. Cenários de teste
 
