@@ -17,13 +17,19 @@ class Attachment {
 
   factory Attachment.fromJson(Map<String, dynamic> json) {
     return Attachment(
-      id: json['id'] as int,
-      obligationId: json['obligationId'] as int,
+      id: (json['id'] as num).toInt(),
+      obligationId: (json['obligationId'] as num).toInt(),
       name: json['name'] as String,
       contentType: json['contentType'] as String? ?? 'application/octet-stream',
-      size: json['size'] as int? ?? 0,
+      size: (json['size'] as num?)?.toInt() ?? 0,
       uploadedAt: DateTime.parse(json['uploadedAt'] as String),
     );
+  }
+
+  String get formattedSize {
+    if (size < 1024) return '$size B';
+    if (size < 1024 * 1024) return '${(size / 1024).toStringAsFixed(1)} KB';
+    return '${(size / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   Map<String, dynamic> toJson() => {

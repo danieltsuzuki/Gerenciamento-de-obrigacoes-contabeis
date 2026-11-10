@@ -1,9 +1,13 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:player_contabilidade_front/core/network/api_client.dart';
 import 'package:player_contabilidade_front/core/network/api_exception.dart';
+import 'package:player_contabilidade_front/core/network/downloaded_file.dart';
 import 'package:player_contabilidade_front/core/network/page_response.dart';
 import 'package:player_contabilidade_front/core/theme/app_theme.dart';
+import 'package:player_contabilidade_front/features/attachment/domain/entities/attachment.dart';
+import 'package:player_contabilidade_front/features/attachment/domain/repositories/attachment_repository.dart';
 import 'package:player_contabilidade_front/features/auth/data/datasources/auth_session_storage.dart';
 import 'package:player_contabilidade_front/features/auth/domain/entities/auth_session.dart';
 import 'package:player_contabilidade_front/features/auth/domain/repositories/auth_repository.dart';
@@ -27,6 +31,8 @@ class MockObligationRepository implements ObligationRepository {
   Obligation? obligationToReturn;
   bool shouldThrow = false;
   int getByIdCalls = 0;
+  ObligationStatus? lastUpdatedStatus;
+  int updateStatusCalls = 0;
 
   @override
   Future<Obligation> getObligationById(int id) async {
@@ -71,8 +77,71 @@ class MockObligationRepository implements ObligationRepository {
       throw UnimplementedError();
 
   @override
-  Future<Obligation> updateObligationStatus(int id, ObligationStatus newStatus) async =>
+  Future<Obligation> updateObligationStatus(int id, ObligationStatus newStatus) async {
+    updateStatusCalls++;
+    lastUpdatedStatus = newStatus;
+    final current = obligationToReturn ??
+        Obligation(
+          id: id,
+          title: 'DAS Mensal',
+          status: ObligationStatus.pending,
+          dueDate: DateTime(2026, 12, 10),
+          company: const ObligationParticipantSummary(id: 1, name: 'Empresa Alpha'),
+          responsible: const ObligationParticipantSummary(id: 2, name: 'Carlos Silva'),
+        );
+
+    final updated = Obligation(
+      id: current.id,
+      title: current.title,
+      description: current.description,
+      status: newStatus,
+      dueDate: current.dueDate,
+      createdAt: current.createdAt,
+      completedAt: newStatus == ObligationStatus.completed ? DateTime(2026, 11, 10) : current.completedAt,
+      company: current.company,
+      responsible: current.responsible,
+      attachmentCount: current.attachmentCount,
+    );
+    obligationToReturn = updated;
+    return updated;
+  }
+}
+
+class MockAttachmentRepository implements AttachmentRepository {
+  List<Attachment> attachmentsToReturn = [];
+  bool shouldThrow = false;
+  int downloadCalls = 0;
+
+  @override
+  Future<List<Attachment>> getAttachments(int obligationId) async {
+    if (shouldThrow) {
+      throw const ApiException(
+        statusCode: 500,
+        code: 'STORAGE_ERROR',
+        message: 'Erro ao carregar anexos do storage.',
+      );
+    }
+    return attachmentsToReturn;
+  }
+
+  @override
+  Future<Attachment> uploadAttachment({
+    required int obligationId,
+    required String filename,
+    required List<int> bytes,
+    String? contentType,
+  }) async =>
       throw UnimplementedError();
+
+  @override
+  Future<DownloadedFile> downloadAttachment(int attachmentId) async {
+    downloadCalls++;
+    return DownloadedFile(
+      filename: 'comprovante.pdf',
+      bytes: Uint8List.fromList([1, 2, 3, 4]),
+      contentType: 'application/pdf',
+    );
+  }
 }
 
 class MockCompanyRepository implements CompanyRepository {
@@ -141,8 +210,9 @@ class FakeAuthRepository implements AuthRepository {
 }
 
 void main() {
-  group('ObligationDetailPage - SPEC-015 / SPEC-018', () {
+  group('ObligationDetailPage - SPEC-019', () {
     late MockObligationRepository mockObligationRepo;
+    late MockAttachmentRepository mockAttachmentRepo;
     late MockCompanyRepository mockCompanyRepo;
     late MockResponsibleRepository mockResponsibleRepo;
     late InMemoryAuthSessionStorage sessionStorage;
@@ -151,6 +221,7 @@ void main() {
 
     setUp(() {
       mockObligationRepo = MockObligationRepository();
+      mockAttachmentRepo = MockAttachmentRepository();
       mockCompanyRepo = MockCompanyRepository();
       mockResponsibleRepo = MockResponsibleRepository();
       sessionStorage = InMemoryAuthSessionStorage();
@@ -170,6 +241,7 @@ void main() {
         theme: AppTheme.lightTheme,
         home: ObligationDetailPage(
           repository: mockObligationRepo,
+          attachmentRepository: mockAttachmentRepo,
           companyRepository: mockCompanyRepo,
           responsibleRepository: mockResponsibleRepo,
           obligationId: obligationId,
@@ -179,7 +251,7 @@ void main() {
       );
     }
 
-    testWidgets('deve exibir dados da obrigação e NÃO exibir botão de editar quando deslogado',
+    testWidgets('deve exibir dados da obrigação e NÃO exibir botões de status, edição ou card de anexos quando deslogado',
         (tester) async {
       final ob = Obligation(
         id: 10,
@@ -205,15 +277,22 @@ void main() {
       expect(find.text('Pendente'), findsOneWidget);
       expect(find.text('Empresa Alpha'), findsOneWidget);
       expect(find.text('Carlos Silva'), findsOneWidget);
-      expect(find.text('3 anexos registrados'), findsOneWidget);
       expect(find.text('#10'), findsOneWidget);
+      expect(find.textContaining('3 anexos registrados no servidor'), findsOneWidget);
 
-      // Botão de editar não deve ser exibido quando deslogado
+      // Botões de ação de status NÃO devem ser visíveis quando deslogado
+      expect(find.byKey(const Key('obligation-detail-start-action')), findsNothing);
+      expect(find.byKey(const Key('obligation-detail-complete-action')), findsNothing);
+
+      // Card de anexos inferior NÃO deve ser exibido quando deslogado
+      expect(find.textContaining('Documentos Anexados ('), findsNothing);
+
+      // Botões de edição NÃO devem ser exibidos quando deslogado
       expect(find.byKey(const Key('obligation-detail-edit-button')), findsNothing);
       expect(find.byKey(const Key('obligation-detail-edit-action')), findsNothing);
     });
 
-    testWidgets('deve exibir botão de editar e abrir ObligationFormPage quando autenticado e não concluída',
+    testWidgets('deve permitir iniciar obrigação com status PENDING após confirmação',
         (tester) async {
       const session = AuthSession(
         token: 'token-valido',
@@ -225,13 +304,112 @@ void main() {
       final ob = Obligation(
         id: 10,
         title: 'Declaração DCTF',
-        description: 'Instruções DCTF Mensal',
-        status: ObligationStatus.inProgress,
+        status: ObligationStatus.pending,
         dueDate: DateTime(2026, 12, 15),
-        createdAt: DateTime(2026, 11, 1),
         company: const ObligationParticipantSummary(id: 1, name: 'Empresa Alpha'),
         responsible: const ObligationParticipantSummary(id: 2, name: 'Carlos Silva'),
-        attachmentCount: 0,
+      );
+      mockObligationRepo.obligationToReturn = ob;
+
+      await tester.pumpWidget(createWidgetUnderTest(
+        obligationId: 10,
+        initialObligation: ob,
+      ));
+      await tester.pumpAndSettle();
+
+      final startButton = find.byKey(const Key('obligation-detail-start-action'));
+      expect(startButton, findsOneWidget);
+
+      await tester.tap(startButton);
+      await tester.pumpAndSettle();
+
+      // Confirmação no AlertDialog
+      expect(find.text('Iniciar Obrigação'), findsWidgets);
+      final confirmButton = find.byKey(const Key('confirm-start-status'));
+      expect(confirmButton, findsOneWidget);
+
+      await tester.tap(confirmButton);
+      await tester.pumpAndSettle();
+
+      expect(mockObligationRepo.updateStatusCalls, 1);
+      expect(mockObligationRepo.lastUpdatedStatus, ObligationStatus.inProgress);
+      expect(find.text('Obrigação iniciada com sucesso!'), findsOneWidget);
+      expect(find.text('Em Andamento'), findsOneWidget);
+    });
+
+    testWidgets('deve permitir concluir obrigação com status IN_PROGRESS após confirmação',
+        (tester) async {
+      const session = AuthSession(
+        token: 'token-valido',
+        responsible: Responsible(id: 1, name: 'Admin', email: 'admin@empresa.com', active: true),
+      );
+      await sessionStorage.saveSession(session);
+      await authController.initialize();
+
+      final ob = Obligation(
+        id: 10,
+        title: 'Declaração DCTF',
+        status: ObligationStatus.inProgress,
+        dueDate: DateTime(2026, 12, 15),
+        company: const ObligationParticipantSummary(id: 1, name: 'Empresa Alpha'),
+        responsible: const ObligationParticipantSummary(id: 2, name: 'Carlos Silva'),
+      );
+      mockObligationRepo.obligationToReturn = ob;
+
+      await tester.pumpWidget(createWidgetUnderTest(
+        obligationId: 10,
+        initialObligation: ob,
+      ));
+      await tester.pumpAndSettle();
+
+      final completeButton = find.byKey(const Key('obligation-detail-complete-action'));
+      expect(completeButton, findsOneWidget);
+
+      await tester.tap(completeButton);
+      await tester.pumpAndSettle();
+
+      // Confirmação no AlertDialog
+      expect(find.text('Concluir Obrigação'), findsWidgets);
+      final confirmButton = find.byKey(const Key('confirm-complete-status'));
+      expect(confirmButton, findsOneWidget);
+
+      await tester.tap(confirmButton);
+      await tester.pumpAndSettle();
+
+      expect(mockObligationRepo.updateStatusCalls, 1);
+      expect(mockObligationRepo.lastUpdatedStatus, ObligationStatus.completed);
+      expect(find.text('Obrigação concluída com sucesso!'), findsOneWidget);
+      expect(find.text('Concluída'), findsOneWidget);
+    });
+
+    testWidgets('deve exibir lista de anexos e permitir acionar download quando autenticado',
+        (tester) async {
+      const session = AuthSession(
+        token: 'token-valido',
+        responsible: Responsible(id: 1, name: 'Admin', email: 'admin@empresa.com', active: true),
+      );
+      await sessionStorage.saveSession(session);
+      await authController.initialize();
+
+      mockAttachmentRepo.attachmentsToReturn = [
+        Attachment(
+          id: 1,
+          obligationId: 10,
+          name: 'recibo_entrega.pdf',
+          contentType: 'application/pdf',
+          size: 1024 * 250, // 250 KB
+          uploadedAt: DateTime(2026, 11, 5, 14, 30),
+        ),
+      ];
+
+      final ob = Obligation(
+        id: 10,
+        title: 'Declaração DCTF',
+        status: ObligationStatus.inProgress,
+        dueDate: DateTime(2026, 12, 15),
+        company: const ObligationParticipantSummary(id: 1, name: 'Empresa Alpha'),
+        responsible: const ObligationParticipantSummary(id: 2, name: 'Carlos Silva'),
+        attachmentCount: 1,
       );
 
       await tester.pumpWidget(createWidgetUnderTest(
@@ -240,17 +418,23 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('obligation-detail-edit-button')), findsOneWidget);
-      expect(find.byKey(const Key('obligation-detail-edit-action')), findsOneWidget);
+      expect(find.text('recibo_entrega.pdf'), findsOneWidget);
+      expect(find.textContaining('250.0 KB'), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('obligation-detail-edit-button')));
+      final downloadBtn = find.byTooltip('Baixar arquivo');
+      expect(downloadBtn, findsOneWidget);
+
+      await tester.ensureVisible(downloadBtn);
       await tester.pumpAndSettle();
 
-      expect(find.byType(ObligationFormPage), findsOneWidget);
-      expect(find.text('Editar Obrigação'), findsOneWidget);
+      await tester.tap(downloadBtn);
+      await tester.pumpAndSettle();
+
+      expect(mockAttachmentRepo.downloadCalls, 1);
+      expect(find.textContaining('baixado com sucesso'), findsOneWidget);
     });
 
-    testWidgets('não deve exibir botão de editar mesmo logado se obrigação for COMPLETED (RN-009)',
+    testWidgets('não deve exibir botão de editar e deve exibir aviso terminal se obrigação for COMPLETED (RN-009)',
         (tester) async {
       const session = AuthSession(
         token: 'token-valido',
@@ -264,7 +448,7 @@ void main() {
         title: 'Declaração DCTF Concluída',
         status: ObligationStatus.completed,
         dueDate: DateTime(2026, 11, 10),
-        completedAt: DateTime(2026, 11, 9),
+        completedAt: DateTime(2026, 11, 9, 10, 0),
         company: const ObligationParticipantSummary(id: 1, name: 'Empresa Alpha'),
         responsible: const ObligationParticipantSummary(id: 2, name: 'Carlos Silva'),
       );
@@ -276,9 +460,44 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Concluída'), findsOneWidget);
+      expect(find.text('Obrigação Concluída com Sucesso'), findsOneWidget);
       expect(find.byKey(const Key('obligation-detail-edit-button')), findsNothing);
       expect(find.byKey(const Key('obligation-detail-edit-action')), findsNothing);
+      expect(find.byKey(const Key('obligation-detail-start-action')), findsNothing);
+      expect(find.byKey(const Key('obligation-detail-complete-action')), findsNothing);
+    });
+
+    testWidgets('deve exibir botão de editar e abrir ObligationFormPage quando autenticado e status não concluído',
+        (tester) async {
+      const session = AuthSession(
+        token: 'token-valido',
+        responsible: Responsible(id: 1, name: 'Admin', email: 'admin@empresa.com', active: true),
+      );
+      await sessionStorage.saveSession(session);
+      await authController.initialize();
+
+      final ob = Obligation(
+        id: 10,
+        title: 'Declaração DCTF',
+        status: ObligationStatus.inProgress,
+        dueDate: DateTime(2026, 12, 15),
+        company: const ObligationParticipantSummary(id: 1, name: 'Empresa Alpha'),
+        responsible: const ObligationParticipantSummary(id: 2, name: 'Carlos Silva'),
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest(
+        obligationId: 10,
+        initialObligation: ob,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('obligation-detail-edit-button')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('obligation-detail-edit-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ObligationFormPage), findsOneWidget);
+      expect(find.text('Editar Obrigação'), findsOneWidget);
     });
   });
 }
-

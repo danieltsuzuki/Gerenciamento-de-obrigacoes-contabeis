@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/widgets/error_state_view.dart';
 import '../../../../core/widgets/loading_state_view.dart';
+import '../../../attachment/domain/entities/attachment.dart';
+import '../../../attachment/domain/repositories/attachment_repository.dart';
 import '../../../auth/presentation/controllers/auth_session_controller.dart';
 import '../../../auth/presentation/widgets/auth_guard.dart';
 import '../../../company/domain/repositories/company_repository.dart';
@@ -12,6 +14,7 @@ import 'obligation_form_page.dart';
 
 class ObligationDetailPage extends StatefulWidget {
   final ObligationRepository repository;
+  final AttachmentRepository? attachmentRepository;
   final CompanyRepository? companyRepository;
   final ResponsibleRepository? responsibleRepository;
   final int obligationId;
@@ -21,6 +24,7 @@ class ObligationDetailPage extends StatefulWidget {
   const ObligationDetailPage({
     super.key,
     required this.repository,
+    this.attachmentRepository,
     this.companyRepository,
     this.responsibleRepository,
     required this.obligationId,
@@ -34,8 +38,12 @@ class ObligationDetailPage extends StatefulWidget {
 
 class _ObligationDetailPageState extends State<ObligationDetailPage> {
   Obligation? _obligation;
-  bool _isLoading = false;
+  List<Attachment> _attachments = [];
+  bool _isLoadingObligation = false;
+  bool _isLoadingAttachments = false;
+  bool _isUpdatingStatus = false;
   String? _errorMessage;
+  String? _attachmentErrorMessage;
   bool _hasMutated = false;
 
   bool get _isAuthenticated => widget.authController?.isAuthenticated ?? false;
@@ -49,13 +57,16 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
     super.initState();
     _obligation = widget.initialObligation;
     widget.authController?.addListener(_onAuthChanged);
-    if (_obligation == null) {
-      _loadObligation();
-    }
+    _loadInitialData();
   }
 
   void _onAuthChanged() {
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {});
+      if (_isAuthenticated && _attachments.isEmpty && !_isLoadingAttachments) {
+        _loadAttachments();
+      }
+    }
   }
 
   @override
@@ -64,10 +75,18 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
     super.dispose();
   }
 
+  Future<void> _loadInitialData() async {
+    if (_obligation == null) {
+      await _loadObligation();
+    } else if (_isAuthenticated && widget.attachmentRepository != null) {
+      _loadAttachments();
+    }
+  }
+
   Future<void> _loadObligation() async {
     if (_obligation == null) {
       setState(() {
-        _isLoading = true;
+        _isLoadingObligation = true;
         _errorMessage = null;
       });
     }
@@ -77,21 +96,199 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
       if (!mounted) return;
       setState(() {
         _obligation = ob;
-        _isLoading = false;
+        _isLoadingObligation = false;
         _errorMessage = null;
       });
+
+      if (_isAuthenticated && widget.attachmentRepository != null) {
+        _loadAttachments();
+      }
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
         _errorMessage = e.message;
-        _isLoading = false;
+        _isLoadingObligation = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _errorMessage = 'Falha ao carregar detalhes da obrigação: $e';
-        _isLoading = false;
+        _isLoadingObligation = false;
       });
+    }
+  }
+
+  Future<void> _loadAttachments() async {
+    if (widget.attachmentRepository == null) return;
+    if (!_isAuthenticated) return;
+
+    setState(() {
+      _isLoadingAttachments = true;
+      _attachmentErrorMessage = null;
+    });
+
+    try {
+      final items = await widget.attachmentRepository!.getAttachments(widget.obligationId);
+      if (!mounted) return;
+      setState(() {
+        _attachments = items;
+        _isLoadingAttachments = false;
+        _attachmentErrorMessage = null;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _attachmentErrorMessage = e.message;
+        _isLoadingAttachments = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _attachmentErrorMessage = 'Erro ao carregar anexos: $e';
+        _isLoadingAttachments = false;
+      });
+    }
+  }
+
+  Future<void> _refreshAll() async {
+    await _loadObligation();
+    if (_isAuthenticated && widget.attachmentRepository != null) {
+      await _loadAttachments();
+    }
+  }
+
+  Future<void> _handleStatusTransition(ObligationStatus nextStatus) async {
+    if (_obligation == null || _isUpdatingStatus) return;
+
+    if (widget.authController != null && !widget.authController!.isAuthenticated) {
+      final allowed = await requireAuth(
+        context,
+        authController: widget.authController!,
+        reason: 'Para alterar o status da obrigação, realize o login.',
+      );
+      if (!allowed || !mounted) return;
+    }
+
+    final isStarting = nextStatus == ObligationStatus.inProgress;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(isStarting ? 'Iniciar Obrigação' : 'Concluir Obrigação'),
+        content: Text(
+          isStarting
+              ? 'Confirma o início da obrigação? O status passará para "Em andamento".'
+              : 'Atenção: ao concluir esta obrigação, ela não poderá mais retornar a nenhum status anterior nem ser editada. Confirma a conclusão?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            key: Key(isStarting ? 'confirm-start-status' : 'confirm-complete-status'),
+            onPressed: () => Navigator.of(dialogCtx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isStarting ? const Color(0xFF2563EB) : const Color(0xFF16A34A),
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isStarting ? 'Iniciar' : 'Concluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isUpdatingStatus = true);
+
+    try {
+      final updated = await widget.repository.updateObligationStatus(
+        _obligation!.id,
+        nextStatus,
+      );
+      if (!mounted) return;
+      setState(() {
+        _obligation = updated;
+        _isUpdatingStatus = false;
+        _hasMutated = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            nextStatus == ObligationStatus.completed
+                ? 'Obrigação concluída com sucesso!'
+                : 'Obrigação iniciada com sucesso!',
+          ),
+          backgroundColor: const Color(0xFF16A34A),
+        ),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _isUpdatingStatus = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUpdatingStatus = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Falha ao atualizar status: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleDownloadAttachment(Attachment attachment) async {
+    if (widget.attachmentRepository == null) return;
+
+    if (widget.authController != null && !widget.authController!.isAuthenticated) {
+      final allowed = await requireAuth(
+        context,
+        authController: widget.authController!,
+        reason: 'Para baixar anexos, realize o login.',
+      );
+      if (!allowed || !mounted) return;
+    }
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Baixando "${attachment.name}"...')),
+      );
+
+      final file = await widget.attachmentRepository!.downloadAttachment(attachment.id);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Arquivo "${file.filename.isNotEmpty ? file.filename : attachment.name}" baixado com sucesso (${file.bytes.length} bytes)!',
+          ),
+          backgroundColor: const Color(0xFF16A34A),
+        ),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao baixar anexo: ${e.message}'),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao baixar anexo: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
     }
   }
 
@@ -127,13 +324,23 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
 
     if (updated == true && mounted) {
       _hasMutated = true;
-      _loadObligation();
+      _refreshAll();
     }
   }
 
   String _formatDate(DateTime? date) {
     if (date == null) return '—';
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
+  String _formatDateTime(DateTime? date) {
+    if (date == null) return '—';
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year;
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$day/$month/$year $hour:$minute';
   }
 
   Color _getStatusColor(ObligationStatus status) {
@@ -169,6 +376,19 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
     }
   }
 
+  IconData _getAttachmentIcon(String contentType) {
+    if (contentType.contains('pdf')) {
+      return Icons.picture_as_pdf_outlined;
+    } else if (contentType.contains('image')) {
+      return Icons.image_outlined;
+    } else if (contentType.contains('sheet') || contentType.contains('excel')) {
+      return Icons.table_chart_outlined;
+    } else if (contentType.contains('xml')) {
+      return Icons.code_outlined;
+    }
+    return Icons.insert_drive_file_outlined;
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -191,7 +411,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
             IconButton(
               icon: const Icon(Icons.refresh),
               tooltip: 'Recarregar',
-              onPressed: _loadObligation,
+              onPressed: _refreshAll,
             ),
           ],
         ),
@@ -201,7 +421,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
   }
 
   Widget _buildBody() {
-    if (_isLoading && _obligation == null) {
+    if (_isLoadingObligation && _obligation == null) {
       return const LoadingStateView(message: 'Carregando detalhes da obrigação...');
     }
 
@@ -218,7 +438,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
     }
 
     return RefreshIndicator(
-      onRefresh: _loadObligation,
+      onRefresh: _refreshAll,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(24.0),
@@ -229,8 +449,16 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildHeaderCard(obligation),
+                if (_isAuthenticated || obligation.status == ObligationStatus.completed) ...[
+                  const SizedBox(height: 16),
+                  _buildStatusTransitionSection(obligation),
+                ],
                 const SizedBox(height: 16),
                 _buildDetailsCard(obligation),
+                if (_isAuthenticated) ...[
+                  const SizedBox(height: 16),
+                  _buildAttachmentsCard(obligation),
+                ],
                 if (_canEdit) ...[
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -348,6 +576,150 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
     );
   }
 
+  Widget _buildStatusTransitionSection(Obligation obligation) {
+    if (!_isAuthenticated && obligation.status != ObligationStatus.completed) {
+      return const SizedBox.shrink();
+    }
+
+    if (_isUpdatingStatus) {
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+              SizedBox(width: 12),
+              Text('Atualizando status da obrigação...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (obligation.status == ObligationStatus.pending) {
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFDBEAFE)),
+        ),
+        color: const Color(0xFFEFF6FF),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline, color: Color(0xFF2563EB)),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Esta obrigação está pendente de início.',
+                  style: TextStyle(color: Color(0xFF1E3A8A), fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+              ),
+              if (_isAuthenticated)
+                ElevatedButton.icon(
+                  key: const Key('obligation-detail-start-action'),
+                  onPressed: () => _handleStatusTransition(ObligationStatus.inProgress),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                  label: const Text('Iniciar'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (obligation.status == ObligationStatus.inProgress) {
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFDCFCE7)),
+        ),
+        color: const Color(0xFFF0FDF4),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              const Icon(Icons.autorenew, color: Color(0xFF16A34A)),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Obrigação em andamento.',
+                  style: TextStyle(color: Color(0xFF14532D), fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+              ),
+              if (_isAuthenticated)
+                ElevatedButton.icon(
+                  key: const Key('obligation-detail-complete-action'),
+                  onPressed: () => _handleStatusTransition(ObligationStatus.completed),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: const Text('Concluir'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF16A34A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Status COMPLETED (RN-009)
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFF86EFAC)),
+      ),
+      color: const Color(0xFFF0FDF4),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            const Icon(Icons.verified, color: Color(0xFF16A34A), size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Obrigação Concluída com Sucesso',
+                    style: TextStyle(
+                      color: Color(0xFF14532D),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    obligation.completedAt != null
+                        ? 'Finalizada em ${_formatDateTime(obligation.completedAt)}. Obrigações concluídas são permanentes e não aceitam novas alterações.'
+                        : 'Obrigações concluídas são permanentes e não aceitam novas alterações (RN-009).',
+                    style: const TextStyle(color: Color(0xFF166534), fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDetailsCard(Obligation obligation) {
     return Card(
       elevation: 0,
@@ -397,23 +769,174 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
             _buildDetailRow(
               icon: Icons.schedule_outlined,
               label: 'Data de Criação',
-              value: _formatDate(obligation.createdAt),
+              value: _formatDateTime(obligation.createdAt),
             ),
             if (obligation.completedAt != null) ...[
               const Divider(height: 24),
               _buildDetailRow(
                 icon: Icons.check_circle_outline,
                 label: 'Data de Conclusão',
-                value: _formatDate(obligation.completedAt),
+                value: _formatDateTime(obligation.completedAt),
                 valueColor: const Color(0xFF16A34A),
               ),
             ],
             const Divider(height: 24),
             _buildDetailRow(
               icon: Icons.attach_file,
-              label: 'Documentos Anexados',
-              value: '${obligation.attachmentCount} anexos registrados',
+              label: 'Total de Anexos',
+              value: '${obligation.attachmentCount} anexos registrados no servidor',
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAttachmentsCard(Obligation obligation) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.attach_file, size: 20, color: Color(0xFF1E3A8A)),
+                const SizedBox(width: 8),
+                Text(
+                  'Documentos Anexados (${_isAuthenticated ? _attachments.length : obligation.attachmentCount})',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (!_isAuthenticated) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.lock_outline, size: 20, color: Color(0xFF64748B)),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Faça login para listar, baixar ou anexar novos documentos.',
+                        style: TextStyle(fontSize: 13, color: Color(0xFF475569)),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        if (widget.authController != null) {
+                          requireAuth(
+                            context,
+                            authController: widget.authController!,
+                            reason: 'Para acessar documentos, realize o login.',
+                          );
+                        }
+                      },
+                      child: const Text('Fazer Login'),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (_isLoadingAttachments) ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ] else if (_attachmentErrorMessage != null) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: Color(0xFFDC2626)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _attachmentErrorMessage!,
+                        style: const TextStyle(color: Color(0xFFDC2626), fontSize: 13),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _loadAttachments,
+                      child: const Text('Tentar novamente'),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (_attachments.isEmpty) ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  child: Column(
+                    children: [
+                      Icon(Icons.folder_open_outlined, size: 40, color: Color(0xFF94A3B8)),
+                      SizedBox(height: 8),
+                      Text(
+                        'Nenhum documento anexado a esta obrigação.',
+                        style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ] else ...[
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _attachments.length,
+                separatorBuilder: (_, __) => const Divider(height: 16),
+                itemBuilder: (context, index) {
+                  final att = _attachments[index];
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        _getAttachmentIcon(att.contentType),
+                        color: const Color(0xFF1E3A8A),
+                      ),
+                    ),
+                    title: Text(
+                      att.name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${att.formattedSize} • Enviado em ${_formatDateTime(att.uploadedAt)}',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.download_rounded, color: Color(0xFF2563EB)),
+                      tooltip: 'Baixar arquivo',
+                      onPressed: () => _handleDownloadAttachment(att),
+                    ),
+                  );
+                },
+              ),
+            ],
           ],
         ),
       ),
@@ -459,4 +982,3 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
     );
   }
 }
-

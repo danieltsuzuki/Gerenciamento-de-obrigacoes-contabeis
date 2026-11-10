@@ -184,12 +184,6 @@ void main() {
       expect(find.byKey(const Key('obligation-due-date-input')), findsOneWidget);
       expect(find.byKey(const Key('obligation-submit-button')), findsOneWidget);
       expect(find.text('Cadastrar Obrigação'), findsOneWidget);
-      expect(
-        find.text(
-          'Toda obrigação recém-cadastrada inicia automaticamente com status Pendente no servidor (RN-008).',
-        ),
-        findsOneWidget,
-      );
     });
 
     testWidgets('deve validar campos obrigatórios vazios', (tester) async {

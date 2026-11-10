@@ -23,6 +23,20 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-019 (Criar tela de detalhes da obrigação):
+  - Exibição detalhada de metadados da obrigação em `ObligationDetailPage`: título, descrição, identificador (`#ID`), empresa contratante, responsável técnico atribuído, prazo de vencimento com alerta de atraso, data de criação e data de conclusão (`completedAt`).
+  - Progressão de status conforme máquina de estados do backend (RN-008):
+    - Botões de transição de status visíveis exclusivamente para usuários autenticados (`_isAuthenticated`).
+    - Status `PENDING`: disponibiliza ação "Iniciar" com diálogo de confirmação, disparando transição para `IN_PROGRESS` via `PATCH /api/obligations/{id}/status`.
+    - Status `IN_PROGRESS`: disponibiliza ação "Concluir" com diálogo de confirmação e alerta de irrevogabilidade, disparando transição para `COMPLETED` via `PATCH /api/obligations/{id}/status`.
+    - Status `COMPLETED`: exibe banner permanente indicando data de encerramento e bloqueando novas ações de alteração de status ou edição cadastral (RN-009).
+  - Seção de Documentos Anexados integrada aos contratos da API:
+    - O card de anexos na parte inferior da tela é exibido exclusivamente para usuários autenticados (`_isAuthenticated`), ficando oculto para acessos anônimos.
+    - Quando autenticado: consumo do endpoint `GET /api/obligations/{id}/attachments`, renderizando lista com ícone por tipo MIME, nome original, tamanho formatado legível (`B`, `KB`, `MB`), data de envio e ação de download binário (`GET /api/attachments/{id}/download`).
+    - Tratamento de estados vazios (`EmptyState`), progresso de carregamento e retry em caso de indisponibilidade de rede ou falha de storage.
+  - Sincronização e injeção do `AttachmentRepository` nas rotas em `AppRoutes.onGenerateRoute`.
+  - Remoção do aviso textual sobre status inicial no formulário de cadastro de obrigações (`ObligationFormPage`).
+  - Atualização da suíte de testes de widgets em `obligation_detail_page_test.dart` e `obligation_form_page_test.dart` (122 testes aprovados no frontend).
 - Implementação e validação da SPEC-018 (Criar formulário de cadastro e edição de obrigações):
   - Formulário unificado `ObligationFormPage` para cadastro (`POST /api/obligations`) e edição (`PUT /api/obligations/{id}`) de obrigações contábeis e fiscais.
   - Seletores dropdown reativos de empresa (`companyId`) e responsável (`responsibleId`) filtrando apenas registros em situação Ativa (`active=true`), em conformidade estrita com as regras de negócio RN-006 e RN-007.
