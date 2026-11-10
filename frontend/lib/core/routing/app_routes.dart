@@ -3,8 +3,12 @@ import '../../features/attachment/data/datasources/attachment_remote_datasource.
 import '../../features/attachment/data/repositories/attachment_repository_impl.dart';
 import '../../features/attachment/domain/repositories/attachment_repository.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
+import '../../features/auth/data/datasources/auth_session_storage.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/presentation/controllers/auth_session_controller.dart';
+import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/company/data/datasources/company_remote_datasource.dart';
 import '../../features/company/data/repositories/company_repository_impl.dart';
 import '../../features/company/domain/entities/company.dart';
@@ -32,10 +36,26 @@ class AppRoutes {
   static const String companyCreate = '/companies/create';
   static const String companyEdit = '/companies/edit';
   static const String responsibles = '/responsibles';
+  static const String login = '/login';
+  static const String register = '/register';
 
   static AuthRepository createAuthRepository(ApiClient apiClient) {
     return AuthRepositoryImpl(
       remoteDataSource: AuthRemoteDataSourceImpl(apiClient),
+      apiClient: apiClient,
+    );
+  }
+
+  static AuthSessionController createAuthSessionController(
+    ApiClient apiClient, {
+    AuthRepository? repository,
+    AuthSessionStorage? storage,
+  }) {
+    final effectiveRepo = repository ?? createAuthRepository(apiClient);
+    final effectiveStorage = storage ?? SecureAuthSessionStorage();
+    return AuthSessionController(
+      authRepository: effectiveRepo,
+      sessionStorage: effectiveStorage,
       apiClient: apiClient,
     );
   }
@@ -49,10 +69,18 @@ class AppRoutes {
   static Route<dynamic> onGenerateRoute(
     RouteSettings settings, {
     required ApiClient apiClient,
+    AuthSessionController? authController,
+    AuthRepository? authRepository,
     CompanyRepository? companyRepository,
     ResponsibleRepository? responsibleRepository,
     ObligationRepository? obligationRepository,
   }) {
+    final effectiveAuthRepo = authRepository ?? createAuthRepository(apiClient);
+    final effectiveAuthController = authController ??
+        createAuthSessionController(
+          apiClient,
+          repository: effectiveAuthRepo,
+        );
     final effectiveCompanyRepo = companyRepository ??
         CompanyRepositoryImpl(CompanyRemoteDataSource(apiClient));
     final effectiveResponsibleRepo = responsibleRepository ??
@@ -65,12 +93,18 @@ class AppRoutes {
       case obligations:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => ObligationListPage(repository: effectiveObligationRepo),
+          builder: (_) => ObligationListPage(
+            repository: effectiveObligationRepo,
+            authController: effectiveAuthController,
+          ),
         );
       case companies:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => CompanyListPage(repository: effectiveCompanyRepo),
+          builder: (_) => CompanyListPage(
+            repository: effectiveCompanyRepo,
+            authController: effectiveAuthController,
+          ),
         );
       case companyCreate:
         return MaterialPageRoute(
@@ -91,7 +125,20 @@ class AppRoutes {
       case responsibles:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => ResponsibleListPage(repository: effectiveResponsibleRepo),
+          builder: (_) => ResponsibleListPage(
+            repository: effectiveResponsibleRepo,
+            authController: effectiveAuthController,
+          ),
+        );
+      case login:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => LoginPage(controller: effectiveAuthController),
+        );
+      case register:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => RegisterPage(controller: effectiveAuthController),
         );
       case obligationDetails:
         final obligation = settings.arguments is Obligation

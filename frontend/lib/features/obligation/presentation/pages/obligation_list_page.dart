@@ -5,17 +5,21 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/empty_state_view.dart';
 import '../../../../core/widgets/error_state_view.dart';
 import '../../../../core/widgets/loading_state_view.dart';
+import '../../../auth/presentation/controllers/auth_session_controller.dart';
+import '../../../auth/presentation/widgets/auth_guard.dart';
 import '../../domain/entities/obligation.dart';
 import '../../domain/repositories/obligation_repository.dart';
 
 class ObligationListPage extends StatefulWidget {
   final ObligationRepository repository;
   final void Function(Obligation obligation)? onObligationTap;
+  final AuthSessionController? authController;
 
   const ObligationListPage({
     super.key,
     required this.repository,
     this.onObligationTap,
+    this.authController,
   });
 
   @override
@@ -396,6 +400,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
     return AppScaffold(
       title: 'Obrigações Fiscais',
       currentNavIndex: 0,
+      authController: widget.authController,
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh),
@@ -412,7 +417,16 @@ class _ObligationListPageState extends State<ObligationListPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+        onPressed: () async {
+          if (widget.authController != null) {
+            final allowed = await requireAuth(
+              context,
+              authController: widget.authController!,
+              reason: 'Para cadastrar uma obrigação, realize o login.',
+            );
+            if (!allowed) return;
+          }
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Formulário de cadastro em desenvolvimento.')),
           );

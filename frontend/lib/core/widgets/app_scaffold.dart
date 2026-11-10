@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../features/auth/presentation/controllers/auth_session_controller.dart';
 import '../routing/app_routes.dart';
 
 class AppScaffold extends StatelessWidget {
@@ -7,6 +8,7 @@ class AppScaffold extends StatelessWidget {
   final Widget? floatingActionButton;
   final List<Widget>? actions;
   final int currentNavIndex;
+  final AuthSessionController? authController;
 
   const AppScaffold({
     super.key,
@@ -15,6 +17,7 @@ class AppScaffold extends StatelessWidget {
     this.floatingActionButton,
     this.actions,
     this.currentNavIndex = 0,
+    this.authController,
   });
 
   void _onNavigationItemTapped(BuildContext context, int index) {
@@ -33,9 +36,124 @@ class AppScaffold extends StatelessWidget {
     }
   }
 
+  Widget _buildLoginButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+      child: OutlinedButton.icon(
+        key: const Key('auth-login-button'),
+        icon: const Icon(Icons.login, size: 18, color: Colors.white),
+        label: const Text(
+          'Login',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.white,
+          side: const BorderSide(color: Colors.white70),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        onPressed: () {
+          Navigator.of(context).pushNamed(AppRoutes.login);
+        },
+      ),
+    );
+  }
+
+  Widget _buildAuthAction(BuildContext context) {
+    if (authController == null) {
+      return _buildLoginButton(context);
+    }
+
+    return AnimatedBuilder(
+      animation: authController!,
+      builder: (context, _) {
+        if (authController!.isAuthenticated) {
+          final user = authController!.currentUser;
+          return PopupMenuButton<String>(
+            key: const Key('auth-user-menu'),
+            icon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.account_circle, size: 24, color: Colors.white),
+                if (user?.name != null) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      user!.name.split(' ').first,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            tooltip: 'Conta: ${user?.name ?? ""}',
+            onSelected: (value) async {
+              if (value == 'logout') {
+                await authController!.logout();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Sessão encerrada com sucesso.')),
+                  );
+                }
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                enabled: false,
+                child: Text(
+                  user?.name ?? 'Usuário',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ),
+              if (user?.email != null)
+                PopupMenuItem(
+                  enabled: false,
+                  child: Text(
+                    user!.email,
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, size: 18, color: Color(0xFFDC2626)),
+                    SizedBox(width: 8),
+                    Text('Sair', style: TextStyle(color: Color(0xFFDC2626))),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+
+        return _buildLoginButton(context);
+      },
+    );
+  }
+
+  List<Widget>? _buildEffectiveActions(BuildContext context) {
+    final authAction = _buildAuthAction(context);
+    return [
+      if (actions != null) ...actions!,
+      authAction,
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final isWideScreen = MediaQuery.of(context).size.width >= 768;
+    final effectiveActions = _buildEffectiveActions(context);
 
     if (isWideScreen) {
       return Scaffold(
@@ -47,7 +165,7 @@ class AppScaffold extends StatelessWidget {
               Text(title),
             ],
           ),
-          actions: actions,
+          actions: effectiveActions,
         ),
         body: Row(
           children: [
@@ -96,7 +214,7 @@ class AppScaffold extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
-        actions: actions,
+        actions: effectiveActions,
       ),
       drawer: Drawer(
         child: ListView(

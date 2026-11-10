@@ -19,8 +19,9 @@ frontend/
 │   │   └── widgets/                # Widgets compartilhados (AppScaffold, Loading, Error, Empty)
 │   ├── features/                   # Módulos funcionais independentes
 │   │   ├── auth/                   # Autenticação e Registro
-│   │   │   ├── data/               # AuthRemoteDataSource, AuthRepositoryImpl, DTOs (Login/Register)
-│   │   │   └── domain/             # AuthSession (entidade), AuthRepository (contrato)
+│   │   │   ├── data/               # AuthRemoteDataSource, AuthRepositoryImpl, AuthSessionStorage, DTOs (Login/Register)
+│   │   │   ├── domain/             # AuthSession (entidade), AuthRepository (contrato)
+│   │   │   └── presentation/       # LoginPage, RegisterPage, AuthSessionController, requireAuth (AuthGuard)
 │   │   ├── company/                # Domínio de Empresas Clientes
 │   │   │   ├── data/               # CompanyRemoteDataSource, CompanyRepositoryImpl, DTOs (Create/Update)
 │   │   │   ├── domain/             # Company (entidade), CompanyRepository (contrato)
@@ -37,13 +38,14 @@ frontend/
 │   │       ├── data/               # AttachmentRemoteDataSource, AttachmentRepositoryImpl
 │   │       └── domain/             # Attachment (entidade com formatação de tamanho), AttachmentRepository
 │   └── main.dart                   # Inicialização da aplicação e bootstrap do AppConfig
-├── test/                           # Suíte de testes unitários, mocks e de widgets
+├── test/                           # Suíte de testes unitários, mocks e de widgets (89 testes aprovados)
 │   ├── core/
 │   │   ├── config/                 # Testes de inicialização e customização de AppConfig
 │   │   ├── network/                # Testes de ApiClient, Download, Multipart, PageResponse e ApiException
-│   │   └── widgets/                # Testes de LoadingStateView, ErrorStateView e EmptyStateView
-│   └── features/                   # Testes de integração de rede e navegação
-│       ├── auth/                   # Testes de login, registro e tratamento de BAD_CREDENTIALS
+│   │   ├── utils/                  # Testes do CnpjValidator
+│   │   └── widgets/                # Testes de AppScaffold (botão de login), Loading, Error e EmptyStateView
+│   └── features/                   # Testes de integração de rede, telas e navegação
+│       ├── auth/                   # Testes de AuthSessionStorage, AuthSessionController, LoginPage, RegisterPage e AuthGuard
 │       ├── company/                # Testes de listagem, filtros, formulário de criação/edição e validação de CNPJ
 │       ├── responsible/            # Testes de listagem paginada, busca por id, criação e atualização
 │       ├── obligation/             # Testes de integração (DataSource/Repo) e de widgets (ObligationListPageTest)
