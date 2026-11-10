@@ -118,4 +118,32 @@ class Obligation {
     final today = DateTime(now.year, now.month, now.day);
     return dueDate.isBefore(today);
   }
+
+  Obligation copyWith({
+    int? id,
+    String? title,
+    String? description,
+    ObligationStatus? status,
+    DateTime? dueDate,
+    DateTime? completedAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    ObligationParticipantSummary? company,
+    ObligationParticipantSummary? responsible,
+    int? attachmentCount,
+  }) {
+    return Obligation(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      status: status ?? this.status,
+      dueDate: dueDate ?? this.dueDate,
+      completedAt: completedAt ?? this.completedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      company: company ?? this.company,
+      responsible: responsible ?? this.responsible,
+      attachmentCount: attachmentCount ?? this.attachmentCount,
+    );
+  }
 }
