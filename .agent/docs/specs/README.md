@@ -49,6 +49,28 @@ As SPECs preservam as decisões das fontes. Pontos não definidos ou contraditó
 | [SPEC-025](./25-preparar-entrega-revisao-e-pull-request.spec.md) | [Preparar entrega, revisão e Pull Request](https://trello.com/c/dK9X0JMO) | Backlog |
 | [SPEC-026](./26-implementar-autenticacao-no-flutter.spec.md) | Implementar autenticação e tela de login no Flutter (sem card; unificada com a interface de login) | Concluído |
 
+> Os status das SPEC-017 a SPEC-025 acima refletem o Trello em 09/11/2026. Na implementação, todas estão concluídas e testadas (ver `docs/status-implementacao.md`); o quadro deve ser sincronizado (SPEC-028).
+
+## SPECs derivadas da validação de conformidade com o enunciado (10/11/2026)
+
+| SPEC | Tema | Tipo | Status |
+|---|---|---|---|
+| [SPEC-027](./27-consolidar-diferenciais-implementados.spec.md) | Diferenciais já implementados: Autenticação, OpenAPI/Swagger, Upload físico | Diferencial | Concluído (retroativa) |
+| [SPEC-028](./28-completar-readme-e-artefatos-de-entrega.spec.md) | Completar README (decisões arquiteturais, melhorias futuras) e links de entrega | Obrigatório | Backlog |
+| [SPEC-029](./29-corrigir-inconsistencias-de-contrato-e-seguranca.spec.md) | Corrigir inconsistências de contrato (status no PUT, `dueFrom`/`dueTo`) e segredo JWT padrão | Obrigatório | Backlog |
+| [SPEC-030](./30-containerizar-backend-e-frontend-com-docker.spec.md) | Docker | Diferencial | Backlog |
+| [SPEC-031](./31-orquestrar-stack-com-docker-compose.spec.md) | Docker Compose | Diferencial | Backlog |
+| [SPEC-032](./32-implementar-paginacao-no-flutter.spec.md) | Paginação (frontend) | Diferencial | Backlog |
+| [SPEC-033](./33-implementar-pesquisa-textual.spec.md) | Pesquisa | Diferencial | Backlog |
+| [SPEC-034](./34-implementar-filtros-avancados-no-flutter.spec.md) | Filtros | Diferencial | Backlog |
+| [SPEC-035](./35-implementar-auditoria-e-historico-de-status.spec.md) | Auditoria | Diferencial | Backlog |
+| [SPEC-036](./36-implementar-logs-estruturados.spec.md) | Logs | Diferencial | Backlog |
+| [SPEC-037](./37-implementar-cache-de-consultas.spec.md) | Cache | Diferencial | Backlog |
+| [SPEC-038](./38-implementar-tema-claro-e-escuro.spec.md) | Tema claro e escuro | Diferencial | Backlog |
+| [SPEC-039](./39-configurar-pipeline-ci-cd.spec.md) | CI/CD | Diferencial | Backlog |
+| [SPEC-040](./40-medir-e-garantir-cobertura-de-testes.spec.md) | Cobertura de testes | Diferencial | Backlog |
+| [SPEC-041](./41-regras-negocio-pendencias-e-perguntas-em-aberto.spec.md) | Resolução de Pendências de Domínio (Imutabilidade de Concluídas, Autorização por Responsável, Status Atrasada, CNPJ Alfanumérico e Recorrência) | Regras de Negócio | Backlog |
+
 ## Observações de consistência
 
 - `Responsible` é a entidade de domínio; a tabela física correspondente é `users`.
