@@ -23,6 +23,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Validação de conformidade com o enunciado do desafio e criação das SPEC-027 a SPEC-040:
+  - SPEC-027 (retroativa, concluída) consolidando diferenciais já entregues: Autenticação JWT, OpenAPI/Swagger e upload físico de arquivos.
+  - SPEC-028 e SPEC-029 (obrigatórias) para completar o README (decisões arquiteturais, melhorias futuras, links de entrega) e corrigir inconsistências de contrato (transição de status no `PUT`, filtros `dueFrom`/`dueTo` não documentados) e o segredo JWT padrão.
+  - SPEC-030 a SPEC-040 cobrindo os diferenciais pendentes ou parciais: Docker, Docker Compose, paginação no Flutter, pesquisa, filtros, auditoria, logs, cache, tema claro/escuro, CI/CD e cobertura de testes.
 - Implementação e validação da SPEC-023 (Adicionar testes do Flutter):
   - Expansão abrangente da suíte de testes automatizados com testes unitários dedicados para models e entidades de domínio (`company_model_test.dart`, `responsible_model_test.dart`, `obligation_model_test.dart`, `attachment_model_test.dart`, `auth_model_test.dart`).
   - Cobertura completa de serialização/desserialização JSON (`fromJson` / `toJson`), campos opcionais e defaults para todas as entidades e DTOs de requisição e resposta do sistema.
