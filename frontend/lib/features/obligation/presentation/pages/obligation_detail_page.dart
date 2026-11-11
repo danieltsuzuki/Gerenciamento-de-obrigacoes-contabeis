@@ -5,6 +5,7 @@ import '../../../../core/widgets/loading_state_view.dart';
 import '../../../attachment/domain/entities/attachment.dart';
 import '../../../attachment/domain/repositories/attachment_repository.dart';
 import '../../../attachment/domain/services/file_picker_service.dart';
+import '../../../attachment/domain/services/file_saver_service.dart';
 import '../../../auth/presentation/controllers/auth_session_controller.dart';
 import '../../../auth/presentation/widgets/auth_guard.dart';
 import '../../../company/domain/repositories/company_repository.dart';
@@ -17,6 +18,7 @@ class ObligationDetailPage extends StatefulWidget {
   final ObligationRepository repository;
   final AttachmentRepository? attachmentRepository;
   final FilePickerService? filePickerService;
+  final FileSaverService? fileSaverService;
   final CompanyRepository? companyRepository;
   final ResponsibleRepository? responsibleRepository;
   final int obligationId;
@@ -28,6 +30,7 @@ class ObligationDetailPage extends StatefulWidget {
     required this.repository,
     this.attachmentRepository,
     this.filePickerService,
+    this.fileSaverService,
     this.companyRepository,
     this.responsibleRepository,
     required this.obligationId,
@@ -46,6 +49,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
   bool _isLoadingAttachments = false;
   bool _isUpdatingStatus = false;
   bool _isUploadingAttachment = false;
+  final Set<int> _downloadingAttachmentIds = {};
   String? _errorMessage;
   String? _attachmentErrorMessage;
   bool _hasMutated = false;
@@ -341,6 +345,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
 
   Future<void> _handleDownloadAttachment(Attachment attachment) async {
     if (widget.attachmentRepository == null) return;
+    if (_downloadingAttachmentIds.contains(attachment.id)) return;
 
     if (widget.authController != null && !widget.authController!.isAuthenticated) {
       final allowed = await requireAuth(
@@ -351,33 +356,59 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
       if (!allowed || !mounted) return;
     }
 
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Baixando "${attachment.name}"...')),
-      );
+    setState(() {
+      _downloadingAttachmentIds.add(attachment.id);
+    });
 
+    try {
       final file = await widget.attachmentRepository!.downloadAttachment(attachment.id);
+
+      final saver = widget.fileSaverService ?? const DefaultFileSaverService();
+      final savedPath = await saver.saveAndOpenFile(file);
+
       if (!mounted) return;
 
+      setState(() {
+        _downloadingAttachmentIds.remove(attachment.id);
+      });
+
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      final displayName = file.filename.isNotEmpty ? file.filename : attachment.name;
+      final msg = savedPath != null
+          ? 'Arquivo "$displayName" baixado com sucesso!'
+          : 'Arquivo "$displayName" baixado com sucesso (${file.bytes.length} bytes)!';
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Arquivo "${file.filename.isNotEmpty ? file.filename : attachment.name}" baixado com sucesso (${file.bytes.length} bytes)!',
-          ),
+          content: Text(msg),
           backgroundColor: const Color(0xFF16A34A),
         ),
       );
     } on ApiException catch (e) {
       if (!mounted) return;
+      setState(() {
+        _downloadingAttachmentIds.remove(attachment.id);
+      });
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      final errorMsg = e.statusCode == 404
+          ? 'Arquivo ou anexo não encontrado no servidor.'
+          : e.statusCode == 401
+              ? 'Sessão expirada. Faça login para baixar anexos.'
+              : e.statusCode == 500
+                  ? 'Erro no armazenamento do servidor ao recuperar o arquivo.'
+                  : 'Erro ao baixar anexo: ${e.message}';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro ao baixar anexo: ${e.message}'),
+          content: Text(errorMsg),
           backgroundColor: const Color(0xFFDC2626),
         ),
       );
     } catch (e) {
       if (!mounted) return;
+      setState(() {
+        _downloadingAttachmentIds.remove(attachment.id);
+      });
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro ao baixar anexo: $e'),
@@ -1044,11 +1075,22 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                       '${att.formattedSize} • Enviado em ${_formatDateTime(att.uploadedAt)}',
                       style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                     ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.download_rounded, color: Color(0xFF2563EB)),
-                      tooltip: 'Baixar arquivo',
-                      onPressed: () => _handleDownloadAttachment(att),
-                    ),
+                    trailing: _downloadingAttachmentIds.contains(att.id)
+                        ? const SizedBox(
+                            key: Key('attachment-download-spinner'),
+                            width: 24,
+                            height: 24,
+                            child: Padding(
+                              padding: EdgeInsets.all(2.0),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : IconButton(
+                            key: Key('attachment-download-button-${att.id}'),
+                            icon: const Icon(Icons.download_rounded, color: Color(0xFF2563EB)),
+                            tooltip: 'Baixar arquivo',
+                            onPressed: () => _handleDownloadAttachment(att),
+                          ),
                   );
                 },
               ),

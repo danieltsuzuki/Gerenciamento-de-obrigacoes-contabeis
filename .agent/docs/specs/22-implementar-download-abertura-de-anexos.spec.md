@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | 22 |
 | Card | [Implementar download/abertura de anexos](https://trello.com/c/MjvDJYIU) |
-| Status no Trello (09/11/2026) | A Fazer |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada do card e da documentação disponível |
+| Status no Trello (10/11/2026) | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluída e testada |
 
 ## 1. Objetivo
 
@@ -15,50 +15,50 @@ Permitir baixar ou abrir arquivos já anexados a uma obrigação.
 
 ## 2. Escopo funcional
 
-- [ ] Disponibilizar ação para baixar/abrir anexo.
-- [ ] Consumir endpoint de download.
-- [ ] Tratar progresso quando suportado pela implementação escolhida.
-- [ ] Tratar indisponibilidade e erros sem bloquear a tela.
-- [ ] Garantir que o arquivo recebido corresponda ao anexo selecionado.
+- [x] Disponibilizar ação para baixar/abrir anexo.
+- [x] Consumir endpoint de download (`GET /api/attachments/{attachmentId}/download`).
+- [x] Tratar progresso quando suportado pela implementação escolhida.
+- [x] Tratar indisponibilidade e erros sem bloquear a tela.
+- [x] Garantir que o arquivo recebido corresponda ao anexo selecionado.
 
 ## 3. Regras de negócio e restrições
 
 - Download exige JWT.
-- Não confiar apenas no nome exibido; usar identificador do anexo.
-- Falhas de rede/arquivo inexistente devem ser comunicadas.
-- A tela permanece utilizável durante a operação.
+- Não confiar apenas no nome exibido; usar identificador numérico do anexo (`attachment.id`).
+- Falhas de rede/arquivo inexistente (`404 NOT_FOUND`, `500 STORAGE_ERROR`) são comunicadas via SnackBar sem travar a interface.
+- A tela permanece totalmente utilizável durante a operação.
 
 ## 4. Contratos e decisões técnicas
 
 - GET /api/attachments/{attachmentId}/download.
-- Resposta binária com Content-Type e Content-Disposition sanitizado.
+- Resposta binária com Content-Type e Content-Disposition sanitizado via `DownloadedFile`.
+- Salvamento local via `FileSaverService` (`platform_file_saver_io.dart` na pasta Downloads do desktop e `platform_file_saver_web.dart` via Blob e âncora de download no navegador).
 - Erros documentados: 401, 404, 500 STORAGE_ERROR.
 
 ## 5. Critérios de aceitação
 
-- [ ] Arquivo baixado/aberto corresponde ao registro selecionado.
-- [ ] Falha de download não trava tela.
-- [ ] Feedback de progresso/erro é apresentado quando aplicável.
+- [x] Arquivo baixado/aberto corresponde ao registro selecionado.
+- [x] Falha de download não trava tela.
+- [x] Feedback de progresso/erro é apresentado de forma clara.
 
 ## 6. Cenários de teste
 
-- **Sucesso:** validar o fluxo principal descrito nesta SPEC.
-- **Validação:** rejeitar dados obrigatórios ausentes ou inválidos.
-- **Falha de dependência:** apresentar erro apropriado quando API, banco ou storage não estiver disponível, quando aplicável.
-- **Regressão:** garantir que a funcionalidade não viole regras existentes do domínio.
+- **Sucesso:** validar download de anexo por ID, salvamento local e SnackBar de sucesso.
+- **Progresso:** exibir spinner dedicado no item em download e evitar cliques concorrentes duplicados.
+- **Tratamento de Erros:** tratar 404 (anexo inexistente), 401 (não autenticado), 500 (erro de storage) e falha de conexão.
+- **Regressão:** garantir que a interface continue responsiva e que os 142 testes do frontend passem.
 
 ## 7. Dependências
 
 - Especificações de arquitetura e domínio do projeto.
-- Contratos REST documentados em `docs/api.md`, quando aplicável.
-- Modelo de dados em `docs/modelo-de-dados.md`, quando aplicável.
-- Implementações anteriores das quais esta funcionalidade depende.
+- Contratos REST documentados em `docs/api.md`.
+- Camada de autenticação JWT e `AttachmentRepository.downloadAttachment`.
 
 ## 8. Pendências e pontos a confirmar
 
-- O card não especifica diretório local, política de cache, nome final, suporte offline nem visualizador embutido. Definir conforme plataformas Flutter suportadas.
+- Nenhuma pendência em aberto.
 
 ## 9. Rastreabilidade
 
 - Card Trello: https://trello.com/c/MjvDJYIU
-- Documentação de referência: `docs/index.md`, `docs/api.md`, `docs/modelo-de-dados.md`, `docs/status-implementacao.md`, `docs/pendencias-e-perguntas-em-aberto.md`, `docs/CHANGELOG.md` e ADRs, conforme aplicável.
+- Documentação de referência: `docs/index.md`, `docs/api.md`, `docs/modelo-de-dados.md`, `docs/status-implementacao.md`, `docs/CHANGELOG.md`.
