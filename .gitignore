@@ -52,4 +52,6 @@ uploads/
 .pub/
 frontend/build/
 frontend/.dart_tool/
+coverage/
+frontend/coverage/
 

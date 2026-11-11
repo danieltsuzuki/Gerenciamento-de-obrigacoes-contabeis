@@ -85,5 +85,58 @@ class LocalFileSystemStorageTest {
 
         assertThat(Files.exists(file)).isFalse();
     }
+
+    @Test
+    @DisplayName("Deve lançar StorageException quando obligationId for nulo no store")
+    void shouldThrowWhenObligationIdIsNullOnStore() {
+        ByteArrayInputStream is = new ByteArrayInputStream("dados".getBytes(StandardCharsets.UTF_8));
+        assertThatThrownBy(() -> storage.store(is, null, "arquivo.pdf"))
+                .isInstanceOf(StorageException.class)
+                .hasMessageContaining("Identificador da obrigação não pode ser nulo.");
+    }
+
+    @Test
+    @DisplayName("Deve lançar StorageException quando inputStream for nulo no store")
+    void shouldThrowWhenInputStreamIsNullOnStore() {
+        assertThatThrownBy(() -> storage.store(null, 1L, "arquivo.pdf"))
+                .isInstanceOf(StorageException.class)
+                .hasMessageContaining("Fluxo de dados do arquivo não pode ser nulo.");
+    }
+
+    @Test
+    @DisplayName("Deve salvar arquivo quando nome original for nulo ou sem extensão")
+    void shouldStoreFileWhenFilenameHasNoExtensionOrIsNull() {
+        ByteArrayInputStream is1 = new ByteArrayInputStream("dados1".getBytes(StandardCharsets.UTF_8));
+        String key1 = storage.store(is1, 1L, null);
+        assertThat(key1).startsWith("1/").doesNotContain(".");
+
+        ByteArrayInputStream is2 = new ByteArrayInputStream("dados2".getBytes(StandardCharsets.UTF_8));
+        String key2 = storage.store(is2, 1L, "sem_extensao");
+        assertThat(key2).startsWith("1/").doesNotContain(".");
+
+        ByteArrayInputStream is3 = new ByteArrayInputStream("dados3".getBytes(StandardCharsets.UTF_8));
+        String key3 = storage.store(is3, 1L, "extensao_muito_longa.extensaomuitolonga12345");
+        assertThat(key3).startsWith("1/").doesNotContain(".");
+    }
+
+    @Test
+    @DisplayName("Deve lançar StorageException quando storageKey for nula ou em branco no load")
+    void shouldThrowWhenStorageKeyIsBlankOnLoad() {
+        assertThatThrownBy(() -> storage.load(null))
+                .isInstanceOf(StorageException.class)
+                .hasMessageContaining("Chave de armazenamento inválida.");
+
+        assertThatThrownBy(() -> storage.load("   "))
+                .isInstanceOf(StorageException.class)
+                .hasMessageContaining("Chave de armazenamento inválida.");
+    }
+
+    @Test
+    @DisplayName("Deve ignorar delete silenciosamente quando chave for nula, em branco ou fora do diretório base")
+    void shouldIgnoreDeleteWhenKeyIsInvalidOrOutsideRoot() {
+        storage.delete(null);
+        storage.delete("   ");
+        storage.delete("../../fora.txt");
+    }
 }
 

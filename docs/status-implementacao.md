@@ -42,22 +42,36 @@ Atualizado em: 2026-11-11
 | SPEC-035 | Implementar auditoria de operações e histórico de status | Concluído / Testado | Migration `V3` (colunas `created_by`/`updated_by`/`uploaded_by` e tabela `obligation_status_history`), Spring Data JPA Auditing (`AuditorAware`), registro append-only imutável de histórico na criação e transição de status, endpoint `GET /api/obligations/{id}/history`, linha do tempo visual de status em `ObligationDetailPage` | `SecurityLoggingTest`, `ObligationServiceTest`, `ObligationControllerTest`, `ObligationApiIntegrationTest`, `obligation_status_history_model_test.dart`, `obligation_detail_page_test.dart` |
 | SPEC-036 | Implementar logs estruturados e rastreabilidade | Concluído / Testado | `RequestLoggingFilter` com correlação via `X-Request-Id` (gerado/propagado, MDC e cabeçalho de resposta/CORS), logs estruturados de negócio em nível `INFO` nos serviços, `WARN` para erros 4xx e `ERROR` com stack trace no `GlobalExceptionHandler`, perfil `prod` com console JSON `ecs` | `RequestLoggingFilterTest`, `SecurityLoggingTest`, `GlobalExceptionHandlerTest` |
 | SPEC-038 | Implementar tema claro e escuro, paleta corporativa, modais centralizados e filtros avançados | Concluído / Testado | Paleta oficial (`#17152F`, `#F5A900`, `#FFC52E`, `#FFFFFF`), `AppTheme` com `lightTheme` e `darkTheme` (WCAG AA), `ThemeController` com alternância de tema no AppBar do `AppScaffold`, centralização de todos os diálogos/modais (`alignment: Alignment.center`, `maxWidth: 520` a `600px`), selects pesquisáveis com diálogo modal centralizado (`SearchableSelectFormField`), filtros avançados e ordenação configurável em `CompanyListPage` e `ResponsibleListPage`, ocultação de ações de mutação (FAB e botões de adição/remoção) para anônimos com diálogo acolhedor de autenticação no `requireAuth` | `test/features/theme_and_filters_spec38_test.dart`, `test/features/auth/auth_guard_test.dart`, `test/features/company/company_list_page_test.dart`, `test/features/responsible/responsible_list_page_test.dart` (198 testes aprovados no frontend) |
+| SPEC-040 | Medir e garantir cobertura de testes (backend e frontend) | Concluído / Testado | JaCoCo 0.8.12 no Maven com goal `check` no ciclo `verify` (limites mínimos: BUNDLE ≥ 85%, Controllers ≥ 90%, Services ≥ 90%); criação de `AuthServiceTest` (100%) e expansão de casos de borda em `LocalFileSystemStorageTest`; medição com `flutter test --coverage` no Flutter e script `frontend/tool/check_coverage.py` com limite de linhas ≥ 80.00% | `./mvnw verify`, `backend/target/site/jacoco/index.html`, `python frontend/tool/check_coverage.py`, 202 testes backend (87.17% geral), 199 testes frontend (82.14% geral) |
 
 ## Resumo
-- **Testado / Concluído:** 32
+- **Testado / Concluído:** 33
 - **Implementado:** 0
 - **Em andamento:** 0
 - **Planejado:** 0
 
-## Cobertura de Testes (JaCoCo)
+## Cobertura de Testes Automatizados (Backend & Frontend)
+
+### Backend (Spring Boot & JaCoCo)
 - **Plugin:** `org.jacoco:jacoco-maven-plugin:0.8.12`
-- **Relatório HTML:** `target/site/jacoco/index.html`
-- **Métricas Atuais:**
-  - **Controllers:** 100% de linhas cobertas (`AuthController`, `CompanyController`, `ResponsibleController`, `ObligationController`, `AttachmentController`).
-  - **Services:** > 92% de linhas cobertas (`CompanyService`: 97.1%, `ResponsibleService`: 100%, `ObligationService`: 93%, `AttachmentService`: 90.7%, `AuthService`: 94.7%).
-  - **Segurança & Validadores:** `JwtService`/`JwtAuthenticationFilter`: 98%, `Cnpj`: 94.7%, `ObligationStatus`: 100%.
-  - **Backend:** 192 testes automatizados aprovados (0 falhas).
-  - **Frontend:** 199 testes automatizados aprovados (0 falhas).
+- **Validação de Limites Automatizada:** Goal `check` vinculado à fase `verify` (`./mvnw verify` ou `./mvnw jacoco:check`), falhando a build se os mínimos não forem atingidos.
+- **Relatório HTML:** `backend/target/site/jacoco/index.html`
+- **Métricas Atuais (202 testes executados com 100% de aprovação):**
+  - **Total Geral (BUNDLE):** **87.17%** de linhas cobertas (822/943 linhas) — *Meta: ≥ 85%*
+  - **Controllers:** **100.0%** de linhas cobertas em todos os 5 controllers (`AttachmentController`, `AuthController`, `CompanyController`, `ObligationController`, `ResponsibleController`) — *Meta: ≥ 90%*
+  - **Services:** **≥ 91.4% a 100%** de linhas cobertas (`ResponsibleService`: 100%, `AuthService`: 100%, `CompanyService`: 97.7%, `ObligationService`: 92.7%, `AttachmentService`: 91.4%) — *Meta: ≥ 90%*
+  - **Storage & Segurança:** `LocalFileSystemStorage`: 87.0%, `JwtService`: 97.1%, `JwtAuthenticationFilter`: 95.5%, `SecurityConfig`: 100.0%, `Cnpj`: 100.0%.
+  - **Exclusões Justificadas:** Classes de inicialização do Spring (`PlayerContabilidadeBackApplication`, `ServletInitializer`), DTOs de transporte (`**/dto/**`) e configurações de infraestrutura pura (`**/shared/config/**`).
+
+### Frontend (Flutter & lcov)
+- **Coleta de Cobertura:** `flutter test --coverage` gerando `frontend/coverage/lcov.info`
+- **Ferramenta de Verificação:** `python frontend/tool/check_coverage.py` com flag `--threshold 80.0`
+- **Métricas Atuais (199 testes de widget e unitários com 100% de aprovação):**
+  - **Total Geral de Linhas:** **82.14%** (3.026 de 3.684 linhas cobertas) — *Meta: ≥ 80.00%*
+  - **Entidades e Domínio:** 100.0% de cobertura (`Company`, `Responsible`, `Attachment`, `ObligationStatusHistory`), 96.5% (`Obligation`)
+  - **Repositórios e Mappers:** 100.0% (`CompanyRepositoryImpl`, `ResponsibleRepositoryImpl`, `AttachmentRepositoryImpl`), 91.7% a 100% nos modelos DTO
+  - **Telas e Formulários:** 84.2% a 95.5% (`CompanyListPage`, `CompanyFormPage`, `ResponsibleListPage`, `ResponsibleFormPage`, `ObligationDetailPage`, `LoginPage`, `RegisterPage`)
+  - **Exclusões Justificadas:** Ponto de entrada da aplicação (`lib/main.dart`) e canais de I/O nativos do sistema operacional (`platform_file_picker_io.dart` e `platform_file_saver_io.dart`).
 
 ## Pendências e perguntas em aberto
 - Pode remover ou substituir anexos de uma obrigação `COMPLETED`?
