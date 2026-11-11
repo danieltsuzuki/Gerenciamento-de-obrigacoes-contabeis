@@ -343,6 +343,8 @@ Acesso anônimo permitido.
 | `companyId` | Long | opcional | Filtra obrigações vinculadas a uma empresa específica |
 | `responsibleId` | Long | opcional | Filtra obrigações atribuídas a um responsável específico |
 | `status` | ObligationStatus (`PENDING`, `IN_PROGRESS`, `COMPLETED`) | opcional | Filtra por status atual |
+| `dueFrom` | LocalDate (`YYYY-MM-DD`) | opcional | Data de vencimento inicial (inclusiva) para filtro de período |
+| `dueTo` | LocalDate (`YYYY-MM-DD`) | opcional | Data de vencimento final (inclusiva) para filtro de período |
 | `page` | Integer | `0` | Número da página (base zero) |
 | `size` | Integer | `20` | Quantidade de registros por página |
 | `sort` | String | `dueDate,asc` | Critério de ordenação |
@@ -371,7 +373,7 @@ Atualiza os dados de uma obrigação existente.
 - Permite alterar título, descrição, prazo (`dueDate`), e opcionalmente realizar transição de status (`RN-008`).
 - Permite reatribuir empresa ou responsável. Caso alterados, valida se o novo destinatário está ativo (`RN-006`).
 - Se o status for alterado para `COMPLETED`, registra a data/hora de conclusão (`completedAt`).
-- Transições de status são validadas de acordo com a máquina de estados (`RN-008`): `PENDING` -> `IN_PROGRESS` / `COMPLETED`, `IN_PROGRESS` -> `COMPLETED`. Transições regressivas ou modificação de obrigações já concluídas resultam em erro 422.
+- Transições de status são validadas de acordo com a máquina de estados estrita (`RN-008`): `PENDING` -> `IN_PROGRESS` e `IN_PROGRESS` -> `COMPLETED`. Saltos (ex.: `PENDING -> COMPLETED`), transições regressivas ou qualquer tentativa de alteração de status em obrigações já concluídas (`COMPLETED`) resultam em erro `422 INVALID_STATUS_TRANSITION`. Se o `status` informado for idêntico ao status atual, a operação prossegue com a atualização cadastral sem erro (comportamento não-idempotente restrito ao PATCH).
 - Requer autenticação JWT (`Authorization: Bearer <token>`).
 
 **Request**

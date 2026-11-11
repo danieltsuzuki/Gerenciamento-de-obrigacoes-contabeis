@@ -272,6 +272,25 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value("INVALID_STATUS_TRANSITION"));
 
+        // 11b. PUT com salto PENDING -> COMPLETED também rejeitado pelo domínio (RN-008) -> 422 INVALID_STATUS_TRANSITION
+        String invalidPutPayload = """
+                {
+                    "companyId": %d,
+                    "responsibleId": %d,
+                    "title": "Declaração de Débitos e Créditos Tributários Federais",
+                    "description": "Tentativa de pular status",
+                    "dueDate": "%s",
+                    "status": "COMPLETED"
+                }
+                """.formatted(activeCompanyId, activeUserId, futureDueDate);
+
+        mockMvc.perform(put("/api/obligations/{id}", obligationId)
+                        .header("Authorization", authHeader)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidPutPayload))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_STATUS_TRANSITION"));
+
         // 12. PATCH com transição válida PENDING -> IN_PROGRESS -> 200 OK (completedAt deve continuar null)
         mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
                         .header("Authorization", authHeader)

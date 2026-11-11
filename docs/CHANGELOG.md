@@ -23,6 +23,11 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação das especificações SPEC-028 a SPEC-031:
+  - **SPEC-028 (Completar README e artefatos de entrega):** README completamente reestruturado contendo todas as 6 seções exigidas pelo desafio, árvore completa de diretórios, resumo das 9 decisões arquiteturais, tabela com links de repositório, PR e Trello, e roadmap de melhorias futuras.
+  - **SPEC-029 (Corrigir inconsistências de contrato e segurança):** Alinhamento do contrato do `PUT /api/obligations/{id}` para cumprir estritamente a máquina de estados sem saltos, documentação dos parâmetros de consulta `dueFrom` e `dueTo`, validação em `JwtService` exigindo chave secreta de no mínimo 32 bytes e remoção de segredos padrão em ambientes de produção.
+  - **SPEC-030 (Containerizar backend e frontend com Docker):** Criação de `backend/Dockerfile` multi-stage com JDK 21 e runtime JRE 21 Temurin seguro com usuário não-root e healthcheck; criação de `frontend/Dockerfile` multi-stage com compilação Flutter Web e runtime Nginx Alpine otimizado com suporte a SPA (`try_files`) e gzip; e arquivos `.dockerignore` em ambos os módulos.
+  - **SPEC-031 (Orquestrar stack com Docker Compose):** Atualização de `docker-compose.yml` para orquestrar MySQL 8.0, Backend Spring Boot e Frontend Flutter Web através de perfis (`infra` e `full`), volumes nomeados e healthcheck de banco com `mysqladmin ping`.
 - Validação de conformidade com o enunciado do desafio e criação das SPEC-027 a SPEC-040:
   - SPEC-027 (retroativa, concluída) consolidando diferenciais já entregues: Autenticação JWT, OpenAPI/Swagger e upload físico de arquivos.
   - SPEC-028 e SPEC-029 (obrigatórias) para completar o README (decisões arquiteturais, melhorias futuras, links de entrega) e corrigir inconsistências de contrato (transição de status no `PUT`, filtros `dueFrom`/`dueTo` não documentados) e o segredo JWT padrão.

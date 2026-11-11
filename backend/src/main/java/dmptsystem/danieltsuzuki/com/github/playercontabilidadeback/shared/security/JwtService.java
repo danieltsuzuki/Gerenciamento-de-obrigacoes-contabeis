@@ -19,9 +19,12 @@ public class JwtService {
     private final long expirationMs;
 
     public JwtService(
-            @Value("${jwt.secret:player-contabilidade-back-secret-key-jwt-must-be-very-long-32-bytes-minimum}") String secret,
+            @Value("${jwt.secret:}") String secret,
             @Value("${jwt.expiration-ms:1800000}") long expirationMs
     ) {
+        if (secret == null || secret.trim().getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalArgumentException("JWT secret must be configured and have at least 32 bytes (256 bits). Please set the JWT_SECRET environment variable.");
+        }
         this.secret = secret;
         this.expirationMs = expirationMs;
     }

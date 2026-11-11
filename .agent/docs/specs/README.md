@@ -56,10 +56,10 @@ As SPECs preservam as decisões das fontes. Pontos não definidos ou contraditó
 | SPEC | Tema | Tipo | Status |
 |---|---|---|---|
 | [SPEC-027](./27-consolidar-diferenciais-implementados.spec.md) | Diferenciais já implementados: Autenticação, OpenAPI/Swagger, Upload físico | Diferencial | Concluído (retroativa) |
-| [SPEC-028](./28-completar-readme-e-artefatos-de-entrega.spec.md) | Completar README (decisões arquiteturais, melhorias futuras) e links de entrega | Obrigatório | Backlog |
-| [SPEC-029](./29-corrigir-inconsistencias-de-contrato-e-seguranca.spec.md) | Corrigir inconsistências de contrato (status no PUT, `dueFrom`/`dueTo`) e segredo JWT padrão | Obrigatório | Backlog |
-| [SPEC-030](./30-containerizar-backend-e-frontend-com-docker.spec.md) | Docker | Diferencial | Backlog |
-| [SPEC-031](./31-orquestrar-stack-com-docker-compose.spec.md) | Docker Compose | Diferencial | Backlog |
+| [SPEC-028](./28-completar-readme-e-artefatos-de-entrega.spec.md) | Completar README (decisões arquiteturais, melhorias futuras) e links de entrega | Obrigatório | Concluído |
+| [SPEC-029](./29-corrigir-inconsistencias-de-contrato-e-seguranca.spec.md) | Corrigir inconsistências de contrato (status no PUT, `dueFrom`/`dueTo`) e segredo JWT padrão | Obrigatório | Concluído |
+| [SPEC-030](./30-containerizar-backend-e-frontend-com-docker.spec.md) | Docker | Diferencial | Concluído |
+| [SPEC-031](./31-orquestrar-stack-com-docker-compose.spec.md) | Docker Compose | Diferencial | Concluído |
 | [SPEC-032](./32-implementar-paginacao-no-flutter.spec.md) | Paginação (frontend) | Diferencial | Backlog |
 | [SPEC-033](./33-implementar-pesquisa-textual.spec.md) | Pesquisa | Diferencial | Backlog |
 | [SPEC-034](./34-implementar-filtros-avancados-no-flutter.spec.md) | Filtros | Diferencial | Backlog |
