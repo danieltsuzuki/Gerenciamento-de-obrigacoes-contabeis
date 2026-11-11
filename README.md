@@ -1,5 +1,12 @@
 # Player Contabilidade
 
+[![CI Pipeline](https://github.com/danieltsuzuki/Gerenciamento-de-obrigacoes-contabeis/actions/workflows/ci.yml/badge.svg)](https://github.com/danieltsuzuki/Gerenciamento-de-obrigacoes-contabeis/actions/workflows/ci.yml)
+[![CD Pipeline](https://github.com/danieltsuzuki/Gerenciamento-de-obrigacoes-contabeis/actions/workflows/cd.yml/badge.svg)](https://github.com/danieltsuzuki/Gerenciamento-de-obrigacoes-contabeis/actions/workflows/cd.yml)
+[![Backend Tests](https://img.shields.io/badge/backend%20tests-202%20passed-success)](backend/)
+[![Frontend Tests](https://img.shields.io/badge/frontend%20tests-199%20passed-success)](frontend/)
+[![Backend Coverage](https://img.shields.io/badge/backend%20coverage-87.17%25-brightgreen)](backend/)
+[![Frontend Coverage](https://img.shields.io/badge/frontend%20coverage-82.14%25-brightgreen)](frontend/)
+
 Sistema corporativo completo para gerenciamento de obrigações contábeis e fiscais, empresas clientes, responsáveis e controle rigoroso de prazos e documentos comprobatórios.
 
 ---
@@ -284,20 +291,58 @@ Após iniciar o backend, acesse no navegador:
 
 ---
 
-## Melhorias Futuras
+## Integração Contínua e Entrega Contínua (CI/CD — SPEC-039)
 
-O roadmap de evolução contínua da aplicação está mapeado e documentado nas especificações detalhadas:
+O repositório possui automação completa configurada com **GitHub Actions** em [`.github/workflows/`](.github/workflows/):
 
-1. **Paginação Avançada no Frontend (SPEC-032):** Suporte a rolagem infinita e controles de página nas listagens de obrigações, empresas e responsáveis.
-2. **Pesquisa Textual Unificada (SPEC-033):** Campo de busca global (`SearchBar`) com debounce na API e no Flutter por razão social, CNPJ, responsável e título.
-3. **Filtros Avançados (SPEC-034):** Painel de filtros combinados por período de vencimento (`dueFrom`/`dueTo`), empresa e atalho rápido para "Obrigações Atrasadas".
-4. **Auditoria e Trilha de Histórico (SPEC-035):** Implementação de Spring Data JPA Auditing (`created_by`/`updated_by`) e tabela dedicada de histórico de transições de status com linha do tempo visual no Flutter.
-5. **Logs Estruturados e Rastreabilidade (SPEC-036):** Configuração de logs em formato JSON com propagação de Correlation ID (`X-Request-Id`) via MDC para observabilidade completa.
-6. **Cache de Alta Performance (SPEC-037):** Cache em memória com Caffeine para entidades de referência e dados com baixa volatilidade (empresas e responsáveis ativos).
-7. **Tema Claro e Escuro (SPEC-038):** Alternador de tema visual no Flutter (`ThemeMode.light`, `ThemeMode.dark`, `ThemeMode.system`) com persistência de preferências do usuário.
-8. **Pipeline Automatizado de CI/CD (SPEC-039):** Workflows do GitHub Actions para validação contínua de testes, análise estática, build e publicação de contêineres no GHCR.
-9. **Metas Rígidas de Cobertura de Testes (SPEC-040):** Enforce de cobertura mínima no build (`jacoco:check` ≥ 85% e cobertura de código no Flutter).
-10. **Refinamentos de Negócio Consolidados (SPEC-041):**
+### 1. Workflow de CI (`.github/workflows/ci.yml`)
+Executado a cada `push` e `pull_request` direcionado às branches `master` ou `main`:
+- **Job Backend:**
+  - Configuração do JDK 21 (Temurin) com cache inteligente de dependências do Maven.
+  - Execução de `./mvnw clean verify`, rodando os 202 testes automatizados com MySQL em Testcontainers e validando os limites mínimos de cobertura do JaCoCo (`check` com BUNDLE ≥ 85%, Controllers ≥ 90%, Services ≥ 90%).
+  - Publicação do relatório HTML do JaCoCo como artefato com retenção de 14 dias.
+- **Job Frontend:**
+  - Configuração do Flutter SDK 3.29.1 (canal estável) com cache.
+  - Análise estática estrita (`flutter analyze`).
+  - Execução dos 199 testes automatizados com cobertura de código (`flutter test --coverage`).
+  - Verificação de threshold mínimo com `python tool/check_coverage.py` (meta: ≥ 80.00%, atingido: 82.14%).
+  - Publicação do relatório `lcov.info` como artefato.
+- **Job Docs:**
+  - Validação automatizada de consistência entre código, banco de dados e contratos da documentação via `python .agent/skills/documentacao-projeto/scripts/check_docs.py .`.
+
+### 2. Workflow de CD (`.github/workflows/cd.yml`)
+Disparado na criação de tags versionadas (`v*.*.*`), merge na branch principal ou execução manual (`workflow_dispatch`):
+- **Job Docker Backend:** Build multi-stage e publicação da imagem para o GitHub Container Registry (`ghcr.io/danieltsuzuki/player-contabilidade-backend`).
+- **Job Docker Frontend:** Build com Nginx alpine e publicação da imagem para o GHCR (`ghcr.io/danieltsuzuki/player-contabilidade-frontend`).
+- **Job Flutter Web Bundle:** Compilação do release estático Web (`flutter build web --release`) e disponibilização para download nos artefatos do workflow.
+
+### 3. Proteção de Branch (Branch Protection Rules)
+Para garantir a estabilidade do produto e impedir que código quebrado ou sem cobertura chegue à branch principal (`master`/`main`):
+- Exigir Pull Request com no mínimo 1 aprovação para merge.
+- Exigir que os status checks do CI passem obrigatoriamente antes do merge:
+  - `Backend (Spring Boot & JaCoCo)`
+  - `Frontend (Flutter & lcov)`
+  - `Documentation Consistency Check`
+- Exigir branch atualizada com a base antes do merge (*Require branches to be up to date before merging*).
+
+---
+
+## Melhorias e Especificações Implementadas
+
+O roadmap de evolução contínua da aplicação foi mapeado e executado com rigor em arquitetura e qualidade:
+
+1. **Paginação Avançada no Frontend (SPEC-032) — Concluído:** Suporte a paginação com feedback de páginas nas listagens de obrigações, empresas e responsáveis.
+2. **Pesquisa Textual Unificada (SPEC-033) — Concluído:** Campo de busca global com debounce na API e no Flutter por razão social, CNPJ, responsável e título.
+3. **Filtros Avançados (SPEC-034) — Concluído:** Painel de filtros combinados por período de vencimento (`dueFrom`/`dueTo`), empresa, responsável e atalho rápido "Apenas Atrasadas".
+4. **Auditoria e Trilha de Histórico (SPEC-035) — Concluído:** Spring Data JPA Auditing (`created_by`/`updated_by`) e histórico imutável de transições de status com linha do tempo visual no Flutter.
+5. **Logs Estruturados e Rastreabilidade (SPEC-036) — Concluído:** Logs estruturados em formato JSON com propagação de Correlation ID (`X-Request-Id`) via MDC para observabilidade completa.
+6. **Tema Claro e Escuro, Modais e Paleta Oficial (SPEC-038) — Concluído:** Alternador de tema visual no Flutter (`light`/`dark`), paleta corporativa oficial, centralização de modais e selects pesquisáveis.
+7. **Pipeline Automatizado de CI/CD (SPEC-039) — Concluído:** Workflows do GitHub Actions para validação contínua (build, test, analyze, lint, docs) e publicação de contêineres no GHCR.
+8. **Metas Rígidas de Cobertura de Testes (SPEC-040) — Concluído:** Enforce automatizado no Maven com JaCoCo (87.17% geral) e verificação de threshold no Flutter (82.14%).
+
+### Roadmap Futuro (Backlog)
+1. **Cache de Alta Performance (SPEC-037):** Cache em memória com Caffeine para entidades de referência e dados com baixa volatilidade (empresas e responsáveis ativos).
+2. **Refinamentos de Negócio Consolidados (SPEC-041):**
     - Imutabilidade absoluta (100%) de anexos em obrigações com status `COMPLETED`.
     - Bloqueio de autorização exigindo que apenas o responsável atribuído à obrigação avance o status (`403 Forbidden`).
     - Destaque visual destacado no frontend para obrigações com prazo vencido (`isOverdue`).
