@@ -109,12 +109,25 @@ flutter build web --dart-define=API_URL=http://seu-servidor-api:8080
 ## 4. Testes e Análise de Código
 
 ```bash
-# Executar toda a suíte de testes automatizados
+# Executar toda a suíte de testes automatizados (199 testes)
 flutter test
 
-# Executar com relatório de cobertura
+# Executar com geração do relatório de cobertura de linhas (lcov.info)
 flutter test --coverage
+
+# Validar threshold mínimo de cobertura de código (SPEC-040, padrão: >= 80%)
+python tool/check_coverage.py
+
+# Validar com exibição detalhada linha a linha de todos os arquivos
+python tool/check_coverage.py --verbose
 
 # Executar o analisador estático (linter)
 flutter analyze
 ```
+
+### Metas e Relatório de Cobertura (SPEC-040):
+- **Arquivo gerado:** `coverage/lcov.info`
+- **Validador:** `tool/check_coverage.py`
+- **Meta mínima:** **80.00%** de linhas cobertas
+- **Resultado atual:** **82.14%** de linhas cobertas (3.026/3.684 linhas)
+- **Exclusões justificadas:** Ponto de entrada (`lib/main.dart`) e adaptadores de canal nativo do sistema operacional (`platform_file_picker_io.dart` e `platform_file_saver_io.dart`).

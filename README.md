@@ -232,8 +232,12 @@ A partir do diretório `backend/`:
 
 # Linux / macOS
 ./mvnw test
+
+# Executar testes com validação obrigatória de thresholds mínimos de cobertura (SPEC-040)
+# Falha a compilação se BUNDLE < 85%, Controllers < 90% ou Services < 90%
+.\mvnw.cmd verify
 ```
-*O relatório de cobertura de código do JaCoCo estará disponível em `backend/target/site/jacoco/index.html`.*
+*O relatório detalhado de cobertura JaCoCo estará disponível em `backend/target/site/jacoco/index.html`.*
 
 #### 5. Executar o Frontend (Flutter)
 A partir do diretório `frontend/`:
@@ -251,8 +255,14 @@ flutter run -d windows --dart-define=API_URL=http://localhost:8080
 #### 6. Executar os Testes e Análise Estática do Frontend
 A partir do diretório `frontend/`:
 ```bash
-# Executar suíte de testes unitários e de widgets
+# Executar suíte de testes unitários e de widgets (199 testes)
 flutter test
+
+# Executar com geração do relatório de cobertura lcov
+flutter test --coverage
+
+# Validar limite mínimo de cobertura do frontend (SPEC-040, meta: >= 80.00%)
+python tool/check_coverage.py
 
 # Executar análise estática de código
 flutter analyze

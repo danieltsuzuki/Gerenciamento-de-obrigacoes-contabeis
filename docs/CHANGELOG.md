@@ -29,6 +29,17 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação da especificação SPEC-040 (Medir e Garantir Cobertura de Testes Backend e Frontend):
+  - **Validação Automatizada de Cobertura no Backend com JaCoCo (`jacoco:check`):**
+    - Configuração de regras estritas de verificação no ciclo `verify` do `jacoco-maven-plugin:0.8.12` em `backend/pom.xml`: threshold mínimo de linhas no módulo (BUNDLE) de 85%, classes de controller com mínimo de 90% e classes de service com mínimo de 90%.
+    - Implementação de novos testes unitários para `AuthService` (`AuthServiceTest.java`) atingindo 100% de linhas cobertas e enriquecimento de `LocalFileSystemStorageTest.java` com testes de casos de borda e sanitização.
+    - Totalização de 202 testes executados no backend com 0 falhas e **87.17%** de cobertura geral de linhas (Controllers em 100.0% e Services entre 91.4% e 100.0%).
+    - Validação de que a compilação falha (`BUILD FAILURE`) caso qualquer threshold não seja atingido.
+  - **Medição e Verificador de Cobertura no Frontend Flutter:**
+    - Medição de cobertura com `flutter test --coverage`, gerando `coverage/lcov.info` para a suíte de 199 testes automatizados (0 falhas).
+    - Criação da ferramenta de análise `frontend/tool/check_coverage.py` com suporte a thresholds configuráveis (padrão ≥ 80.00%), relatório detalhado por arquivo e saída com status code de erro caso a meta não seja cumprida.
+    - Cobertura geral atingida no Flutter de **82.14%** (3.026/3.684 linhas cobertas), superando a meta estabelecida.
+    - Documentação de comandos e relatórios nos arquivos `README.md`, `backend/README.md`, `frontend/README.md` e `docs/status-implementacao.md`.
 - Implementação da especificação SPEC-038 (Tema Claro e Escuro, Paleta Corporativa, Modais Centralizados e Filtros Avançados):
   - **Paleta de Cores Institucional e Design System Material 3 (`AppTheme`):**
     - Definição das constantes oficiais da marca: `#17152F` (Primary Navy), `#F5A900` (Brand Yellow), `#FFC52E` (Accent Yellow) e `#FFFFFF` (White).

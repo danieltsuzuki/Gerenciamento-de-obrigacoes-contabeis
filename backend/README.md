@@ -73,11 +73,24 @@ Após a inicialização, a API estará acessível em `http://localhost:8080`.
 
 # Linux / macOS
 ./mvnw test
+
+# Executar testes e verificar limites mínimos de cobertura (SPEC-040)
+# Falha a compilação caso a cobertura caia abaixo dos limites configurados
+# Windows
+.\mvnw.cmd verify
+
+# Linux / macOS
+./mvnw verify
 ```
 
-### Relatório de Cobertura JaCoCo:
+### Relatório e Metas de Cobertura JaCoCo (SPEC-040):
 Após a execução dos testes, o relatório detalhado de cobertura de código estará disponível em:
-`target/site/jacoco/index.html`
+`backend/target/site/jacoco/index.html`
+
+O projeto possui regras automatizadas no plugin `jacoco-maven-plugin` vinculadas à fase `verify`:
+- **Geral (BUNDLE):** mínimo de **85%** de linhas cobertas (atingido: **87.17%**).
+- **Controllers:** mínimo de **90%** de linhas cobertas (atingido: **100.0%**).
+- **Services:** mínimo de **90%** de linhas cobertas (atingido: **≥ 91.4% a 100%**).
 
 ---
 
