@@ -11,6 +11,7 @@ import '../../../auth/presentation/widgets/auth_guard.dart';
 import '../../../company/domain/repositories/company_repository.dart';
 import '../../../responsible/domain/repositories/responsible_repository.dart';
 import '../../domain/entities/obligation.dart';
+import '../../domain/entities/obligation_status_history.dart';
 import '../../domain/repositories/obligation_repository.dart';
 import 'obligation_form_page.dart';
 
@@ -45,13 +46,16 @@ class ObligationDetailPage extends StatefulWidget {
 class _ObligationDetailPageState extends State<ObligationDetailPage> {
   Obligation? _obligation;
   List<Attachment> _attachments = [];
+  List<ObligationStatusHistory> _history = [];
   bool _isLoadingObligation = false;
   bool _isLoadingAttachments = false;
+  bool _isLoadingHistory = false;
   bool _isUpdatingStatus = false;
   bool _isUploadingAttachment = false;
   final Set<int> _downloadingAttachmentIds = {};
   String? _errorMessage;
   String? _attachmentErrorMessage;
+  String? _historyErrorMessage;
   bool _hasMutated = false;
 
   bool get _isAuthenticated => widget.authController?.isAuthenticated ?? false;
@@ -86,8 +90,11 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
   Future<void> _loadInitialData() async {
     if (_obligation == null) {
       await _loadObligation();
-    } else if (_isAuthenticated && widget.attachmentRepository != null) {
-      _loadAttachments();
+    } else {
+      _loadHistory();
+      if (_isAuthenticated && widget.attachmentRepository != null) {
+        _loadAttachments();
+      }
     }
   }
 
@@ -108,6 +115,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
         _errorMessage = null;
       });
 
+      _loadHistory();
       if (_isAuthenticated && widget.attachmentRepository != null) {
         _loadAttachments();
       }
@@ -122,6 +130,35 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
       setState(() {
         _errorMessage = 'Falha ao carregar detalhes da obrigação: $e';
         _isLoadingObligation = false;
+      });
+    }
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() {
+      _isLoadingHistory = true;
+      _historyErrorMessage = null;
+    });
+
+    try {
+      final items = await widget.repository.getObligationHistory(widget.obligationId);
+      if (!mounted) return;
+      setState(() {
+        _history = items;
+        _isLoadingHistory = false;
+        _historyErrorMessage = null;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _historyErrorMessage = e.message;
+        _isLoadingHistory = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _historyErrorMessage = 'Erro ao carregar histórico: $e';
+        _isLoadingHistory = false;
       });
     }
   }
@@ -160,6 +197,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
 
   Future<void> _refreshAll() async {
     await _loadObligation();
+    await _loadHistory();
     if (_isAuthenticated && widget.attachmentRepository != null) {
       await _loadAttachments();
     }
@@ -220,6 +258,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
         _isUpdatingStatus = false;
         _hasMutated = true;
       });
+      _loadHistory();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -581,6 +620,8 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                 ],
                 const SizedBox(height: 16),
                 _buildDetailsCard(obligation),
+                const SizedBox(height: 16),
+                _buildHistoryCard(obligation),
                 if (_isAuthenticated) ...[
                   const SizedBox(height: 16),
                   _buildAttachmentsCard(obligation),
@@ -1091,6 +1132,220 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                             tooltip: 'Baixar arquivo',
                             onPressed: () => _handleDownloadAttachment(att),
                           ),
+                  );
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryCard(Obligation obligation) {
+    return Card(
+      key: const Key('obligation-history-card'),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.history_rounded, size: 20, color: Color(0xFF1E3A8A)),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Histórico de Status',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
+                if (_history.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${_history.length}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF475569),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_isLoadingHistory && _history.isEmpty) ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ] else if (_historyErrorMessage != null && _history.isEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: Color(0xFFDC2626)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _historyErrorMessage!,
+                        style: const TextStyle(color: Color(0xFFDC2626), fontSize: 13),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _loadHistory,
+                      child: const Text('Tentar novamente'),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (_history.isEmpty) ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  child: Column(
+                    children: [
+                      Icon(Icons.timeline, size: 40, color: Color(0xFF94A3B8)),
+                      SizedBox(height: 8),
+                      Text(
+                        'Nenhum registro de histórico encontrado.',
+                        style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ] else ...[
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _history.length,
+                itemBuilder: (context, index) {
+                  final item = _history[index];
+                  final isLast = index == _history.length - 1;
+                  final statusColor = _getStatusColor(item.toStatus);
+                  final statusBg = _getStatusBgColor(item.toStatus);
+                  final statusIcon = _getStatusIcon(item.toStatus);
+
+                  final titleText = item.fromStatus == null
+                      ? 'Criação da obrigação'
+                      : 'Transição: ${item.fromStatus!.label} → ${item.toStatus.label}';
+
+                  final authorText = item.changedBy != null
+                      ? item.changedBy!.name
+                      : 'Sistema / Cadastro';
+
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 32,
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: statusBg,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: statusColor, width: 1.5),
+                                ),
+                                child: Icon(statusIcon, size: 14, color: statusColor),
+                              ),
+                              if (!isLast)
+                                Expanded(
+                                  child: Container(
+                                    width: 2,
+                                    color: const Color(0xFFCBD5E1),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: isLast ? 4 : 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        titleText,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: statusBg,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        item.toStatus.label,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: statusColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.person_outline, size: 14, color: Color(0xFF64748B)),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        authorText,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF475569),
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.access_time, size: 14, color: Color(0xFF94A3B8)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _formatDateTime(item.changedAt),
+                                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),

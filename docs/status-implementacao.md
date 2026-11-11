@@ -39,9 +39,11 @@ Atualizado em: 2026-11-11
 | SPEC-032 | Implementar paginação nas listagens do Flutter | Testado | Controles de paginação Anterior/Próxima nas 3 listagens (`CompanyListPage`, `ResponsibleListPage`, `ObligationListPage`), exibição de `Página X de Y (N)`, ordenação selecionável na lista de obrigações e `size: 100` nos dropdowns de formulário | Testes de widget em `company_list_page_test.dart`, `responsible_list_page_test.dart`, `obligation_list_page_test.dart` |
 | SPEC-033 | Implementar pesquisa textual (API e Flutter) | Testado | Parâmetro `q` na API (`GET /api/companies`, `GET /api/responsibles`, `GET /api/obligations`) com validação de limite de 100 caracteres; barras de pesquisa com debounce de 400ms, botão limpar e empty states específicos no Flutter | Testes unitários/integração no backend (`CompanyControllerTest`, `CompanyServiceTest`, etc.) e testes de widget no Flutter |
 | SPEC-034 | Implementar filtros avançados no Flutter | Testado | BottomSheet de filtros avançados em `ObligationListPage` (empresa, responsável, `DateRangePicker`), filtro rápido "Apenas Atrasadas", chips com remoção individual e botão "Limpar todos", atalhos "Ver Obrigações" nas telas de detalhes e suporte a rota | Testes de widget em `obligation_list_page_test.dart` e navegação |
+| SPEC-035 | Implementar auditoria de operações e histórico de status | Concluído / Testado | Migration `V3` (colunas `created_by`/`updated_by`/`uploaded_by` e tabela `obligation_status_history`), Spring Data JPA Auditing (`AuditorAware`), registro append-only imutável de histórico na criação e transição de status, endpoint `GET /api/obligations/{id}/history`, linha do tempo visual de status em `ObligationDetailPage` | `SecurityLoggingTest`, `ObligationServiceTest`, `ObligationControllerTest`, `ObligationApiIntegrationTest`, `obligation_status_history_model_test.dart`, `obligation_detail_page_test.dart` |
+| SPEC-036 | Implementar logs estruturados e rastreabilidade | Concluído / Testado | `RequestLoggingFilter` com correlação via `X-Request-Id` (gerado/propagado, MDC e cabeçalho de resposta/CORS), logs estruturados de negócio em nível `INFO` nos serviços, `WARN` para erros 4xx e `ERROR` com stack trace no `GlobalExceptionHandler`, perfil `prod` com console JSON `ecs` | `RequestLoggingFilterTest`, `SecurityLoggingTest`, `GlobalExceptionHandlerTest` |
 
 ## Resumo
-- **Testado / Concluído:** 29
+- **Testado / Concluído:** 31
 - **Implementado:** 0
 - **Em andamento:** 0
 - **Planejado:** 0
@@ -53,8 +55,8 @@ Atualizado em: 2026-11-11
   - **Controllers:** 100% de linhas cobertas (`AuthController`, `CompanyController`, `ResponsibleController`, `ObligationController`, `AttachmentController`).
   - **Services:** > 92% de linhas cobertas (`CompanyService`: 97.1%, `ResponsibleService`: 100%, `ObligationService`: 93%, `AttachmentService`: 90.7%, `AuthService`: 94.7%).
   - **Segurança & Validadores:** `JwtService`/`JwtAuthenticationFilter`: 98%, `Cnpj`: 94.7%, `ObligationStatus`: 100%.
-  - **Backend:** 182 testes automatizados aprovados (0 falhas).
-  - **Frontend:** 184 testes automatizados aprovados (0 falhas).
+  - **Backend:** 192 testes automatizados aprovados (0 falhas).
+  - **Frontend:** 188 testes automatizados aprovados (0 falhas).
 
 ## Pendências e perguntas em aberto
 - Pode remover ou substituir anexos de uma obrigação `COMPLETED`?

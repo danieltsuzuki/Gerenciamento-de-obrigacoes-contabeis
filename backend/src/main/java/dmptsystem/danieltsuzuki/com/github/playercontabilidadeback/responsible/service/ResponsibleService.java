@@ -8,6 +8,8 @@ import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.m
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.repository.ResponsibleRepository;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.DuplicateResourceException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +21,8 @@ import java.util.Locale;
 @Service
 @Transactional
 public class ResponsibleService {
+
+    private static final Logger log = LoggerFactory.getLogger(ResponsibleService.class);
 
     private final ResponsibleRepository responsibleRepository;
     private final ResponsibleMapper responsibleMapper;
@@ -46,6 +50,7 @@ public class ResponsibleService {
         responsible.setPasswordHash(passwordEncoder.encode(request.password()));
 
         Responsible saved = responsibleRepository.save(responsible);
+        log.info("Responsible created: id={}, email='{}', name='{}'", saved.getId(), saved.getEmail(), saved.getName());
         return responsibleMapper.toResponse(saved);
     }
 
@@ -96,6 +101,7 @@ public class ResponsibleService {
         responsible.setActive(request.active());
 
         Responsible updated = responsibleRepository.save(responsible);
+        log.info("Responsible updated: id={}, email='{}', active={}", updated.getId(), updated.getEmail(), updated.isActive());
         return responsibleMapper.toResponse(updated);
     }
 

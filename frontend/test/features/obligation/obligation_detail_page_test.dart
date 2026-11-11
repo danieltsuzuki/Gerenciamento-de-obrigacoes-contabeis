@@ -19,6 +19,7 @@ import 'package:player_contabilidade_front/features/company/domain/repositories/
 import 'package:player_contabilidade_front/features/obligation/data/models/create_obligation_request.dart';
 import 'package:player_contabilidade_front/features/obligation/data/models/update_obligation_request.dart';
 import 'package:player_contabilidade_front/features/obligation/domain/entities/obligation.dart';
+import 'package:player_contabilidade_front/features/obligation/domain/entities/obligation_status_history.dart';
 import 'package:player_contabilidade_front/features/obligation/domain/repositories/obligation_repository.dart';
 import 'package:player_contabilidade_front/features/obligation/presentation/pages/obligation_detail_page.dart';
 import 'package:player_contabilidade_front/features/obligation/presentation/pages/obligation_form_page.dart';
@@ -29,8 +30,10 @@ import 'package:player_contabilidade_front/features/responsible/domain/repositor
 
 class MockObligationRepository implements ObligationRepository {
   Obligation? obligationToReturn;
+  List<ObligationStatusHistory> historyToReturn = [];
   bool shouldThrow = false;
   int getByIdCalls = 0;
+  int getHistoryCalls = 0;
   ObligationStatus? lastUpdatedStatus;
   int updateStatusCalls = 0;
 
@@ -107,6 +110,12 @@ class MockObligationRepository implements ObligationRepository {
     );
     obligationToReturn = updated;
     return updated;
+  }
+
+  @override
+  Future<List<ObligationStatusHistory>> getObligationHistory(int id) async {
+    getHistoryCalls++;
+    return historyToReturn;
   }
 }
 
@@ -503,6 +512,49 @@ void main() {
 
       expect(find.byType(ObligationFormPage), findsOneWidget);
       expect(find.text('Editar Obrigação'), findsOneWidget);
+    });
+
+    testWidgets('SPEC-035: deve exibir histórico de transições de status na tela de detalhes',
+        (tester) async {
+      mockObligationRepo.historyToReturn = [
+        ObligationStatusHistory(
+          id: 1,
+          obligationId: 10,
+          fromStatus: null,
+          toStatus: ObligationStatus.pending,
+          changedBy: const ChangedBySummary(id: 1, name: 'Admin Silva', email: 'admin@player.com'),
+          changedAt: DateTime(2026, 11, 10, 10, 0),
+        ),
+        ObligationStatusHistory(
+          id: 2,
+          obligationId: 10,
+          fromStatus: ObligationStatus.pending,
+          toStatus: ObligationStatus.inProgress,
+          changedBy: const ChangedBySummary(id: 2, name: 'Carlos Operador', email: 'carlos@player.com'),
+          changedAt: DateTime(2026, 11, 10, 14, 30),
+        ),
+      ];
+
+      await tester.pumpWidget(createWidgetUnderTest(obligationId: 10));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('obligation-history-card')), findsOneWidget);
+      expect(find.text('Histórico de Status'), findsOneWidget);
+      expect(find.text('Criação da obrigação'), findsOneWidget);
+      expect(find.text('Transição: Pendente → Em Andamento'), findsOneWidget);
+      expect(find.text('Admin Silva'), findsOneWidget);
+      expect(find.text('Carlos Operador'), findsOneWidget);
+    });
+
+    testWidgets('SPEC-035: deve exibir mensagem de histórico vazio quando não houver transições',
+        (tester) async {
+      mockObligationRepo.historyToReturn = [];
+
+      await tester.pumpWidget(createWidgetUnderTest(obligationId: 10));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('obligation-history-card')), findsOneWidget);
+      expect(find.text('Nenhum registro de histórico encontrado.'), findsOneWidget);
     });
   });
 }

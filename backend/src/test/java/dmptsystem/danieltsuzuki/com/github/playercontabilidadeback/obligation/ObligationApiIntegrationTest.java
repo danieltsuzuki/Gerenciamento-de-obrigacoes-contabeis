@@ -392,5 +392,17 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
                 obligationId
         );
         assertThat(persistedCompletedAt).isNotNull();
+
+        // 20. SPEC-035: Consultar histórico cronológico de status da obrigação
+        mockMvc.perform(get("/api/obligations/{id}/history", obligationId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].fromStatus").doesNotExist())
+                .andExpect(jsonPath("$[0].toStatus").value("PENDING"))
+                .andExpect(jsonPath("$[1].fromStatus").value("PENDING"))
+                .andExpect(jsonPath("$[1].toStatus").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$[2].fromStatus").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$[2].toStatus").value("COMPLETED"));
     }
 }

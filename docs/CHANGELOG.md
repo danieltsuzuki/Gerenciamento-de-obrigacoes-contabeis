@@ -29,6 +29,21 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação das especificações SPEC-035 e SPEC-036:
+  - **SPEC-035 (Implementar auditoria de operações e histórico de status):**
+    - Migration Flyway `V3__add_audit_and_obligation_history.sql` adicionando colunas de auditoria `created_by` e `updated_by` (`users.id`) nas tabelas `company`, `users`, `obligation` e `uploaded_by` em `attachment`.
+    - Criação da tabela imutável `obligation_status_history` (`id`, `obligation_id`, `from_status`, `to_status`, `changed_by`, `changed_at`) com chaves estrangeiras sem cascade de exclusão (ADR-0001).
+    - Habilitação do Spring Data JPA Auditing (`@EnableJpaAuditing`) com implementação otimizada de `SecurityAuditorAware` que extrai o usuário autenticado do token JWT via `UserPrincipal` e utiliza `EntityManager.getReference` para evitar recursões de flush no Hibernate.
+    - Registro de histórico append-only imutável na criação da obrigação (`null` -> `PENDING`) e em cada alteração de status bem-sucedida (via `PUT` ou `PATCH`), persistido atomicamente na mesma transação.
+    - Exposição do endpoint público `GET /api/obligations/{id}/history` para leitura cronológica das transições de status da obrigação.
+    - No frontend Flutter: criação do modelo `ObligationStatusHistory` e `ChangedBySummary`, extensão do `ObligationRepository` e inclusão de linha do tempo visual (*Status History / Timeline*) na tela `ObligationDetailPage`, exibindo badges coloridos dos status, indicador vertical, dados do autor e timestamp formatado com atualização em tempo real após transições.
+    - Testes unitários, de repositório, de serviço, de controller, de integração e de widgets em ambos os módulos (totalizando 192 testes no backend e 188 no frontend).
+  - **SPEC-036 (Implementar logs estruturados e rastreabilidade):**
+    - Criação do `RequestLoggingFilter` (`OncePerRequestFilter`) responsável por ler ou gerar o cabeçalho de correlação `X-Request-Id` (UUID v4), inseri-lo no MDC do SLF4J (`requestId`), devolvê-lo na resposta HTTP e registrá-lo nas mensagens de log com método, URI, código de status HTTP e tempo de execução em milissegundos.
+    - Exposição do cabeçalho `X-Request-Id` na política global de CORS da API.
+    - Logs estruturados de negócio em nível `INFO` nas operações críticas de `CompanyService`, `ResponsibleService`, `ObligationService`, `AttachmentService` e `AuthService` (com mascaramento seguro de e-mails em falhas de login e estrita proibição de senhas/tokens nos logs).
+    - Tratamento de exceções no `GlobalExceptionHandler` com `log.warn(...)` para erros negociais/validação (4xx) e `log.error(...)` com stack trace completo para falhas de infraestrutura e inesperadas (5xx).
+    - Configuração de console logging no `application.yml` incluindo `%X{requestId}` no padrão de log e ativação do formato JSON estruturado padrão Elastic Common Schema (`logging.structured.format.console: ecs`) para o perfil de produção (`prod`).
 - Componente de seleção pesquisável centralizado no Flutter (SPEC-018):
   - Criação do componente genérico reutilizável `SearchableSelectFormField<T>` em `frontend/lib/core/widgets/searchable_select_form_field.dart`, oferecendo seletor estilizado tipo input, diálogo modal centralizado (`showDialog` / `Dialog` com `maxWidth: 520px` e cantos arredondados), campo de busca instantânea com botão limpar, listagem rolável com destaque do item selecionado e validação integrada ao formulário Flutter.
   - Integração do componente no formulário de obrigações (`ObligationFormPage`), substituindo os antigos `DropdownButtonFormField` por seletores pesquisáveis de "Empresa Cliente" (busca por Razão Social, Nome Fantasia ou CNPJ) e "Responsável Atribuído" (busca por Nome ou E-mail).

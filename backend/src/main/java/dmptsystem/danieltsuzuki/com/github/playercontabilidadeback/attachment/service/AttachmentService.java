@@ -11,6 +11,8 @@ import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.st
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.entity.Obligation;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.repository.ObligationRepository;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,8 @@ import java.util.Set;
 @Service
 @Transactional
 public class AttachmentService {
+
+    private static final Logger log = LoggerFactory.getLogger(AttachmentService.class);
 
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
             "application/pdf",
@@ -108,6 +112,7 @@ public class AttachmentService {
             attachment.setUploadedAt(LocalDateTime.now(clock));
 
             Attachment saved = attachmentRepository.save(attachment);
+            log.info("Attachment uploaded: id={}, obligationId={}, fileName='{}', size={} bytes", saved.getId(), obligationId, saved.getName(), saved.getSize());
             return attachmentMapper.toResponse(saved);
         } catch (Exception e) {
             fileStorage.delete(storageKey);
@@ -137,6 +142,8 @@ public class AttachmentService {
                 .orElseThrow(() -> new NotFoundException("Anexo", attachmentId));
 
         Resource resource = fileStorage.load(attachment.getStorageKey());
+        Long obligationId = attachment.getObligation() != null ? attachment.getObligation().getId() : null;
+        log.info("Attachment downloaded: id={}, obligationId={}, fileName='{}'", attachmentId, obligationId, attachment.getName());
         return new DownloadedFile(
                 resource,
                 attachment.getName(),
