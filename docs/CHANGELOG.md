@@ -23,6 +23,13 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-023 (Adicionar testes do Flutter):
+  - Expansão abrangente da suíte de testes automatizados com testes unitários dedicados para models e entidades de domínio (`company_model_test.dart`, `responsible_model_test.dart`, `obligation_model_test.dart`, `attachment_model_test.dart`, `auth_model_test.dart`).
+  - Cobertura completa de serialização/desserialização JSON (`fromJson` / `toJson`), campos opcionais e defaults para todas as entidades e DTOs de requisição e resposta do sistema.
+  - Implementação de suíte de testes dedicada para garantia de resiliência e tratamento estrito de erros (`unhandled_exceptions_and_error_handling_test.dart`), validando que falhas de rede, respostas 500, dados malformados e erros de validação (409 DUPLICATE_CNPJ, 409 DUPLICATE_EMAIL, 422) não geram exceções não tratadas.
+  - Testes unitários para regras de transição da máquina de estados do enum `ObligationStatus` (`canTransitionTo`), códigos, labels e cálculo dinâmico de prazos de vencimento (`isOverdue`).
+  - Formatação e parsing de tamanho de anexos (`formattedSize`) em bytes, kilobytes e megabytes.
+  - Consolidação da suíte com 172 testes automatizados aprovados no frontend (`flutter test`), sem dependência de APIs reais nem chamadas de rede externas.
 - Implementação e validação da SPEC-022 (Implementar download/abertura de anexos):
   - Camada de salvamento e abertura de arquivos desacoplada via `FileSaverService` e `DefaultFileSaverService`.
   - Suporte multiplataforma com download e abertura local segura em disco (`platform_file_saver_io.dart` na pasta Downloads do usuário em ambientes desktop Windows/Linux/macOS) e via Blob e download nativo no navegador (`platform_file_saver_web.dart`).
