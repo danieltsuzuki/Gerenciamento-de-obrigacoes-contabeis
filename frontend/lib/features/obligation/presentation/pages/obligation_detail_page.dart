@@ -651,13 +651,14 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
   Widget _buildHeaderCard(Obligation obligation) {
     final statusColor = _getStatusColor(obligation.status);
     final statusBgColor = _getStatusBgColor(obligation.status);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: obligation.isOverdue ? const Color(0xFFFCA5A5) : const Color(0xFFE2E8F0),
+          color: obligation.isOverdue ? const Color(0xFFFCA5A5) : Theme.of(context).dividerColor,
           width: obligation.isOverdue ? 1.5 : 1,
         ),
       ),
@@ -672,10 +673,10 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                 Expanded(
                   child: Text(
                     obligation.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -709,7 +710,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
               const SizedBox(height: 10),
               Text(
                 obligation.description!,
-                style: const TextStyle(fontSize: 14, color: Color(0xFF475569)),
+                style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
               ),
             ],
             if (obligation.isOverdue) ...[
@@ -888,23 +889,25 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
   }
 
   Widget _buildDetailsCard(Obligation obligation) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFE2E8F0)),
+        side: BorderSide(color: Theme.of(context).dividerColor),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Informações e Vínculos',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 16),
@@ -960,11 +963,13 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
   }
 
   Widget _buildAttachmentsCard(Obligation obligation) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFE2E8F0)),
+        side: BorderSide(color: Theme.of(context).dividerColor),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -973,15 +978,15 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
           children: [
             Row(
               children: [
-                const Icon(Icons.attach_file, size: 20, color: Color(0xFF1E3A8A)),
+                Icon(Icons.attach_file, size: 20, color: colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Documentos Anexados (${_isAuthenticated ? _attachments.length : obligation.attachmentCount})',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -998,8 +1003,8 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                         : const Icon(Icons.upload_file, size: 16),
                     label: Text(_isUploadingAttachment ? 'Enviando...' : 'Anexar Arquivo'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1E3A8A),
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                     ),
@@ -1096,25 +1101,25 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         _getAttachmentIcon(att.contentType),
-                        color: const Color(0xFF1E3A8A),
+                        color: colorScheme.primary,
                       ),
                     ),
                     title: Text(
                       att.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF0F172A),
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     subtitle: Text(
                       '${att.formattedSize} • Enviado em ${_formatDateTime(att.uploadedAt)}',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                     ),
                     trailing: _downloadingAttachmentIds.contains(att.id)
                         ? const SizedBox(
@@ -1143,12 +1148,14 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
   }
 
   Widget _buildHistoryCard(Obligation obligation) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       key: const Key('obligation-history-card'),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFE2E8F0)),
+        side: BorderSide(color: Theme.of(context).dividerColor),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -1157,15 +1164,15 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
           children: [
             Row(
               children: [
-                const Icon(Icons.history_rounded, size: 20, color: Color(0xFF1E3A8A)),
+                Icon(Icons.history_rounded, size: 20, color: colorScheme.primary),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Histórico de Status',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -1173,15 +1180,15 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                      color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${_history.length}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF475569),
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -1216,16 +1223,16 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                 ),
               ),
             ] else if (_history.isEmpty) ...[
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  padding: const EdgeInsets.symmetric(vertical: 20.0),
                   child: Column(
                     children: [
-                      Icon(Icons.timeline, size: 40, color: Color(0xFF94A3B8)),
-                      SizedBox(height: 8),
+                      const Icon(Icons.timeline, size: 40, color: Color(0xFF94A3B8)),
+                      const SizedBox(height: 8),
                       Text(
                         'Nenhum registro de histórico encontrado.',
-                        style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                        style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
                       ),
                     ],
                   ),
@@ -1273,7 +1280,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                                 Expanded(
                                   child: Container(
                                     width: 2,
-                                    color: const Color(0xFFCBD5E1),
+                                    color: Theme.of(context).dividerColor,
                                   ),
                                 ),
                             ],
@@ -1291,10 +1298,10 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                                     Expanded(
                                       child: Text(
                                         titleText,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: Color(0xFF0F172A),
+                                          color: colorScheme.onSurface,
                                         ),
                                       ),
                                     ),
@@ -1318,25 +1325,25 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    const Icon(Icons.person_outline, size: 14, color: Color(0xFF64748B)),
+                                    Icon(Icons.person_outline, size: 14, color: colorScheme.onSurfaceVariant),
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
                                         authorText,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,
-                                          color: Color(0xFF475569),
+                                          color: colorScheme.onSurface,
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    const Icon(Icons.access_time, size: 14, color: Color(0xFF94A3B8)),
+                                    Icon(Icons.access_time, size: 14, color: colorScheme.onSurfaceVariant),
                                     const SizedBox(width: 4),
                                     Text(
                                       _formatDateTime(item.changedAt),
-                                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                                     ),
                                   ],
                                 ),
@@ -1362,10 +1369,12 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
     required String value,
     Color? valueColor,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF64748B)),
+        Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -1373,9 +1382,9 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Color(0xFF64748B),
+                  color: colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -1385,7 +1394,7 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: valueColor ?? const Color(0xFF0F172A),
+                  color: valueColor ?? colorScheme.onSurface,
                 ),
               ),
             ],

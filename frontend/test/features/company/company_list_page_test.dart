@@ -192,10 +192,34 @@ void main() {
       expect(find.text('Alpha Tech'), findsOneWidget);
     });
 
-    testWidgets('deve abrir formulário de cadastro ao tocar no FAB', (tester) async {
+    testWidgets('deve esconder o FAB de cadastro quando deslogado', (tester) async {
       final repository = MockCompanyListRepository()..items = [company1];
 
       await tester.pumpWidget(createWidgetUnderTest(repository: repository));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('new-company-fab')), findsNothing);
+    });
+
+    testWidgets('deve abrir formulário de cadastro ao tocar no FAB quando autenticado', (tester) async {
+      final repository = MockCompanyListRepository()..items = [company1];
+      final sessionStorage = InMemoryAuthSessionStorage();
+      final authController = AuthSessionController(
+        authRepository: FakeAuthRepository(),
+        sessionStorage: sessionStorage,
+        apiClient: ApiClient(baseUrl: 'http://test.local'),
+      );
+      const session = AuthSession(
+        token: 'token-abc',
+        responsible: Responsible(id: 1, name: 'Admin', email: 'admin@empresa.com', active: true),
+      );
+      await sessionStorage.saveSession(session);
+      await authController.initialize();
+
+      await tester.pumpWidget(createWidgetUnderTest(
+        repository: repository,
+        authController: authController,
+      ));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('new-company-fab')));

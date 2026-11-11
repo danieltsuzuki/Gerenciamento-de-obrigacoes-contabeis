@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/empty_state_view.dart';
 import '../../../../core/widgets/error_state_view.dart';
@@ -22,6 +23,7 @@ class ObligationListPage extends StatefulWidget {
   final ResponsibleRepository? responsibleRepository;
   final void Function(Obligation obligation)? onObligationTap;
   final AuthSessionController? authController;
+  final ThemeController? themeController;
   final int? initialCompanyId;
   final int? initialResponsibleId;
 
@@ -32,6 +34,7 @@ class ObligationListPage extends StatefulWidget {
     this.responsibleRepository,
     this.onObligationTap,
     this.authController,
+    this.themeController,
     this.initialCompanyId,
     this.initialResponsibleId,
   });
@@ -240,7 +243,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
       final allowed = await requireAuth(
         context,
         authController: widget.authController!,
-        reason: 'Para cadastrar uma nova obrigação, realize o login.',
+        reason: 'Para cadastrar novas obrigações fiscais com segurança, acesse sua conta corporativa.',
       );
       if (!allowed || !mounted) return;
     }
@@ -272,7 +275,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
       final allowed = await requireAuth(
         context,
         authController: widget.authController!,
-        reason: 'Para editar a obrigação, realize o login.',
+        reason: 'Para editar a obrigação fiscal com segurança, acesse sua conta corporativa.',
       );
       if (!allowed || !mounted) return;
     }
@@ -306,192 +309,198 @@ class _ObligationListPageState extends State<ObligationListPage> {
     DateTime? tempDueFrom = _dueFrom;
     DateTime? tempDueTo = _dueTo;
 
-    await showModalBottomSheet<void>(
+    await showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      barrierDismissible: true,
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            String dateRangeText = 'Não definido';
-            if (tempDueFrom != null && tempDueTo != null) {
-              dateRangeText = '${_formatDate(tempDueFrom)} até ${_formatDate(tempDueTo)}';
-            } else if (tempDueFrom != null) {
-              dateRangeText = 'A partir de ${_formatDate(tempDueFrom)}';
-            } else if (tempDueTo != null) {
-              dateRangeText = 'Até ${_formatDate(tempDueTo)}';
-            }
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          clipBehavior: Clip.antiAlias,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: SingleChildScrollView(
+              child: StatefulBuilder(
+                builder: (context, setModalState) {
+                  String dateRangeText = 'Não definido';
+                  if (tempDueFrom != null && tempDueTo != null) {
+                    dateRangeText = '${_formatDate(tempDueFrom)} até ${_formatDate(tempDueTo)}';
+                  } else if (tempDueFrom != null) {
+                    dateRangeText = 'A partir de ${_formatDate(tempDueFrom)}';
+                  } else if (tempDueTo != null) {
+                    dateRangeText = 'Até ${_formatDate(tempDueTo)}';
+                  }
 
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Filtros Avançados',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 8),
-
-                  // Empresa
-                  DropdownButtonFormField<int?>(
-                    key: const Key('filter-company-dropdown'),
-                    decoration: const InputDecoration(
-                      labelText: 'Empresa',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    ),
-                    value: tempCompanyId,
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('Todas as empresas'),
-                      ),
-                      ..._availableCompanies.map((c) => DropdownMenuItem<int?>(
-                            value: c.id,
-                            child: Text(c.displayName),
-                          )),
-                    ],
-                    onChanged: (val) {
-                      setModalState(() => tempCompanyId = val);
-                    },
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Responsável
-                  DropdownButtonFormField<int?>(
-                    key: const Key('filter-responsible-dropdown'),
-                    decoration: const InputDecoration(
-                      labelText: 'Responsável',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    ),
-                    value: tempResponsibleId,
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('Todos os responsáveis'),
-                      ),
-                      ..._availableResponsibles.map((r) => DropdownMenuItem<int?>(
-                            value: r.id,
-                            child: Text(r.name),
-                          )),
-                    ],
-                    onChanged: (val) {
-                      setModalState(() => tempResponsibleId = val);
-                    },
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Intervalo de Prazo
-                  ListTile(
-                    key: const Key('filter-date-range-tile'),
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Intervalo de Vencimento', style: TextStyle(fontSize: 14)),
-                    subtitle: Text(dateRangeText, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    trailing: Row(
+                  return Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.calendar_today, size: 20),
-                          tooltip: 'Selecionar período',
-                          onPressed: () async {
-                            final picked = await showDateRangePicker(
-                              context: context,
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime(2100),
-                              initialDateRange: (tempDueFrom != null && tempDueTo != null)
-                                  ? DateTimeRange(start: tempDueFrom!, end: tempDueTo!)
-                                  : null,
-                            );
-                            if (picked != null) {
-                              setModalState(() {
-                                tempDueFrom = picked.start;
-                                tempDueTo = picked.end;
-                              });
-                            }
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Filtros Avançados',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ],
+                        ),
+                        const Divider(),
+                        const SizedBox(height: 12),
+
+                        // Empresa
+                        DropdownButtonFormField<int?>(
+                          key: const Key('filter-company-dropdown'),
+                          decoration: const InputDecoration(
+                            labelText: 'Empresa',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
+                          value: tempCompanyId,
+                          isExpanded: true,
+                          items: [
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text('Todas as empresas'),
+                            ),
+                            ..._availableCompanies.map((c) => DropdownMenuItem<int?>(
+                                  value: c.id,
+                                  child: Text(c.displayName, overflow: TextOverflow.ellipsis),
+                                )),
+                          ],
+                          onChanged: (val) {
+                            setModalState(() => tempCompanyId = val);
                           },
                         ),
-                        if (tempDueFrom != null || tempDueTo != null)
-                          IconButton(
-                            icon: const Icon(Icons.clear, size: 20),
-                            tooltip: 'Limpar datas',
-                            onPressed: () {
-                              setModalState(() {
-                                tempDueFrom = null;
-                                tempDueTo = null;
-                              });
-                            },
+                        const SizedBox(height: 16),
+
+                        // Responsável
+                        DropdownButtonFormField<int?>(
+                          key: const Key('filter-responsible-dropdown'),
+                          decoration: const InputDecoration(
+                            labelText: 'Responsável',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           ),
+                          value: tempResponsibleId,
+                          isExpanded: true,
+                          items: [
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text('Todos os responsáveis'),
+                            ),
+                            ..._availableResponsibles.map((r) => DropdownMenuItem<int?>(
+                                  value: r.id,
+                                  child: Text(r.name, overflow: TextOverflow.ellipsis),
+                                )),
+                          ],
+                          onChanged: (val) {
+                            setModalState(() => tempResponsibleId = val);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Intervalo de Prazo
+                        ListTile(
+                          key: const Key('filter-date-range-tile'),
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Intervalo de Vencimento', style: TextStyle(fontSize: 14)),
+                          subtitle: Text(dateRangeText, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.calendar_today, size: 20),
+                                tooltip: 'Selecionar período',
+                                onPressed: () async {
+                                  final picked = await showDateRangePicker(
+                                    context: context,
+                                    firstDate: DateTime(2000),
+                                    lastDate: DateTime(2100),
+                                    initialDateRange: (tempDueFrom != null && tempDueTo != null)
+                                        ? DateTimeRange(start: tempDueFrom!, end: tempDueTo!)
+                                        : null,
+                                  );
+                                  if (picked != null) {
+                                    setModalState(() {
+                                      tempDueFrom = picked.start;
+                                      tempDueTo = picked.end;
+                                    });
+                                  }
+                                },
+                              ),
+                              if (tempDueFrom != null || tempDueTo != null)
+                                IconButton(
+                                  icon: const Icon(Icons.clear, size: 20),
+                                  tooltip: 'Limpar datas',
+                                  onPressed: () {
+                                    setModalState(() {
+                                      tempDueFrom = null;
+                                      tempDueTo = null;
+                                    });
+                                  },
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Botões de Ação
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    tempCompanyId = null;
+                                    tempResponsibleId = null;
+                                    tempDueFrom = null;
+                                    tempDueTo = null;
+                                  });
+                                },
+                                child: const Text('Redefinir'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                key: const Key('filter-apply-button'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF17152F),
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedCompanyId = tempCompanyId;
+                                    _selectedResponsibleId = tempResponsibleId;
+                                    _dueFrom = tempDueFrom;
+                                    _dueTo = tempDueTo;
+                                    if (_dueFrom != null || _dueTo != null) {
+                                      _filterOverdue = false;
+                                    }
+                                  });
+                                  Navigator.of(context).pop();
+                                  _loadObligations(page: 0);
+                                },
+                                child: const Text('Aplicar Filtros'),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Botões de Ação
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setModalState(() {
-                              tempCompanyId = null;
-                              tempResponsibleId = null;
-                              tempDueFrom = null;
-                              tempDueTo = null;
-                            });
-                          },
-                          child: const Text('Redefinir'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          key: const Key('filter-apply-button'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1E3A8A),
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _selectedCompanyId = tempCompanyId;
-                              _selectedResponsibleId = tempResponsibleId;
-                              _dueFrom = tempDueFrom;
-                              _dueTo = tempDueTo;
-                              if (_dueFrom != null || _dueTo != null) {
-                                _filterOverdue = false;
-                              }
-                            });
-                            Navigator.of(context).pop();
-                            _loadObligations(page: 0);
-                          },
-                          child: const Text('Aplicar Filtros'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  );
+                },
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
@@ -536,6 +545,11 @@ class _ObligationListPageState extends State<ObligationListPage> {
   }
 
   Widget _buildSearchBar() {
+    final activeFiltersCount = (_selectedCompanyId != null ? 1 : 0) +
+        (_selectedResponsibleId != null ? 1 : 0) +
+        (_dueFrom != null || _dueTo != null ? 1 : 0) +
+        (_filterOverdue ? 1 : 0);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
@@ -556,21 +570,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
                         onPressed: _clearSearch,
                       )
                     : null,
-                filled: true,
-                fillColor: Colors.grey.shade100,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFF1E3A8A), width: 1.5),
-                ),
               ),
             ),
           ),
@@ -578,10 +578,8 @@ class _ObligationListPageState extends State<ObligationListPage> {
           IconButton.filledTonal(
             key: const Key('open-filters-modal-button'),
             icon: Badge(
-              isLabelVisible: _selectedCompanyId != null ||
-                  _selectedResponsibleId != null ||
-                  _dueFrom != null ||
-                  _dueTo != null,
+              isLabelVisible: activeFiltersCount > 0,
+              label: Text('$activeFiltersCount'),
               child: const Icon(Icons.tune),
             ),
             tooltip: 'Filtros avançados',
@@ -656,7 +654,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
             selectedColor: const Color(0xFFFEE2E2),
             checkmarkColor: const Color(0xFFDC2626),
             labelStyle: TextStyle(
-              color: _filterOverdue ? const Color(0xFFDC2626) : Colors.black87,
+              color: _filterOverdue ? const Color(0xFFDC2626) : Theme.of(context).colorScheme.onSurface,
               fontWeight: _filterOverdue ? FontWeight.bold : FontWeight.normal,
             ),
             onSelected: (_) => _toggleOverdueFilter(),
@@ -742,7 +740,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -768,7 +766,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
           Text(
             'Página ${_currentPage + 1} de ${_totalPages > 0 ? _totalPages : 1} ($_totalElements)',
             key: const Key('obligation-pagination-info'),
-            style: const TextStyle(fontSize: 13, color: Colors.black87),
+            style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface),
           ),
         ],
       ),
@@ -828,6 +826,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
           final item = _obligations[index];
           final statusColor = _getStatusColor(item.status);
           final statusBgColor = _getStatusBgColor(item.status);
+          final colorScheme = Theme.of(context).colorScheme;
 
           return Card(
             key: Key('obligation-card-${item.id}'),
@@ -838,7 +837,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
               side: BorderSide(
                 color: item.isOverdue
                     ? const Color(0xFFFCA5A5)
-                    : const Color(0xFFE2E8F0),
+                    : Theme.of(context).dividerColor,
                 width: item.isOverdue ? 1.5 : 1,
               ),
             ),
@@ -856,10 +855,10 @@ class _ObligationListPageState extends State<ObligationListPage> {
                         Expanded(
                           child: Text(
                             item.title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
+                              color: colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -904,8 +903,8 @@ class _ObligationListPageState extends State<ObligationListPage> {
                       const SizedBox(height: 6),
                       Text(
                         item.description!,
-                        style: const TextStyle(
-                          color: Color(0xFF64748B),
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
                           fontSize: 13,
                         ),
                         maxLines: 2,
@@ -915,13 +914,13 @@ class _ObligationListPageState extends State<ObligationListPage> {
                     const Divider(height: 20),
                     Row(
                       children: [
-                        const Icon(Icons.business_outlined, size: 16, color: Color(0xFF64748B)),
+                        Icon(Icons.business_outlined, size: 16, color: colorScheme.onSurfaceVariant),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             item.company.name,
-                            style: const TextStyle(
-                              color: Color(0xFF334155),
+                            style: TextStyle(
+                              color: colorScheme.onSurface,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -929,12 +928,12 @@ class _ObligationListPageState extends State<ObligationListPage> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Icon(Icons.person_outline, size: 16, color: Color(0xFF64748B)),
+                        Icon(Icons.person_outline, size: 16, color: colorScheme.onSurfaceVariant),
                         const SizedBox(width: 6),
                         Text(
                           item.responsible.name,
-                          style: const TextStyle(
-                            color: Color(0xFF334155),
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
@@ -954,7 +953,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
                               size: 15,
                               color: item.isOverdue
                                   ? const Color(0xFFDC2626)
-                                  : const Color(0xFF64748B),
+                                  : colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -966,7 +965,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
                                     : FontWeight.normal,
                                 color: item.isOverdue
                                     ? const Color(0xFFDC2626)
-                                    : const Color(0xFF64748B),
+                                    : colorScheme.onSurfaceVariant,
                               ),
                             ),
                             if (item.isOverdue) ...[
@@ -992,13 +991,13 @@ class _ObligationListPageState extends State<ObligationListPage> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.schedule_outlined, size: 15, color: Color(0xFF64748B)),
+                            Icon(Icons.schedule_outlined, size: 15, color: colorScheme.onSurfaceVariant),
                             const SizedBox(width: 4),
                             Text(
                               'Criada em: ${_formatDate(item.createdAt)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFF64748B),
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -1006,13 +1005,13 @@ class _ObligationListPageState extends State<ObligationListPage> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.attach_file, size: 15, color: Color(0xFF64748B)),
+                            Icon(Icons.attach_file, size: 15, color: colorScheme.onSurfaceVariant),
                             const SizedBox(width: 2),
                             Text(
                               '${item.attachmentCount} anexos',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFF64748B),
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -1035,6 +1034,7 @@ class _ObligationListPageState extends State<ObligationListPage> {
       title: 'Obrigações Fiscais',
       currentNavIndex: 0,
       authController: widget.authController,
+      themeController: widget.themeController,
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh),
@@ -1053,12 +1053,14 @@ class _ObligationListPageState extends State<ObligationListPage> {
           _buildPaginationBar(),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('new-obligation-fab'),
-        onPressed: _openCreateForm,
-        icon: const Icon(Icons.add),
-        label: const Text('Nova Obrigação'),
-      ),
+      floatingActionButton: _isAuthenticated
+          ? FloatingActionButton.extended(
+              key: const Key('new-obligation-fab'),
+              onPressed: _openCreateForm,
+              icon: const Icon(Icons.add),
+              label: const Text('Nova Obrigação'),
+            )
+          : null,
     );
   }
 }

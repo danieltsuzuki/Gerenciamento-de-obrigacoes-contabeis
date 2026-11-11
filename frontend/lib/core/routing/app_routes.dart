@@ -31,6 +31,7 @@ import '../../features/responsible/presentation/pages/responsible_detail_page.da
 import '../../features/responsible/presentation/pages/responsible_form_page.dart';
 import '../../features/responsible/presentation/pages/responsible_list_page.dart';
 import '../network/api_client.dart';
+import '../theme/theme_controller.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -82,6 +83,7 @@ class AppRoutes {
     RouteSettings settings, {
     required ApiClient apiClient,
     AuthSessionController? authController,
+    ThemeController? themeController,
     AuthRepository? authRepository,
     CompanyRepository? companyRepository,
     ResponsibleRepository? responsibleRepository,
@@ -120,6 +122,7 @@ class AppRoutes {
             companyRepository: effectiveCompanyRepo,
             responsibleRepository: effectiveResponsibleRepo,
             authController: effectiveAuthController,
+            themeController: themeController,
             initialCompanyId: compId,
             initialResponsibleId: respId,
           ),
@@ -130,6 +133,7 @@ class AppRoutes {
           builder: (_) => CompanyListPage(
             repository: effectiveCompanyRepo,
             authController: effectiveAuthController,
+            themeController: themeController,
           ),
         );
       case companyDetails:
@@ -170,6 +174,7 @@ class AppRoutes {
           builder: (_) => ResponsibleListPage(
             repository: effectiveResponsibleRepo,
             authController: effectiveAuthController,
+            themeController: themeController,
           ),
         );
       case responsibleDetails:

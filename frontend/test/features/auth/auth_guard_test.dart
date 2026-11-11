@@ -110,7 +110,7 @@ void main() {
       expect(find.byType(LoginPage), findsNothing);
     });
 
-    testWidgets('deve abrir tela de login quando desautenticado e retornar true após login com sucesso', (tester) async {
+    testWidgets('deve abrir diálogo amigável e tela de login quando desautenticado e retornar true após login com sucesso', (tester) async {
       bool? allowed;
       await tester.pumpWidget(createTestApp(
         Builder(
@@ -131,8 +131,15 @@ void main() {
       await tester.tap(find.text('Executar Ação Protegida'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(LoginPage), findsOneWidget);
+      // Diálogo amigável centralizado (SPEC-038)
+      expect(find.byKey(const Key('auth-guard-dialog')), findsOneWidget);
       expect(find.text('Login obrigatório para esta ação.'), findsOneWidget);
+
+      // Clica em Fazer Login
+      await tester.tap(find.byKey(const Key('auth-guard-login-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginPage), findsOneWidget);
 
       await tester.enterText(find.byKey(const Key('login-email-input')), 'carlos@player.com.br');
       await tester.enterText(find.byKey(const Key('login-password-input')), _samplePassword());
@@ -143,7 +150,7 @@ void main() {
       expect(controller.isAuthenticated, isTrue);
     });
 
-    testWidgets('deve retornar false quando o usuário fechar a tela de login sem autenticar', (tester) async {
+    testWidgets('deve retornar false quando o usuário cancelar no diálogo de autenticação amigável', (tester) async {
       bool? allowed;
       await tester.pumpWidget(createTestApp(
         Builder(
@@ -158,6 +165,37 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Executar Ação Protegida'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('auth-guard-dialog')), findsOneWidget);
+
+      // Clica em Continuar navegando (cancelar)
+      await tester.tap(find.byKey(const Key('auth-guard-cancel-button')));
+      await tester.pumpAndSettle();
+
+      expect(allowed, isFalse);
+      expect(controller.isAuthenticated, isFalse);
+    });
+
+    testWidgets('deve retornar false quando o usuário avançar para tela de login e fechar sem autenticar', (tester) async {
+      bool? allowed;
+      await tester.pumpWidget(createTestApp(
+        Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () async {
+              allowed = await requireAuth(context, authController: controller);
+            },
+            child: const Text('Executar Ação Protegida'),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Executar Ação Protegida'));
+      await tester.pumpAndSettle();
+
+      // Clica no botão de login do diálogo
+      await tester.tap(find.byKey(const Key('auth-guard-login-button')));
       await tester.pumpAndSettle();
 
       expect(find.byType(LoginPage), findsOneWidget);

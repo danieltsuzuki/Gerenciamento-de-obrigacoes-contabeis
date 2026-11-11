@@ -29,6 +29,27 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação da especificação SPEC-038 (Tema Claro e Escuro, Paleta Corporativa, Modais Centralizados e Filtros Avançados):
+  - **Paleta de Cores Institucional e Design System Material 3 (`AppTheme`):**
+    - Definição das constantes oficiais da marca: `#17152F` (Primary Navy), `#F5A900` (Brand Yellow), `#FFC52E` (Accent Yellow) e `#FFFFFF` (White).
+    - Criação de `AppTheme.lightTheme` e `AppTheme.darkTheme` com contraste WCAG AA, aplicando as cores institucionais em `ColorScheme`, `appBarTheme`, `cardTheme`, `elevatedButtonTheme`, `outlinedButtonTheme`, `inputDecorationTheme` e `floatingActionButtonTheme`.
+    - Criação do controlador reativo `ThemeController` (`ChangeNotifier`) com alternância entre `ThemeMode.system`, `ThemeMode.light` e `ThemeMode.dark`, integrado ao `AppScaffold` via botão de alternância no AppBar com ícone dinâmico (`theme-toggle-button`).
+  - **Centralização Universal de Modais e Diálogos:**
+    - Padronização de todos os diálogos da aplicação com centralização geométrica na viewport (`alignment: Alignment.center` e largura responsiva `maxWidth: 520` a `600px`).
+    - Substituição de bottom sheets ancorados na base por diálogos modais centralizados em `ObligationListPage`, eliminando desbalanceamentos visuais em telas largas e navegadores web.
+    - Configuração de `dialogTheme` global com bordas arredondadas de 16px e centralização padrão.
+  - **Selects Pesquisáveis com Busca Instantânea (`SearchableSelectFormField`):**
+    - Padronização dos campos de seleção no formulário de obrigações com diálogo modal centralizado de pesquisa em tempo real, suporte a filtro incremental e feedback de seleção destacada.
+  - **Filtros Avançados e Ordenação Configurável em Empresas e Responsáveis:**
+    - Inclusão de modal de filtros avançados centralizado em `CompanyListPage` e `ResponsibleListPage`, com filtragem por situação cadastral (Todas/Ativas/Inativas) e ordenação configurável.
+    - Inclusão de menu rápido de ordenação (`PopupMenuButton`) no topo das páginas (`company-sort-menu` e `responsible-sort-menu`).
+    - Exibição de chips de filtros ativos com botão de remoção individual e ação "Limpar todos".
+    - Badge dinâmico no botão de filtros indicando a quantidade de filtros aplicados.
+  - **Mensagens Acolhedoras e Ocultação de Mutações para Usuários Anônimos:**
+    - Ocultação dos botões de adição (Floating Action Buttons `+` e "Anexar Arquivo") e ações de mutação em toda a aplicação quando o usuário não estiver autenticado.
+    - Reformulação do `requireAuth` para exibir um diálogo modal empático e centralizado (`auth-guard-dialog`), com ícone institucional, justificativa contextual e botões "Fazer Login" e "Continuar navegando".
+  - **Suíte de Testes Automatizados:**
+    - Adição de testes cobrindo `ThemeController`, alternância de tema no `AppScaffold`, modais de filtros avançados e ordenação em empresas/responsáveis, legibilidade de textos no modo dark e padronização da barra de pesquisa de obrigações (`test/features/theme_and_filters_spec38_test.dart`), elevando o total do frontend para 199 testes aprovados.
 - Implementação e validação das especificações SPEC-035 e SPEC-036:
   - **SPEC-035 (Implementar auditoria de operações e histórico de status):**
     - Migration Flyway `V3__add_audit_and_obligation_history.sql` adicionando colunas de auditoria `created_by` e `updated_by` (`users.id`) nas tabelas `company`, `users`, `obligation` e `uploaded_by` em `attachment`.
