@@ -6,6 +6,7 @@ import '../entities/company.dart';
 abstract class CompanyRepository {
   Future<PageResponse<Company>> getCompanies({
     bool? active,
+    String? q,
     int page = 0,
     int size = 20,
     String sort = 'id,asc',

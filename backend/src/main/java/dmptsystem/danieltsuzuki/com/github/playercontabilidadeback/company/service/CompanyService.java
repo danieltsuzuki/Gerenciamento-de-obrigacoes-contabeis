@@ -50,14 +50,29 @@ public class CompanyService {
     }
 
     @Transactional(readOnly = true)
-    public Page<CompanyResponse> findAll(Boolean active, Pageable pageable) {
+    public Page<CompanyResponse> findAll(Boolean active, String q, Pageable pageable) {
+        if (q != null && q.trim().length() > 100) {
+            throw new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.SearchQueryTooLongException(
+                    "O parâmetro de busca 'q' não pode exceder 100 caracteres."
+            );
+        }
+        String cleanQ = (q != null && !q.trim().isEmpty()) ? q.trim() : null;
+
         Page<Company> page;
-        if (active != null) {
+        if (cleanQ != null) {
+            String cleanCnpj = cleanQ.replaceAll("\\D", "");
+            page = companyRepository.search(active, cleanQ, cleanCnpj, pageable);
+        } else if (active != null) {
             page = companyRepository.findByActive(active, pageable);
         } else {
             page = companyRepository.findAll(pageable);
         }
         return page.map(companyMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CompanyResponse> findAll(Boolean active, Pageable pageable) {
+        return findAll(active, null, pageable);
     }
 
     public CompanyResponse update(Long id, UpdateCompanyRequest request) {

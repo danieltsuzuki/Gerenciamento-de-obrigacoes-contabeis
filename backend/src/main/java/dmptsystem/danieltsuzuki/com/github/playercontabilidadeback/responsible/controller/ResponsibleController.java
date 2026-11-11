@@ -52,15 +52,21 @@ public class ResponsibleController {
 
     @GetMapping
     @SecurityRequirements
-    @Operation(summary = "Lista responsáveis", description = "Retorna lista paginada de responsáveis cadastrados. Permite filtro por status ativo/inativo.")
+    @Operation(summary = "Lista responsáveis", description = "Retorna lista paginada de responsáveis cadastrados. Permite filtro por status ativo/inativo e busca textual por nome ou e-mail.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Listagem de responsáveis retornada com sucesso")
+            @ApiResponse(responseCode = "200", description = "Listagem de responsáveis retornada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Parâmetro de busca inválido ou excede 100 caracteres")
     })
     public Page<ResponsibleResponse> list(
             @Parameter(description = "Filtro opcional por situação do responsável (true para ativos, false para inativos)")
             @RequestParam(required = false) Boolean active,
+            @Parameter(description = "Termo de busca textual opcional (nome ou e-mail)")
+            @RequestParam(required = false) String q,
             @Parameter(hidden = true) Pageable pageable
     ) {
+        if (q != null && !q.trim().isEmpty()) {
+            return responsibleService.findAll(active, q, pageable);
+        }
         return responsibleService.findAll(active, pageable);
     }
 

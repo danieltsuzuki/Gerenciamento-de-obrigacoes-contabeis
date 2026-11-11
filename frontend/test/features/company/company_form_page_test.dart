@@ -68,6 +68,7 @@ class MockCompanyRepository implements CompanyRepository {
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
+    String? q,
   }) async =>
       throw UnimplementedError();
 
@@ -102,7 +103,7 @@ void main() {
       expect(find.byKey(const Key('company-legal-name-input')), findsOneWidget);
       expect(find.byKey(const Key('company-trade-name-input')), findsOneWidget);
       expect(find.byKey(const Key('company-cnpj-input')), findsOneWidget);
-      expect(find.byKey(const Key('company-active-switch')), findsOneWidget);
+      expect(find.byKey(const Key('company-active-switch')), findsNothing);
     });
 
     testWidgets('deve renderizar campos pré-preenchidos no modo edição', (tester) async {
@@ -126,6 +127,7 @@ void main() {
       expect(find.text('Alpha Tech Ltda'), findsOneWidget);
       expect(find.text('Alpha Tech'), findsOneWidget);
       expect(find.text('33.000.167/0001-01'), findsOneWidget);
+      expect(find.byKey(const Key('company-active-switch')), findsOneWidget);
     });
 
     testWidgets('deve validar campos obrigatórios e formato de CNPJ', (tester) async {

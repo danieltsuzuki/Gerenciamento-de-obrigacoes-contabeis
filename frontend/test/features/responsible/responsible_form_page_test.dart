@@ -68,6 +68,7 @@ class MockResponsibleRepository implements ResponsibleRepository {
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
+    String? q,
   }) async =>
       throw UnimplementedError();
 
@@ -101,7 +102,7 @@ void main() {
       expect(find.byKey(const Key('responsible-name-input')), findsOneWidget);
       expect(find.byKey(const Key('responsible-email-input')), findsOneWidget);
       expect(find.byKey(const Key('responsible-password-input')), findsOneWidget);
-      expect(find.byKey(const Key('responsible-active-switch')), findsOneWidget);
+      expect(find.byKey(const Key('responsible-active-switch')), findsNothing);
       expect(find.byKey(const Key('responsible-submit-button')), findsOneWidget);
       expect(find.text('Cadastrar Responsável'), findsOneWidget);
     });

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/network/api_exception.dart';
+import '../../../../core/widgets/searchable_select_form_field.dart';
 import '../../../company/domain/entities/company.dart';
 import '../../../company/domain/repositories/company_repository.dart';
 import '../../../responsible/domain/entities/responsible.dart';
@@ -91,8 +92,8 @@ class _ObligationFormPageState extends State<ObligationFormPage> {
     });
 
     try {
-      final companiesFuture = widget.companyRepository.getCompanies(active: true);
-      final responsiblesFuture = widget.responsibleRepository.getResponsibles(active: true);
+      final companiesFuture = widget.companyRepository.getCompanies(active: true, size: 100);
+      final responsiblesFuture = widget.responsibleRepository.getResponsibles(active: true, size: 100);
 
       final results = await Future.wait([companiesFuture, responsiblesFuture]);
       final companiesPage = results[0] as dynamic;
@@ -375,64 +376,59 @@ class _ObligationFormPageState extends State<ObligationFormPage> {
                     textInputAction: TextInputAction.newline,
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
+                  SearchableSelectFormField<Company>(
                     key: const Key('obligation-company-select'),
-                    value: _selectedCompanyId,
-                    decoration: const InputDecoration(
-                      labelText: 'Empresa Cliente *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.business_outlined),
-                    ),
-                    items: _availableCompanies.map((c) {
-                      return DropdownMenuItem<int>(
-                        value: c.id,
-                        child: Text(
-                          c.displayName + (!c.active ? ' (Inativa)' : ''),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: _isCompleted
-                        ? null
-                        : (val) {
-                            setState(() {
-                              _selectedCompanyId = val;
-                            });
-                          },
-                    validator: (val) {
-                      if (val == null) {
+                    initialValue: _availableCompanies.where((c) => c.id == _selectedCompanyId).firstOrNull,
+                    items: _availableCompanies,
+                    labelText: 'Empresa Cliente *',
+                    hintText: 'Selecione uma empresa...',
+                    modalTitle: 'Selecionar Empresa Cliente',
+                    searchHintText: 'Pesquisar por razão, fantasia ou CNPJ...',
+                    prefixIcon: const Icon(Icons.business_outlined),
+                    enabled: !_isCompleted,
+                    itemLabel: (c) => c.displayName + (!c.active ? ' (Inativa)' : ''),
+                    itemSubtitle: (c) => c.cnpj.isNotEmpty ? 'CNPJ: ${c.cnpj}' : null,
+                    filterItem: (c, query) {
+                      return c.legalName.toLowerCase().contains(query) ||
+                          (c.tradeName?.toLowerCase().contains(query) ?? false) ||
+                          c.cnpj.contains(query);
+                    },
+                    onChanged: (comp) {
+                      setState(() {
+                        _selectedCompanyId = comp?.id;
+                      });
+                    },
+                    validator: (comp) {
+                      if (comp == null && _selectedCompanyId == null) {
                         return 'Selecione a empresa vinculada.';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
+                  SearchableSelectFormField<Responsible>(
                     key: const Key('obligation-responsible-select'),
-                    value: _selectedResponsibleId,
-                    decoration: const InputDecoration(
-                      labelText: 'Responsável Atribuído *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person_outline),
-                    ),
-                    items: _availableResponsibles.map((r) {
-                      return DropdownMenuItem<int>(
-                        value: r.id,
-                        child: Text(
-                          r.name + (!r.active ? ' (Inativo)' : ''),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: _isCompleted
-                        ? null
-                        : (val) {
-                            setState(() {
-                              _selectedResponsibleId = val;
-                            });
-                          },
-                    validator: (val) {
-                      if (val == null) {
+                    initialValue: _availableResponsibles.where((r) => r.id == _selectedResponsibleId).firstOrNull,
+                    items: _availableResponsibles,
+                    labelText: 'Responsável Atribuído *',
+                    hintText: 'Selecione um responsável...',
+                    modalTitle: 'Selecionar Responsável',
+                    searchHintText: 'Pesquisar por nome ou e-mail...',
+                    prefixIcon: const Icon(Icons.person_outline),
+                    enabled: !_isCompleted,
+                    itemLabel: (r) => r.name + (!r.active ? ' (Inativo)' : ''),
+                    itemSubtitle: (r) => r.email.isNotEmpty ? r.email : null,
+                    filterItem: (r, query) {
+                      return r.name.toLowerCase().contains(query) ||
+                          r.email.toLowerCase().contains(query);
+                    },
+                    onChanged: (resp) {
+                      setState(() {
+                        _selectedResponsibleId = resp?.id;
+                      });
+                    },
+                    validator: (resp) {
+                      if (resp == null && _selectedResponsibleId == null) {
                         return 'Selecione o responsável atribuído.';
                       }
                       return null;

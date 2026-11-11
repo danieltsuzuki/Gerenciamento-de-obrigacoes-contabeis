@@ -6,6 +6,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Não lançado]
 
 ### Alterado
+- Refinamento de visibilidade de ações para usuários deslogados (SPEC-016, SPEC-017, SPEC-018, SPEC-026):
+  - Botões e ícones de edição nos cards de listagem e nas telas de detalhes (`CompanyListPage`, `CompanyDetailPage`, `ResponsibleListPage`, `ResponsibleDetailPage`, `ObligationListPage`, `ObligationDetailPage`) agora são condicionalmente ocultados para usuários não autenticados (`!authSessionController.isLoggedIn`).
+  - Navegação e visualização de dados continuam abertas e acessíveis a usuários anônimos, enquanto as operações de mutação (criação e edição) ficam reservadas a usuários autenticados.
+- Simplificação dos formulários de cadastro de Empresas e Responsáveis (SPEC-016, SPEC-017):
+  - Remoção do switch de "Situação Cadastral" na tela de criação de Empresas (`CompanyFormPage`) e Responsáveis (`ResponsibleFormPage`), garantindo que novas entidades sejam sempre criadas como ativas (`active: true`) por padrão.
+  - O controle de ativação/inativação lógica permanece disponível exclusivamente no modo de edição (`isEditing`), preservando a regra de inativação/soft delete (RN-004).
 - Atualização e alinhamento da documentação e READMEs:
   - Expansão do `README.md` raiz detalhando a stack do frontend, comandos para executar a aplicação Flutter (`flutter run`), testes (`flutter test`) e análise estática (`flutter analyze`).
   - Criação do `backend/README.md` com instruções específicas do módulo Spring Boot e integração com o `.env` na raiz.
@@ -23,6 +29,18 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Componente de seleção pesquisável centralizado no Flutter (SPEC-018):
+  - Criação do componente genérico reutilizável `SearchableSelectFormField<T>` em `frontend/lib/core/widgets/searchable_select_form_field.dart`, oferecendo seletor estilizado tipo input, diálogo modal centralizado (`showDialog` / `Dialog` com `maxWidth: 520px` e cantos arredondados), campo de busca instantânea com botão limpar, listagem rolável com destaque do item selecionado e validação integrada ao formulário Flutter.
+  - Integração do componente no formulário de obrigações (`ObligationFormPage`), substituindo os antigos `DropdownButtonFormField` por seletores pesquisáveis de "Empresa Cliente" (busca por Razão Social, Nome Fantasia ou CNPJ) e "Responsável Atribuído" (busca por Nome ou E-mail).
+- Ampliação da suíte de testes automatizados do Flutter (SPEC-023):
+  - Adição de testes de widget para o componente `SearchableSelectFormField`, cobrindo pesquisa textual, seleção e submissão de formulário em `obligation_form_page_test.dart`.
+  - Validação da ocultação do switch de ativação no cadastro em `company_form_page_test.dart` e `responsible_form_page_test.dart`.
+  - Verificação da ocultação dos botões de edição para usuários anônimos em `company_list_page_test.dart`, `responsible_list_page_test.dart` e `obligation_list_page_test.dart`.
+  - Total de 184 testes automatizados executados e aprovados com sucesso no frontend (`flutter test`).
+- Implementação e validação das especificações SPEC-032 a SPEC-034:
+  - **SPEC-032 (Implementar paginação nas listagens do Flutter):** Controles Anterior/Próxima compactos e responsivos nas listagens de empresas (`CompanyListPage`), responsáveis (`ResponsibleListPage`) e obrigações (`ObligationListPage`); indicador visual `Página X de Y (Total: N)`; reset automático de página ao alterar busca, filtros ou ordenação; dropdowns de formulário com `size: 100` para evitar truncamento; e menu de ordenação configurável por prazo, criação e título.
+  - **SPEC-033 (Implementar pesquisa textual na API e Flutter):** Parâmetro de busca textual `q` nos endpoints `GET /api/companies` (razão, fantasia e CNPJ formatado/não formatado), `GET /api/responsibles` (nome e e-mail) e `GET /api/obligations` (título, descrição, empresa e responsável); validação de limite de 100 caracteres com retorno `400 VALIDATION_ERROR`; campo de pesquisa debounced (400ms) com botão limpar nas 3 telas do Flutter e empty states específicos "Nenhum resultado para '<termo>'".
+  - **SPEC-034 (Implementar filtros avançados no Flutter):** Modal BottomSheet de filtros avançados em `ObligationListPage` suportando seleção por empresa, responsável e intervalo de prazo com `DateRangePicker` nativo; filtro rápido "Apenas Atrasadas" (`dueTo=ontem`); badges de filtros ativos com remoção individual e botão "Limpar todos"; atalhos "Ver Obrigações desta Empresa / deste Responsável" em `CompanyDetailPage` e `ResponsibleDetailPage`; e suporte a argumentos de rota para pré-filtragem.
 - Implementação e validação das especificações SPEC-028 a SPEC-031:
   - **SPEC-028 (Completar README e artefatos de entrega):** README completamente reestruturado contendo todas as 6 seções exigidas pelo desafio, árvore completa de diretórios, resumo das 9 decisões arquiteturais, tabela com links de repositório, PR e Trello, e roadmap de melhorias futuras.
   - **SPEC-029 (Corrigir inconsistências de contrato e segurança):** Alinhamento do contrato do `PUT /api/obligations/{id}` para cumprir estritamente a máquina de estados sem saltos, documentação dos parâmetros de consulta `dueFrom` e `dueTo`, validação em `JwtService` exigindo chave secreta de no mínimo 32 bytes e remoção de segredos padrão em ambientes de produção.

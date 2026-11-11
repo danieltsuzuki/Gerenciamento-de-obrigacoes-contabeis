@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/widgets/app_scaffold.dart';
@@ -30,26 +31,56 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
   String? _errorMessage;
   List<Responsible> _responsibles = [];
   bool? _selectedActiveFilter;
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
+
+  int _currentPage = 0;
+  int _totalPages = 1;
+  int _totalElements = 0;
+  final int _pageSize = 10;
+
+  bool get _isAuthenticated => widget.authController?.isAuthenticated ?? false;
 
   @override
   void initState() {
     super.initState();
+    widget.authController?.addListener(_onAuthChanged);
     _loadResponsibles();
   }
 
-  Future<void> _loadResponsibles() async {
+  void _onAuthChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.authController?.removeListener(_onAuthChanged);
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadResponsibles({int page = 0}) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
+    final query = _searchController.text.trim();
+
     try {
       final result = await widget.repository.getResponsibles(
         active: _selectedActiveFilter,
+        page: page,
+        size: _pageSize,
+        q: query.isNotEmpty ? query : null,
       );
       if (!mounted) return;
       setState(() {
         _responsibles = result.content;
+        _currentPage = result.number;
+        _totalPages = result.totalPages;
+        _totalElements = result.totalElements;
         _isLoading = false;
       });
     } on ApiException catch (e) {
@@ -67,12 +98,24 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
     }
   }
 
+  void _onSearchChanged(String value) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 400), () {
+      _loadResponsibles(page: 0);
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _loadResponsibles(page: 0);
+  }
+
   void _onActiveFilterSelected(bool? active) {
     if (_selectedActiveFilter == active) return;
     setState(() {
       _selectedActiveFilter = active;
     });
-    _loadResponsibles();
+    _loadResponsibles(page: 0);
   }
 
   Future<void> _openCreateForm() async {
@@ -91,7 +134,7 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
       ),
     );
     if (created == true && mounted) {
-      _loadResponsibles();
+      _loadResponsibles(page: 0);
     }
   }
 
@@ -107,7 +150,7 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
       ),
     );
     if (changed == true && mounted) {
-      _loadResponsibles();
+      _loadResponsibles(page: _currentPage);
     }
   }
 
@@ -130,14 +173,52 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
       ),
     );
     if (updated == true && mounted) {
-      _loadResponsibles();
+      _loadResponsibles(page: _currentPage);
     }
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: TextField(
+        key: const Key('responsible-search-field'),
+        controller: _searchController,
+        onChanged: _onSearchChanged,
+        onSubmitted: (_) => _loadResponsibles(page: 0),
+        decoration: InputDecoration(
+          hintText: 'Pesquisar por nome ou e-mail...',
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  key: const Key('responsible-search-clear'),
+                  icon: const Icon(Icons.clear),
+                  onPressed: _clearSearch,
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFF1E3A8A), width: 1.5),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildFilterChips() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
           ChoiceChip(
@@ -165,6 +246,49 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
     );
   }
 
+  Widget _buildPaginationBar() {
+    if (_totalElements == 0) return const SizedBox.shrink();
+
+    final hasPrevious = _currentPage > 0;
+    final hasNext = _currentPage < _totalPages - 1;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          IconButton.outlined(
+            key: const Key('responsible-pagination-prev'),
+            icon: const Icon(Icons.chevron_left),
+            tooltip: 'Página anterior',
+            onPressed: hasPrevious && !_isLoading
+                ? () => _loadResponsibles(page: _currentPage - 1)
+                : null,
+          ),
+          const SizedBox(width: 8),
+          IconButton.outlined(
+            key: const Key('responsible-pagination-next'),
+            icon: const Icon(Icons.chevron_right),
+            tooltip: 'Próxima página',
+            onPressed: hasNext && !_isLoading
+                ? () => _loadResponsibles(page: _currentPage + 1)
+                : null,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Página ${_currentPage + 1} de ${_totalPages > 0 ? _totalPages : 1} ($_totalElements)',
+            key: const Key('responsible-pagination-info'),
+            style: const TextStyle(fontSize: 13, color: Colors.black87),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildListContent() {
     if (_isLoading) {
       return const LoadingStateView(message: 'Carregando responsáveis contábeis...');
@@ -173,11 +297,23 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
     if (_errorMessage != null) {
       return ErrorStateView(
         message: _errorMessage!,
-        onRetry: _loadResponsibles,
+        onRetry: () => _loadResponsibles(page: _currentPage),
       );
     }
 
+    final query = _searchController.text.trim();
+
     if (_responsibles.isEmpty) {
+      if (query.isNotEmpty) {
+        return EmptyStateView(
+          icon: Icons.search_off_outlined,
+          title: "Nenhum resultado para '$query'",
+          message: 'Nenhum responsável corresponde aos termos pesquisados.',
+          actionLabel: 'Limpar pesquisa',
+          onAction: _clearSearch,
+        );
+      }
+
       return EmptyStateView(
         icon: Icons.people_outline,
         title: 'Nenhum responsável encontrado',
@@ -190,7 +326,7 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
     }
 
     return RefreshIndicator(
-      onRefresh: _loadResponsibles,
+      onRefresh: () => _loadResponsibles(page: _currentPage),
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: _responsibles.length,
@@ -250,12 +386,13 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
                         : const Color(0xFFF1F5F9),
                     side: BorderSide.none,
                   ),
-                  IconButton(
-                    key: Key('responsible-edit-button-${responsible.id}'),
-                    icon: const Icon(Icons.edit_outlined, size: 20),
-                    tooltip: 'Editar responsável',
-                    onPressed: () => _openEditForm(responsible),
-                  ),
+                  if (_isAuthenticated)
+                    IconButton(
+                      key: Key('responsible-edit-button-${responsible.id}'),
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      tooltip: 'Editar responsável',
+                      onPressed: () => _openEditForm(responsible),
+                    ),
                 ],
               ),
             ),
@@ -275,15 +412,17 @@ class _ResponsibleListPageState extends State<ResponsibleListPage> {
         IconButton(
           icon: const Icon(Icons.refresh),
           tooltip: 'Recarregar',
-          onPressed: _loadResponsibles,
+          onPressed: () => _loadResponsibles(page: _currentPage),
         ),
       ],
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _buildSearchBar(),
           _buildFilterChips(),
           const Divider(height: 1),
           Expanded(child: _buildListContent()),
+          _buildPaginationBar(),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

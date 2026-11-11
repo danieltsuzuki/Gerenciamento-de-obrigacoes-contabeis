@@ -225,41 +225,43 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
                     validator: CnpjValidator.validate,
                   ),
                   const SizedBox(height: 16),
-                  Card(
-                    elevation: 0,
-                    color: const Color(0xFFF8FAFC),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    child: SwitchListTile(
-                      key: const Key('company-active-switch'),
-                      title: const Text(
-                        'Situação Cadastral',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                  if (widget.isEditing) ...[
+                    Card(
+                      elevation: 0,
+                      color: const Color(0xFFF8FAFC),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
                       ),
-                      subtitle: Text(
-                        _active
-                            ? 'Empresa Ativa (pode ser vinculada a novas obrigações)'
-                            : 'Empresa Inativa (não receberá novas obrigações — RN-006)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _active
-                              ? const Color(0xFF16A34A)
-                              : const Color(0xFF64748B),
+                      child: SwitchListTile(
+                        key: const Key('company-active-switch'),
+                        title: const Text(
+                          'Situação Cadastral',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
+                        subtitle: Text(
+                          _active
+                              ? 'Empresa Ativa (pode ser vinculada a novas obrigações)'
+                              : 'Empresa Inativa (não receberá novas obrigações — RN-006)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _active
+                                ? const Color(0xFF16A34A)
+                                : const Color(0xFF64748B),
+                          ),
+                        ),
+                        value: _active,
+                        activeColor: const Color(0xFF1E3A8A),
+                        onChanged: _isSubmitting
+                            ? null
+                            : (val) {
+                                setState(() {
+                                  _active = val;
+                                });
+                              },
                       ),
-                      value: _active,
-                      activeColor: const Color(0xFF1E3A8A),
-                      onChanged: _isSubmitting
-                          ? null
-                          : (val) {
-                              setState(() {
-                                _active = val;
-                              });
-                            },
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 24),
                   Row(
                     children: [

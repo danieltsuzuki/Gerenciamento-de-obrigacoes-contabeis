@@ -80,8 +80,14 @@ public class ObligationController {
             @Parameter(description = "Data de vencimento final (inclusive) - YYYY-MM-DD", example = "2026-11-30")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dueTo,
 
+            @Parameter(description = "Termo de busca textual opcional (título, descrição, empresa ou responsável)")
+            @RequestParam(required = false) String q,
+
             @Parameter(hidden = true) Pageable pageable
     ) {
+        if (q != null && !q.trim().isEmpty()) {
+            return obligationService.findAll(companyId, responsibleId, status, dueFrom, dueTo, q, pageable);
+        }
         return obligationService.findAll(companyId, responsibleId, status, dueFrom, dueTo, pageable);
     }
 

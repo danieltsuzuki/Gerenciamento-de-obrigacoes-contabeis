@@ -150,6 +150,7 @@ Lista responsáveis cadastrados com suporte a paginação e filtro por situaçã
 | Parâmetro | Tipo | Padrão | Descrição |
 |---|---|---|---|
 | `active` | Boolean | opcional | Se informado, filtra ativos (`true`) ou inativos (`false`) |
+| `q` | String | opcional | Termo para busca textual (filtra por nome ou e-mail, case-insensitive, máx. 100 caracteres) |
 | `page` | Integer | `0` | Número da página (base zero) |
 | `size` | Integer | `20` | Quantidade de registros por página |
 | `sort` | String | `id,asc` | Ordenação dos resultados |
@@ -240,6 +241,7 @@ Lista empresas cadastradas com suporte a paginação e filtro por situação cad
 | Parâmetro | Tipo | Padrão | Descrição |
 |---|---|---|---|
 | `active` | Boolean | opcional | Se informado, filtra apenas ativas (`true`) ou inativas (`false`) |
+| `q` | String | opcional | Termo para busca textual (filtra por razão social, nome fantasia ou CNPJ, máx. 100 caracteres) |
 | `page` | Integer | `0` | Número da página (base zero) |
 | `size` | Integer | `20` | Quantidade de registros por página |
 | `sort` | String | `id,asc` | Ordenação dos resultados |
@@ -345,6 +347,7 @@ Acesso anônimo permitido.
 | `status` | ObligationStatus (`PENDING`, `IN_PROGRESS`, `COMPLETED`) | opcional | Filtra por status atual |
 | `dueFrom` | LocalDate (`YYYY-MM-DD`) | opcional | Data de vencimento inicial (inclusiva) para filtro de período |
 | `dueTo` | LocalDate (`YYYY-MM-DD`) | opcional | Data de vencimento final (inclusiva) para filtro de período |
+| `q` | String | opcional | Termo para busca textual (título, descrição, razão social/nome fantasia ou responsável, máx. 100 caracteres) |
 | `page` | Integer | `0` | Número da página (base zero) |
 | `size` | Integer | `20` | Quantidade de registros por página |
 | `sort` | String | `dueDate,asc` | Critério de ordenação |

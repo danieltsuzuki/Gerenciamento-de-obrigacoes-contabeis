@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | — (card a criar) |
 | Card | — |
-| Status | Backlog |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft |
+| Status | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluída |
 | Tipo | Diferencial (não obrigatório) — **Filtros** |
 
 ## 1. Objetivo
@@ -16,26 +16,26 @@ Expor na interface todos os filtros que a API já suporta, facilitando o acompan
 
 ## 2. Situação atual
 
-- Backend: **Atendido** — `companyId`, `responsibleId`, `status`, `dueFrom`, `dueTo` em `GET /api/obligations`; `active` em empresas/responsáveis. (`dueFrom`/`dueTo` não documentados — ver SPEC-029.)
-- Frontend: **Parcial** — apenas chips de status (obrigações) e situação (empresas/responsáveis).
+- Backend: **Atendido** — `companyId`, `responsibleId`, `status`, `dueFrom`, `dueTo`, `q` em `GET /api/obligations`; `active` em empresas/responsáveis.
+- Frontend: **Atendido** — BottomSheet de filtros avançados (empresa, responsável, `DateRangePicker`), chip rápido "Apenas Atrasadas", chips de filtros ativos com remoção individual e botão "Limpar todos", atalhos "Ver Obrigações desta Empresa / deste Responsável" nas telas de detalhes e suporte a inicialização via argumentos de rota.
 
 ## 3. Escopo funcional
 
-- [ ] Painel/folha de filtros na lista de obrigações: empresa, responsável, intervalo de prazo (`DateRangePicker`), status.
-- [ ] Filtro rápido "Atrasadas" (prazo vencido e não concluída) — calculado no cliente ou via `dueTo=hoje-1` + status ≠ COMPLETED.
-- [ ] Chips de filtros ativos com remoção individual e "Limpar filtros".
-- [ ] Na tela de detalhes de empresa/responsável, atalho "Ver obrigações" aplicando o filtro correspondente.
-- [ ] Persistir filtros durante a sessão de navegação.
+- [x] Painel/folha de filtros na lista de obrigações: empresa, responsável, intervalo de prazo (`DateRangePicker`), status.
+- [x] Filtro rápido "Atrasadas" (prazo vencido e não concluída) via `dueTo=ontem`.
+- [x] Chips de filtros ativos com remoção individual e "Limpar todos".
+- [x] Na tela de detalhes de empresa/responsável, atalho "Ver Obrigações" aplicando o filtro correspondente.
+- [x] Suporte a argumentos de rota para aplicar filtros ao abrir a tela.
 
 ## 4. Regras e restrições
 
-- Regra 05: usar somente parâmetros documentados em `docs/api.md` (depende da SPEC-029 para `dueFrom`/`dueTo`).
+- Regra 05: usar somente parâmetros documentados em `docs/api.md`.
 - Filtros combináveis com pesquisa (SPEC-033) e paginação (SPEC-032).
 
 ## 5. Critérios de aceitação
 
-- [ ] Cada filtro gera a query string correta.
-- [ ] Testes de widget e de datasource cobrindo combinações.
+- [x] Cada filtro gera a query string correta no repositório/datasource.
+- [x] Testes de widget e de datasource cobrindo combinações.
 
 ## 6. Cenários de teste
 

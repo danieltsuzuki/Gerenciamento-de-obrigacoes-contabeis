@@ -227,6 +227,40 @@ class CompanyControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/companies com termo de busca q deve retornar 200 OK")
+    void shouldReturn200WhenSearchingCompanies() throws Exception {
+        CompanyResponse response = new CompanyResponse(
+                1L,
+                "Petróleo Brasileiro S.A.",
+                "Petrobras",
+                NORMALIZED_CNPJ,
+                true,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        when(companyService.findAll(eq(true), eq("petro"), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(response)));
+
+        mockMvc.perform(get("/api/companies?active=true&q=petro&page=0&size=10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].tradeName").value("Petrobras"));
+    }
+
+    @Test
+    @DisplayName("GET /api/companies com q excedendo 100 caracteres deve retornar 400 VALIDATION_ERROR")
+    void shouldReturn400WhenSearchQueryTooLong() throws Exception {
+        when(companyService.findAll(any(), eq("a".repeat(101)), any()))
+                .thenThrow(new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.SearchQueryTooLongException(
+                        "O parâmetro de busca 'q' não pode exceder 100 caracteres."
+                ));
+
+        mockMvc.perform(get("/api/companies?q=" + "a".repeat(101)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
     @DisplayName("DELETE /api/companies/{id} deve retornar 405 Method Not Allowed (sem exclusão física)")
     void shouldReturn405WhenAttemptingToDeleteCompany() throws Exception {
         mockMvc.perform(delete("/api/companies/1"))

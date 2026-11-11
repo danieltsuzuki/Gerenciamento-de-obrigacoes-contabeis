@@ -3,6 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:player_contabilidade_front/core/network/api_exception.dart';
 import 'package:player_contabilidade_front/core/network/page_response.dart';
 import 'package:player_contabilidade_front/core/theme/app_theme.dart';
+import 'package:http/http.dart' as http;
+import 'package:player_contabilidade_front/core/network/api_client.dart';
+import 'package:player_contabilidade_front/features/auth/data/datasources/auth_session_storage.dart';
+import 'package:player_contabilidade_front/features/auth/domain/entities/auth_session.dart';
+import 'package:player_contabilidade_front/features/auth/domain/repositories/auth_repository.dart';
+import 'package:player_contabilidade_front/features/auth/presentation/controllers/auth_session_controller.dart';
 import 'package:player_contabilidade_front/features/company/data/models/create_company_request.dart';
 import 'package:player_contabilidade_front/features/company/data/models/update_company_request.dart';
 import 'package:player_contabilidade_front/features/company/domain/entities/company.dart';
@@ -10,6 +16,12 @@ import 'package:player_contabilidade_front/features/company/domain/repositories/
 import 'package:player_contabilidade_front/features/company/presentation/pages/company_detail_page.dart';
 import 'package:player_contabilidade_front/features/company/presentation/pages/company_form_page.dart';
 import 'package:player_contabilidade_front/features/company/presentation/pages/company_list_page.dart';
+import 'package:player_contabilidade_front/features/responsible/domain/entities/responsible.dart';
+
+class FakeAuthRepository implements AuthRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class MockCompanyListRepository implements CompanyRepository {
   List<Company> items = [];
@@ -23,6 +35,7 @@ class MockCompanyListRepository implements CompanyRepository {
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
+    String? q,
   }) async {
     callCount++;
     lastActiveFilter = active;
@@ -35,19 +48,33 @@ class MockCompanyListRepository implements CompanyRepository {
       );
     }
 
-    final filtered = active != null
+    var filtered = active != null
         ? items.where((c) => c.active == active).toList()
         : items;
 
+    if (q != null && q.isNotEmpty) {
+      filtered = filtered.where((c) =>
+          c.legalName.toLowerCase().contains(q.toLowerCase()) ||
+          (c.tradeName?.toLowerCase().contains(q.toLowerCase()) ?? false) ||
+          c.cnpj.contains(q)).toList();
+    }
+
+    final total = filtered.length;
+    final totalPages = (total / size).ceil() == 0 ? 1 : (total / size).ceil();
+    final start = page * size;
+    final pageContent = (start < total)
+        ? filtered.sublist(start, (start + size) > total ? total : start + size)
+        : <Company>[];
+
     return PageResponse<Company>(
-      content: filtered,
-      totalElements: filtered.length,
-      totalPages: 1,
+      content: pageContent,
+      totalElements: total,
+      totalPages: totalPages,
       size: size,
       number: page,
-      first: true,
-      last: true,
-      empty: filtered.isEmpty,
+      first: page == 0,
+      last: page >= totalPages - 1,
+      empty: pageContent.isEmpty,
     );
   }
 
@@ -79,10 +106,16 @@ void main() {
     active: false,
   );
 
-  Widget createWidgetUnderTest({required CompanyRepository repository}) {
+  Widget createWidgetUnderTest({
+    required CompanyRepository repository,
+    AuthSessionController? authController,
+  }) {
     return MaterialApp(
       theme: AppTheme.lightTheme,
-      home: CompanyListPage(repository: repository),
+      home: CompanyListPage(
+        repository: repository,
+        authController: authController,
+      ),
     );
   }
 
@@ -186,11 +219,39 @@ void main() {
       expect(find.text('#1'), findsOneWidget);
     });
 
-    testWidgets('deve abrir formulário de edição ao tocar no botão de editar', (tester) async {
+    testWidgets('deve esconder o botão de editar quando usuário não estiver autenticado', (tester) async {
       final repository = MockCompanyListRepository()..items = [company1];
 
       await tester.pumpWidget(createWidgetUnderTest(repository: repository));
       await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('company-edit-button-1')), findsNothing);
+    });
+
+    testWidgets('deve abrir formulário de edição ao tocar no botão de editar quando autenticado', (tester) async {
+      final sessionStorage = InMemoryAuthSessionStorage();
+      final apiClient = ApiClient(httpClient: http.Client(), baseUrl: 'http://localhost');
+      final authController = AuthSessionController(
+        authRepository: FakeAuthRepository(),
+        sessionStorage: sessionStorage,
+        apiClient: apiClient,
+      );
+      const session = AuthSession(
+        token: 'token-abc',
+        responsible: Responsible(id: 1, name: 'Admin', email: 'admin@empresa.com', active: true),
+      );
+      await sessionStorage.saveSession(session);
+      await authController.initialize();
+
+      final repository = MockCompanyListRepository()..items = [company1];
+
+      await tester.pumpWidget(createWidgetUnderTest(
+        repository: repository,
+        authController: authController,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('company-edit-button-1')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('company-edit-button-1')));
       await tester.pumpAndSettle();
@@ -198,6 +259,66 @@ void main() {
       expect(find.byType(CompanyFormPage), findsOneWidget);
       expect(find.text('Editar Empresa'), findsOneWidget);
       expect(find.text('Alpha Tech Ltda'), findsOneWidget);
+    });
+
+    testWidgets('SPEC-033: deve permitir pesquisar empresas e exibir empty state específico quando não houver resultado', (tester) async {
+      final repository = MockCompanyListRepository()..items = [company1, company2];
+
+      await tester.pumpWidget(createWidgetUnderTest(repository: repository));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Alpha Tech'), findsOneWidget);
+      expect(find.text('Beta Serviços Contábeis'), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('company-search-field')), 'Beta');
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Beta Serviços Contábeis'), findsOneWidget);
+      expect(find.text('Alpha Tech'), findsNothing);
+
+      await tester.enterText(find.byKey(const Key('company-search-field')), 'Inexistente');
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Nenhum resultado para 'Inexistente'"), findsOneWidget);
+
+      await tester.tap(find.text('Limpar pesquisa'));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Alpha Tech'), findsOneWidget);
+      expect(find.text('Beta Serviços Contábeis'), findsOneWidget);
+    });
+
+    testWidgets('SPEC-032: deve exibir barra de paginação e navegar entre páginas', (tester) async {
+      final manyCompanies = List.generate(
+        15,
+        (i) => Company(
+          id: i + 1,
+          legalName: 'Empresa Legal ${i + 1}',
+          tradeName: 'Empresa Fantasia ${i + 1}',
+          cnpj: '1122233300018${i % 10}',
+          active: true,
+          createdAt: DateTime.now(),
+        ),
+      );
+
+      final repository = MockCompanyListRepository()..items = manyCompanies;
+
+      await tester.pumpWidget(createWidgetUnderTest(repository: repository));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Página 1 de 2 (15)'), findsOneWidget);
+      expect(find.text('Empresa Fantasia 1'), findsOneWidget);
+      expect(find.text('Empresa Fantasia 11'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('company-pagination-next')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Página 2 de 2 (15)'), findsOneWidget);
+      expect(find.text('Empresa Fantasia 11'), findsOneWidget);
+      expect(find.text('Empresa Fantasia 1'), findsNothing);
     });
   });
 }

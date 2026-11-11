@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/network/api_exception.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/widgets/error_state_view.dart';
 import '../../../../core/widgets/loading_state_view.dart';
 import '../../../auth/presentation/controllers/auth_session_controller.dart';
@@ -176,6 +177,21 @@ class _ResponsibleDetailPageState extends State<ResponsibleDetailPage> {
                 _buildHeaderCard(responsible),
                 const SizedBox(height: 16),
                 _buildDetailsCard(responsible),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  key: const Key('responsible-view-obligations-button'),
+                  onPressed: () {
+                    Navigator.of(context).pushNamed(
+                      AppRoutes.obligations,
+                      arguments: {'responsibleId': responsible.id},
+                    );
+                  },
+                  icon: const Icon(Icons.assignment_outlined),
+                  label: const Text('Ver Obrigações deste Responsável'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
                 if (_isAuthenticated) ...[
                   const SizedBox(height: 24),
                   ElevatedButton.icon(

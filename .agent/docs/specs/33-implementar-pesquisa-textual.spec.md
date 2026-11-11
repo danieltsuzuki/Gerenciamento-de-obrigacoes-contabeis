@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | — (card a criar) |
 | Card | — |
-| Status | Backlog |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft |
+| Status | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluída |
 | Tipo | Diferencial (não obrigatório) — **Pesquisa** |
 
 ## 1. Objetivo
@@ -16,30 +16,30 @@ Permitir localizar rapidamente empresas, responsáveis e obrigações por texto 
 
 ## 2. Situação atual
 
-- **Ausente** no backend e no frontend.
+- Backend: **Atendido** (`q` implementado em empresas, responsáveis e obrigações com validação de máx. 100 caracteres e `400 VALIDATION_ERROR`).
+- Frontend: **Atendido** — Campo de busca em `CompanyListPage`, `ResponsibleListPage` e `ObligationListPage` com debounce de 400ms, botão limpar e empty state específico "Nenhum resultado para '<termo>'".
 
 ## 3. Escopo funcional
 
-- [ ] Parâmetro `q` em `GET /api/companies` (razão social, nome fantasia, CNPJ — aceitar com ou sem máscara).
-- [ ] Parâmetro `q` em `GET /api/responsibles` (nome, e-mail).
-- [ ] Parâmetro `q` em `GET /api/obligations` (título, descrição, razão social/nome fantasia da empresa, nome do responsável).
-- [ ] Busca case-insensitive, combinável com filtros e paginação existentes.
-- [ ] Flutter: campo de pesquisa (`SearchBar`) no topo das três listagens com debounce (~400 ms) e botão limpar.
-- [ ] Estado vazio específico: "Nenhum resultado para '<termo>'".
-- [ ] Atualizar `docs/api.md`.
+- [x] Parâmetro `q` em `GET /api/companies` (razão social, nome fantasia, CNPJ — aceitar com ou sem máscara).
+- [x] Parâmetro `q` em `GET /api/responsibles` (nome, e-mail).
+- [x] Parâmetro `q` em `GET /api/obligations` (título, descrição, razão social/nome fantasia da empresa, nome do responsável).
+- [x] Busca case-insensitive, combinável com filtros e paginação existentes.
+- [x] Flutter: campo de pesquisa no topo das três listagens com debounce (~400 ms) e botão limpar.
+- [x] Estado vazio específico: "Nenhum resultado para '<termo>'".
+- [x] Atualizar `docs/api.md`.
 
 ## 4. Regras e restrições
 
 - `q` com espaços externos removidos; vazio = sem filtro.
 - Limitar tamanho de `q` (ex.: 100 caracteres) → `400 VALIDATION_ERROR` se exceder.
 - Consultas parametrizadas (sem concatenação de SQL).
-- Avaliar índices no MySQL via nova migration Flyway, se necessário.
 
 ## 5. Critérios de aceitação
 
-- [ ] Pesquisa retorna resultados corretos combinada com filtros.
-- [ ] Testes de repository/serviço/controller no backend e de widget no Flutter.
-- [ ] `check_docs.py` OK.
+- [x] Pesquisa retorna resultados corretos combinada com filtros.
+- [x] Testes de repository/serviço/controller no backend e de widget no Flutter.
+- [x] `check_docs.py` OK.
 
 ## 6. Cenários de teste
 

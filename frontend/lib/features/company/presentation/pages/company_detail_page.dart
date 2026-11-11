@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/network/api_exception.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/utils/cnpj_validator.dart';
 import '../../../../core/widgets/error_state_view.dart';
 import '../../../../core/widgets/loading_state_view.dart';
@@ -177,6 +178,21 @@ class _CompanyDetailPageState extends State<CompanyDetailPage> {
                 _buildHeaderCard(company),
                 const SizedBox(height: 16),
                 _buildDetailsCard(company, formattedCnpj),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  key: const Key('company-view-obligations-button'),
+                  onPressed: () {
+                    Navigator.of(context).pushNamed(
+                      AppRoutes.obligations,
+                      arguments: {'companyId': company.id},
+                    );
+                  },
+                  icon: const Icon(Icons.assignment_outlined),
+                  label: const Text('Ver Obrigações desta Empresa'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
                 if (_isAuthenticated) ...[
                   const SizedBox(height: 24),
                   ElevatedButton.icon(

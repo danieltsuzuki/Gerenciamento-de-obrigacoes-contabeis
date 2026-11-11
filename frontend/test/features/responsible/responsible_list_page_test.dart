@@ -27,6 +27,7 @@ class MockResponsibleRepository implements ResponsibleRepository {
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
+    String? q,
   }) async {
     lastActiveFilter = active;
     if (shouldThrow) {
@@ -37,19 +38,32 @@ class MockResponsibleRepository implements ResponsibleRepository {
       );
     }
 
-    final filtered = active == null
+    var filtered = active == null
         ? responsibles
         : responsibles.where((r) => r.active == active).toList();
 
+    if (q != null && q.isNotEmpty) {
+      filtered = filtered.where((r) =>
+          r.name.toLowerCase().contains(q.toLowerCase()) ||
+          r.email.toLowerCase().contains(q.toLowerCase())).toList();
+    }
+
+    final total = filtered.length;
+    final totalPages = (total / size).ceil() == 0 ? 1 : (total / size).ceil();
+    final start = page * size;
+    final pageContent = (start < total)
+        ? filtered.sublist(start, (start + size) > total ? total : start + size)
+        : <Responsible>[];
+
     return PageResponse<Responsible>(
-      content: filtered,
-      totalElements: filtered.length,
-      totalPages: 1,
-      size: 20,
-      number: 0,
-      first: true,
-      last: true,
-      empty: filtered.isEmpty,
+      content: pageContent,
+      totalElements: total,
+      totalPages: totalPages,
+      size: size,
+      number: page,
+      first: page == 0,
+      last: page >= totalPages - 1,
+      empty: pageContent.isEmpty,
     );
   }
 
@@ -239,6 +253,17 @@ void main() {
       expect(find.text('#10'), findsOneWidget);
     });
 
+    testWidgets('deve esconder o botão de editar quando usuário não estiver autenticado', (tester) async {
+      mockRepo.responsibles = [
+        const Responsible(id: 10, name: 'Carlos Alberto', email: 'carlos@empresa.com', active: true),
+      ];
+
+      await tester.pumpWidget(createWidgetUnderTest(customAuthController: null));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('responsible-edit-button-10')), findsNothing);
+    });
+
     testWidgets('deve abrir ResponsibleFormPage em modo edição ao clicar no botão de editar', (tester) async {
       const session = AuthSession(
         token: 'token-abc',
@@ -260,6 +285,67 @@ void main() {
       expect(find.byType(ResponsibleFormPage), findsOneWidget);
       expect(find.text('Editar Responsável'), findsOneWidget);
       expect(find.text('Carlos Alberto'), findsOneWidget);
+    });
+
+    testWidgets('SPEC-033: deve permitir pesquisar responsáveis e exibir empty state específico quando não houver resultado', (tester) async {
+      mockRepo.responsibles = [
+        const Responsible(id: 1, name: 'Ana Silva', email: 'ana@empresa.com', active: true),
+        const Responsible(id: 2, name: 'Bruno Souza', email: 'bruno@empresa.com', active: true),
+      ];
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ana Silva'), findsOneWidget);
+      expect(find.text('Bruno Souza'), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('responsible-search-field')), 'Bruno');
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bruno Souza'), findsOneWidget);
+      expect(find.text('Ana Silva'), findsNothing);
+
+      await tester.enterText(find.byKey(const Key('responsible-search-field')), 'Inexistente');
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Nenhum resultado para 'Inexistente'"), findsOneWidget);
+
+      await tester.tap(find.text('Limpar pesquisa'));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ana Silva'), findsOneWidget);
+      expect(find.text('Bruno Souza'), findsOneWidget);
+    });
+
+    testWidgets('SPEC-032: deve exibir barra de paginação e navegar entre páginas de responsáveis', (tester) async {
+      final many = List.generate(
+        15,
+        (i) => Responsible(
+          id: i + 1,
+          name: 'Responsável ${i + 1}',
+          email: 'resp${i + 1}@empresa.com',
+          active: true,
+        ),
+      );
+
+      mockRepo.responsibles = many;
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Página 1 de 2 (15)'), findsOneWidget);
+      expect(find.text('Responsável 1'), findsOneWidget);
+      expect(find.text('Responsável 11'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('responsible-pagination-next')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Página 2 de 2 (15)'), findsOneWidget);
+      expect(find.text('Responsável 11'), findsOneWidget);
+      expect(find.text('Responsável 1'), findsNothing);
     });
   });
 }

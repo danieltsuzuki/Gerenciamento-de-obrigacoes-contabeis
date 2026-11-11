@@ -19,6 +19,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -284,6 +285,42 @@ class ObligationControllerTest {
                         .content(body))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("GET /api/obligations com termo de busca q deve retornar 200 OK")
+    void shouldReturn200WhenSearchingObligations() throws Exception {
+        ObligationListItemResponse item = new ObligationListItemResponse(
+                1L,
+                new CompanySummaryResponse(1L, "Empresa LTDA", "Empresa", "11222333000181", true),
+                new ResponsibleSummaryResponse(2L, "Carlos", "carlos@empresa.com", true),
+                "Declaração DCTF",
+                ObligationStatus.PENDING,
+                LocalDate.of(2026, 11, 30),
+                0L,
+                LocalDateTime.now(),
+                null
+        );
+
+        when(obligationService.findAll(any(), any(), any(), any(), any(), eq("dctf"), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(item)));
+
+        mockMvc.perform(get("/api/obligations?q=dctf&page=0&size=10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Declaração DCTF"));
+    }
+
+    @Test
+    @DisplayName("GET /api/obligations com q excedendo 100 caracteres deve retornar 400 VALIDATION_ERROR")
+    void shouldReturn400WhenSearchQueryTooLong() throws Exception {
+        when(obligationService.findAll(any(), any(), any(), any(), any(), eq("d".repeat(101)), any()))
+                .thenThrow(new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.SearchQueryTooLongException(
+                        "O parâmetro de busca 'q' não pode exceder 100 caracteres."
+                ));
+
+        mockMvc.perform(get("/api/obligations?q=" + "d".repeat(101)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 }
 

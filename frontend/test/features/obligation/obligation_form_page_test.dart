@@ -72,6 +72,9 @@ class MockObligationRepository implements ObligationRepository {
     int? companyId,
     int? responsibleId,
     ObligationStatus? status,
+    String? dueFrom,
+    String? dueTo,
+    String? q,
     int page = 0,
     int size = 20,
     String sort = 'dueDate,asc',
@@ -93,6 +96,7 @@ class MockCompanyRepository implements CompanyRepository {
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
+    String? q,
   }) async {
     return PageResponse<Company>(
       content: [
@@ -124,6 +128,7 @@ class MockResponsibleRepository implements ResponsibleRepository {
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
+    String? q,
   }) async {
     return PageResponse<Responsible>(
       content: [
@@ -230,6 +235,77 @@ void main() {
       expect(mockObligationRepo.lastUpdateId, 5);
       expect(mockObligationRepo.lastUpdateRequest, isNotNull);
       expect(mockObligationRepo.lastUpdateRequest!.title, 'Declaração DCTF Retificadora');
+    });
+
+    testWidgets('deve selecionar empresa e responsável via modal pesquisável e cadastrar obrigação',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('obligation-title-input')),
+        'Folha de Pagamento Mensal',
+      );
+      await tester.enterText(
+        find.byKey(const Key('obligation-description-input')),
+        'Apuração da folha e guias de recolhimento',
+      );
+
+      // Abrir modal de seleção de empresa pesquisável
+      await tester.tap(find.byKey(const Key('obligation-company-select')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Selecionar Empresa Cliente'), findsOneWidget);
+      expect(find.text('Alpha Tech Ltda'), findsOneWidget);
+      expect(find.text('Beta Indústria S.A.'), findsOneWidget);
+
+      // Pesquisar empresa no modal
+      await tester.enterText(
+        find.byKey(const Key('searchable-select-search-field')),
+        'Beta',
+      );
+      await tester.pumpAndSettle();
+
+      // Alpha foi filtrada, Beta permanece
+      expect(find.text('Alpha Tech Ltda'), findsNothing);
+      expect(find.text('Beta Indústria S.A.'), findsOneWidget);
+
+      // Selecionar Beta
+      await tester.tap(find.text('Beta Indústria S.A.'));
+      await tester.pumpAndSettle();
+
+      // Modal fechou e o campo exibe o nome selecionado
+      expect(find.text('Beta Indústria S.A.'), findsOneWidget);
+
+      // Abrir modal de seleção de responsável pesquisável
+      await tester.tap(find.byKey(const Key('obligation-responsible-select')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Selecionar Responsável'), findsOneWidget);
+      expect(find.text('Carlos Alberto'), findsOneWidget);
+      expect(find.text('Mariana Duarte'), findsOneWidget);
+
+      // Selecionar Mariana Duarte
+      await tester.tap(find.text('Mariana Duarte'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mariana Duarte'), findsOneWidget);
+
+      // Selecionar data de vencimento via date picker
+      await tester.tap(find.byKey(const Key('obligation-due-date-input')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Confirmar'));
+      await tester.pumpAndSettle();
+
+      // Submeter formulário
+      await tester.tap(find.byKey(const Key('obligation-submit-button')));
+      await tester.pumpAndSettle();
+
+      expect(mockObligationRepo.lastCreateRequest, isNotNull);
+      expect(mockObligationRepo.lastCreateRequest!.title, 'Folha de Pagamento Mensal');
+      expect(mockObligationRepo.lastCreateRequest!.companyId, 2);
+      expect(mockObligationRepo.lastCreateRequest!.responsibleId, 20);
+      expect(mockObligationRepo.lastCreateRequest!.dueDate, isNotNull);
     });
 
     testWidgets('deve desabilitar campos e exibir aviso se obrigação for COMPLETED (RN-009)',

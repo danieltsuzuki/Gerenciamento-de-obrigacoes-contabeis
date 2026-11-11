@@ -57,14 +57,28 @@ public class ResponsibleService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ResponsibleResponse> findAll(Boolean active, Pageable pageable) {
+    public Page<ResponsibleResponse> findAll(Boolean active, String q, Pageable pageable) {
+        if (q != null && q.trim().length() > 100) {
+            throw new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.SearchQueryTooLongException(
+                    "O parâmetro de busca 'q' não pode exceder 100 caracteres."
+            );
+        }
+        String cleanQ = (q != null && !q.trim().isEmpty()) ? q.trim() : null;
+
         Page<Responsible> page;
-        if (active != null) {
+        if (cleanQ != null) {
+            page = responsibleRepository.search(active, cleanQ, pageable);
+        } else if (active != null) {
             page = responsibleRepository.findByActive(active, pageable);
         } else {
             page = responsibleRepository.findAll(pageable);
         }
         return page.map(responsibleMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ResponsibleResponse> findAll(Boolean active, Pageable pageable) {
+        return findAll(active, null, pageable);
     }
 
     public ResponsibleResponse update(Long id, UpdateResponsibleRequest request) {

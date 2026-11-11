@@ -57,10 +57,11 @@ Implementar interface Flutter para listar, detalhar, cadastrar e editar respons�
 ## 5. Critérios de aceitação
 
 - [x] Criar, editar, detalhar e listar responsáveis totalmente integrados à API e ao repositório Flutter.
-- [x] Toque no card abre a tela de detalhes; toque no botão de editar abre o formulário de edição.
-- [x] Botões de editar responsável na página de detalhes ficam estritamente ocultos para usuários não logados.
+- [x] Toque no card abre a tela de detalhes; toque no botão de editar abre o formulário de edição pré-preenchido.
+- [x] Botões de edição (no card da listagem e na tela de detalhes) e botão FAB de criação ficam estritamente ocultos para usuários não logados.
+- [x] No formulário de cadastro, o switch de situação cadastral é omitido e o responsável é criado sempre como ativo (`active: true`).
+- [x] No formulário de edição, a situação cadastral (Ativo/Inativo) é exibida e permite inativação lógica via switch.
 - [x] Formato inválido de e-mail e e-mail duplicado são devidamente comunicados ao usuário.
-- [x] Situação cadastral (Ativo/Inativo) é exibida com destaque visual e atualizada via switch.
 - [x] Feedbacks de sucesso (SnackBar verde) e erro (banner e campos com erro) claros.
 - [x] Cobertura automatizada por testes de unidade e widgets (`responsible_detail_page_test.dart`, `responsible_form_page_test.dart` e `responsible_list_page_test.dart`).
 
@@ -68,9 +69,9 @@ Implementar interface Flutter para listar, detalhar, cadastrar e editar respons�
 
 - **Sucesso - Listagem:** renderização de responsáveis com avatar, nome, e-mail e status chip.
 - **Sucesso - Detalhes:** navegação para a tela de detalhes ao clicar no card, exibindo ID, nome, e-mail e status.
-- **Sucesso - Filtros:** alternância entre filtros `Todos`, `Ativos` e `Inativos` com reload dinâmico.
-- **Sucesso - Cadastro:** preenchimento de nome, e-mail válido e senha segura resultando em `CreateResponsibleRequest`.
-- **Sucesso - Edição:** acionamento via ícone de edição, abertura pré-preenchida, inativação lógica via switch e envio de `UpdateResponsibleRequest`.
+- **Segurança - Ocultação:** ausência dos botões de edição e criação para usuários não autenticados.
+- **Formulário de Cadastro:** omissão do switch de situação cadastral, criando responsável ativo por padrão.
+- **Sucesso - Edição:** abertura pré-preenchida ao clicar no ícone de editar (autenticado), inativação lógica via switch e envio de `UpdateResponsibleRequest`.
 - **Validação:** bloqueio de submissão com campos vazios, e-mail inválido ou senha menor que 6 caracteres.
 - **Conflito de negócio:** tratamento visual de `409 DUPLICATE_EMAIL`.
 - **Autenticação:** proteção com `requireAuth` nas ações de criação e edição.

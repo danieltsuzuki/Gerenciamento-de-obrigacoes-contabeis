@@ -106,6 +106,13 @@ class AppRoutes {
     switch (settings.name) {
       case initial:
       case obligations:
+        int? compId;
+        int? respId;
+        if (settings.arguments is Map) {
+          final argsMap = settings.arguments as Map;
+          compId = argsMap['companyId'] as int?;
+          respId = argsMap['responsibleId'] as int?;
+        }
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => ObligationListPage(
@@ -113,6 +120,8 @@ class AppRoutes {
             companyRepository: effectiveCompanyRepo,
             responsibleRepository: effectiveResponsibleRepo,
             authController: effectiveAuthController,
+            initialCompanyId: compId,
+            initialResponsibleId: respId,
           ),
         );
       case companies:

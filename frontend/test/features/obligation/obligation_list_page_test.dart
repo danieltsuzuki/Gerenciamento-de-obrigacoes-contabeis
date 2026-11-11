@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:player_contabilidade_front/core/network/api_client.dart';
 import 'package:player_contabilidade_front/core/network/api_exception.dart';
 import 'package:player_contabilidade_front/core/network/page_response.dart';
 import 'package:player_contabilidade_front/core/routing/app_routes.dart';
 import 'package:player_contabilidade_front/core/theme/app_theme.dart';
+import 'package:player_contabilidade_front/features/auth/data/datasources/auth_session_storage.dart';
+import 'package:player_contabilidade_front/features/auth/domain/entities/auth_session.dart';
+import 'package:player_contabilidade_front/features/auth/domain/repositories/auth_repository.dart';
+import 'package:player_contabilidade_front/features/auth/presentation/controllers/auth_session_controller.dart';
 import 'package:player_contabilidade_front/features/obligation/data/models/create_obligation_request.dart';
 import 'package:player_contabilidade_front/features/obligation/data/models/update_obligation_request.dart';
 import 'package:player_contabilidade_front/features/obligation/domain/entities/obligation.dart';
 import 'package:player_contabilidade_front/features/obligation/domain/repositories/obligation_repository.dart';
 import 'package:player_contabilidade_front/features/obligation/presentation/pages/obligation_list_page.dart';
+import 'package:player_contabilidade_front/features/responsible/domain/entities/responsible.dart';
+
+class FakeAuthRepository implements AuthRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class MockObligationRepository implements ObligationRepository {
   List<Obligation> items = [];
@@ -22,6 +34,9 @@ class MockObligationRepository implements ObligationRepository {
     int? companyId,
     int? responsibleId,
     ObligationStatus? status,
+    String? dueFrom,
+    String? dueTo,
+    String? q,
     int page = 0,
     int size = 20,
     String sort = 'dueDate,asc',
@@ -33,19 +48,37 @@ class MockObligationRepository implements ObligationRepository {
       throw ApiException(statusCode: 500, code: 'SERVER_ERROR', message: errorMessage);
     }
 
-    final filtered = status != null
-        ? items.where((o) => o.status == status).toList()
-        : items;
+    var filtered = items.where((o) {
+      if (status != null && o.status != status) return false;
+      if (companyId != null && o.company.id != companyId) return false;
+      if (responsibleId != null && o.responsible.id != responsibleId) return false;
+      if (q != null && q.isNotEmpty) {
+        final query = q.toLowerCase();
+        final matches = o.title.toLowerCase().contains(query) ||
+            (o.description?.toLowerCase().contains(query) ?? false) ||
+            o.company.name.toLowerCase().contains(query) ||
+            o.responsible.name.toLowerCase().contains(query);
+        if (!matches) return false;
+      }
+      return true;
+    }).toList();
+
+    final total = filtered.length;
+    final totalPages = (total / size).ceil() == 0 ? 1 : (total / size).ceil();
+    final start = page * size;
+    final pageContent = (start < total)
+        ? filtered.sublist(start, (start + size) > total ? total : start + size)
+        : <Obligation>[];
 
     return PageResponse<Obligation>(
-      content: filtered,
-      totalElements: filtered.length,
-      totalPages: 1,
+      content: pageContent,
+      totalElements: total,
+      totalPages: totalPages,
       size: size,
       number: page,
-      first: true,
-      last: true,
-      empty: filtered.isEmpty,
+      first: page == 0,
+      last: page >= totalPages - 1,
+      empty: pageContent.isEmpty,
     );
   }
 
@@ -78,12 +111,14 @@ void main() {
   Widget createWidgetUnderTest({
     required ObligationRepository repository,
     void Function(Obligation)? onObligationTap,
+    AuthSessionController? authController,
   }) {
     return MaterialApp(
       theme: AppTheme.lightTheme,
       home: ObligationListPage(
         repository: repository,
         onObligationTap: onObligationTap,
+        authController: authController,
       ),
     );
   }
@@ -226,6 +261,162 @@ void main() {
       await tester.tap(find.byTooltip('Recarregar'));
       await tester.pumpAndSettle();
       expect(repository.callCount, 2);
+    });
+
+    testWidgets('SPEC-033: deve permitir pesquisar obrigações por título ou texto', (tester) async {
+      final item2 = Obligation(
+        id: 2,
+        title: 'Folha de Pagamento',
+        description: 'Cálculo de salários',
+        status: ObligationStatus.inProgress,
+        dueDate: DateTime.now().add(const Duration(days: 10)),
+        createdAt: DateTime.now(),
+        company: const ObligationParticipantSummary(id: 1, name: 'Alpha Tech'),
+        responsible: const ObligationParticipantSummary(id: 1, name: 'Lucas Contábil'),
+        attachmentCount: 0,
+      );
+
+      final repository = MockObligationRepository()..items = [sampleObligation, item2];
+
+      await tester.pumpWidget(createWidgetUnderTest(repository: repository));
+      await tester.pumpAndSettle();
+
+      expect(find.text('DAS Mensal - Simples'), findsOneWidget);
+      expect(find.text('Folha de Pagamento'), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('obligation-search-field')), 'Folha');
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Folha de Pagamento'), findsOneWidget);
+      expect(find.text('DAS Mensal - Simples'), findsNothing);
+
+      await tester.enterText(find.byKey(const Key('obligation-search-field')), 'SemResultado');
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Nenhum resultado para 'SemResultado'"), findsOneWidget);
+
+      await tester.tap(find.text('Limpar pesquisa'));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('DAS Mensal - Simples'), findsOneWidget);
+      expect(find.text('Folha de Pagamento'), findsOneWidget);
+    });
+
+    testWidgets('SPEC-032: deve exibir barra de paginação e navegar entre páginas de obrigações', (tester) async {
+      final many = List.generate(
+        15,
+        (i) => Obligation(
+          id: i + 1,
+          title: 'Obrigação ${i + 1}',
+          description: 'Desc ${i + 1}',
+          status: ObligationStatus.pending,
+          dueDate: DateTime.now().add(Duration(days: i + 1)),
+          createdAt: DateTime.now(),
+          company: const ObligationParticipantSummary(id: 1, name: 'Alpha Tech'),
+          responsible: const ObligationParticipantSummary(id: 1, name: 'Lucas Contábil'),
+          attachmentCount: 0,
+        ),
+      );
+
+      final repository = MockObligationRepository()..items = many;
+
+      await tester.pumpWidget(createWidgetUnderTest(repository: repository));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Página 1 de 2 (15)'), findsOneWidget);
+      expect(find.text('Obrigação 1'), findsOneWidget);
+      expect(find.text('Obrigação 11'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('obligation-pagination-next')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Página 2 de 2 (15)'), findsOneWidget);
+      expect(find.text('Obrigação 11'), findsOneWidget);
+      expect(find.text('Obrigação 1'), findsNothing);
+    });
+
+    testWidgets('SPEC-034: deve filtrar por status Atrasadas e permitir selecionar ordenação', (tester) async {
+      final repository = MockObligationRepository()..items = [sampleObligation];
+
+      await tester.pumpWidget(createWidgetUnderTest(repository: repository));
+      await tester.pumpAndSettle();
+
+      // Ativar chip Apenas Atrasadas
+      await tester.ensureVisible(find.byKey(const Key('filter-overdue-chip')));
+      await tester.tap(find.byKey(const Key('filter-overdue-chip')));
+      await tester.pumpAndSettle();
+
+      // Abrir menu de ordenação
+      await tester.tap(find.byKey(const Key('obligation-sort-menu')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Prazo (Mais próximo)'), findsOneWidget);
+      expect(find.text('Prazo (Mais distante)'), findsOneWidget);
+      expect(find.text('Mais recentes'), findsOneWidget);
+      expect(find.text('Título (A-Z)'), findsOneWidget);
+
+      await tester.tap(find.text('Mais recentes'));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('SPEC-034: deve inicializar com initialCompanyId e exibir badge de filtro ativo', (tester) async {
+      final repository = MockObligationRepository()..items = [sampleObligation];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: ObligationListPage(
+            repository: repository,
+            initialCompanyId: 1,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Empresa: ID 1'), findsOneWidget);
+      expect(find.byKey(const Key('clear-all-filters-button')), findsOneWidget);
+
+      // Limpar todos
+      await tester.tap(find.byKey(const Key('clear-all-filters-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Empresa: ID 1'), findsNothing);
+    });
+
+    testWidgets('deve esconder o botão de editar obrigação quando usuário não estiver autenticado e exibir quando autenticado', (tester) async {
+      final repository = MockObligationRepository()..items = [sampleObligation];
+
+      // Não autenticado
+      await tester.pumpWidget(createWidgetUnderTest(repository: repository));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('obligation-edit-button-1')), findsNothing);
+
+      // Autenticado
+      final sessionStorage = InMemoryAuthSessionStorage();
+      final apiClient = ApiClient(httpClient: http.Client(), baseUrl: 'http://localhost');
+      final authController = AuthSessionController(
+        authRepository: FakeAuthRepository(),
+        sessionStorage: sessionStorage,
+        apiClient: apiClient,
+      );
+      const session = AuthSession(
+        token: 'token-abc',
+        responsible: Responsible(id: 1, name: 'Admin', email: 'admin@empresa.com', active: true),
+      );
+      await sessionStorage.saveSession(session);
+      await authController.initialize();
+
+      await tester.pumpWidget(createWidgetUnderTest(
+        repository: repository,
+        authController: authController,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('obligation-edit-button-1')), findsOneWidget);
     });
   });
 }
