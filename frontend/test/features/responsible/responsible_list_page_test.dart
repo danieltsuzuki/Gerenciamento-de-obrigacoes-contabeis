@@ -194,6 +194,24 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Nenhum responsável encontrado'), findsOneWidget);
+      expect(find.byIcon(Icons.people_outline), findsOneWidget);
+      // FAB e ação de adicionar não devem estar visíveis para deslogados (SPEC-038)
+      expect(find.byKey(const Key('new-responsible-fab')), findsNothing);
+    });
+
+    testWidgets('deve exibir EmptyStateView com botão Novo Responsável quando autenticado', (tester) async {
+      mockRepo.responsibles = [];
+      const session = AuthSession(
+        token: 'token-abc',
+        responsible: Responsible(id: 1, name: 'Admin', email: 'admin@empresa.com', active: true),
+      );
+      await sessionStorage.saveSession(session);
+      await authController.initialize();
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nenhum responsável encontrado'), findsOneWidget);
       expect(find.text('Novo Responsável'), findsWidgets);
     });
 

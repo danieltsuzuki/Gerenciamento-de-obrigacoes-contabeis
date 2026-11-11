@@ -41,9 +41,10 @@ Atualizado em: 2026-11-11
 | SPEC-034 | Implementar filtros avançados no Flutter | Testado | BottomSheet de filtros avançados em `ObligationListPage` (empresa, responsável, `DateRangePicker`), filtro rápido "Apenas Atrasadas", chips com remoção individual e botão "Limpar todos", atalhos "Ver Obrigações" nas telas de detalhes e suporte a rota | Testes de widget em `obligation_list_page_test.dart` e navegação |
 | SPEC-035 | Implementar auditoria de operações e histórico de status | Concluído / Testado | Migration `V3` (colunas `created_by`/`updated_by`/`uploaded_by` e tabela `obligation_status_history`), Spring Data JPA Auditing (`AuditorAware`), registro append-only imutável de histórico na criação e transição de status, endpoint `GET /api/obligations/{id}/history`, linha do tempo visual de status em `ObligationDetailPage` | `SecurityLoggingTest`, `ObligationServiceTest`, `ObligationControllerTest`, `ObligationApiIntegrationTest`, `obligation_status_history_model_test.dart`, `obligation_detail_page_test.dart` |
 | SPEC-036 | Implementar logs estruturados e rastreabilidade | Concluído / Testado | `RequestLoggingFilter` com correlação via `X-Request-Id` (gerado/propagado, MDC e cabeçalho de resposta/CORS), logs estruturados de negócio em nível `INFO` nos serviços, `WARN` para erros 4xx e `ERROR` com stack trace no `GlobalExceptionHandler`, perfil `prod` com console JSON `ecs` | `RequestLoggingFilterTest`, `SecurityLoggingTest`, `GlobalExceptionHandlerTest` |
+| SPEC-038 | Implementar tema claro e escuro, paleta corporativa, modais centralizados e filtros avançados | Concluído / Testado | Paleta oficial (`#17152F`, `#F5A900`, `#FFC52E`, `#FFFFFF`), `AppTheme` com `lightTheme` e `darkTheme` (WCAG AA), `ThemeController` com alternância de tema no AppBar do `AppScaffold`, centralização de todos os diálogos/modais (`alignment: Alignment.center`, `maxWidth: 520` a `600px`), selects pesquisáveis com diálogo modal centralizado (`SearchableSelectFormField`), filtros avançados e ordenação configurável em `CompanyListPage` e `ResponsibleListPage`, ocultação de ações de mutação (FAB e botões de adição/remoção) para anônimos com diálogo acolhedor de autenticação no `requireAuth` | `test/features/theme_and_filters_spec38_test.dart`, `test/features/auth/auth_guard_test.dart`, `test/features/company/company_list_page_test.dart`, `test/features/responsible/responsible_list_page_test.dart` (198 testes aprovados no frontend) |
 
 ## Resumo
-- **Testado / Concluído:** 31
+- **Testado / Concluído:** 32
 - **Implementado:** 0
 - **Em andamento:** 0
 - **Planejado:** 0
@@ -56,7 +57,7 @@ Atualizado em: 2026-11-11
   - **Services:** > 92% de linhas cobertas (`CompanyService`: 97.1%, `ResponsibleService`: 100%, `ObligationService`: 93%, `AttachmentService`: 90.7%, `AuthService`: 94.7%).
   - **Segurança & Validadores:** `JwtService`/`JwtAuthenticationFilter`: 98%, `Cnpj`: 94.7%, `ObligationStatus`: 100%.
   - **Backend:** 192 testes automatizados aprovados (0 falhas).
-  - **Frontend:** 188 testes automatizados aprovados (0 falhas).
+  - **Frontend:** 199 testes automatizados aprovados (0 falhas).
 
 ## Pendências e perguntas em aberto
 - Pode remover ou substituir anexos de uma obrigação `COMPLETED`?

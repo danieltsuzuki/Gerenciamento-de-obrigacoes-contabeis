@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../features/auth/presentation/controllers/auth_session_controller.dart';
 import '../routing/app_routes.dart';
+import '../theme/app_theme.dart';
+import '../theme/theme_controller.dart';
 
 class AppScaffold extends StatelessWidget {
   final String title;
@@ -9,6 +11,7 @@ class AppScaffold extends StatelessWidget {
   final List<Widget>? actions;
   final int currentNavIndex;
   final AuthSessionController? authController;
+  final ThemeController? themeController;
 
   const AppScaffold({
     super.key,
@@ -18,6 +21,7 @@ class AppScaffold extends StatelessWidget {
     this.actions,
     this.currentNavIndex = 0,
     this.authController,
+    this.themeController,
   });
 
   void _onNavigationItemTapped(BuildContext context, int index) {
@@ -60,6 +64,26 @@ class AppScaffold extends StatelessWidget {
           Navigator.of(context).pushNamed(AppRoutes.login);
         },
       ),
+    );
+  }
+
+  Widget _buildThemeToggleButton(BuildContext context) {
+    if (themeController == null) return const SizedBox.shrink();
+
+    return AnimatedBuilder(
+      animation: themeController!,
+      builder: (context, _) {
+        final isDark = themeController!.isDark(context);
+        return IconButton(
+          key: const Key('theme-toggle-button'),
+          icon: Icon(
+            isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+            color: Colors.white,
+          ),
+          tooltip: isDark ? 'Alternar para tema claro' : 'Alternar para tema escuro',
+          onPressed: () => themeController!.toggleTheme(),
+        );
+      },
     );
   }
 
@@ -111,7 +135,7 @@ class AppScaffold extends StatelessWidget {
                 enabled: false,
                 child: Text(
                   user?.name ?? 'Usuário',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
               if (user?.email != null)
@@ -119,7 +143,7 @@ class AppScaffold extends StatelessWidget {
                   enabled: false,
                   child: Text(
                     user!.email,
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
               const PopupMenuDivider(),
@@ -144,8 +168,10 @@ class AppScaffold extends StatelessWidget {
 
   List<Widget>? _buildEffectiveActions(BuildContext context) {
     final authAction = _buildAuthAction(context);
+    final themeToggleAction = _buildThemeToggleButton(context);
     return [
       if (actions != null) ...actions!,
+      themeToggleAction,
       authAction,
     ];
   }
@@ -181,7 +207,7 @@ class AppScaffold extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E3A8A),
+                    color: AppTheme.brandYellow,
                   ),
                 ),
               ),
@@ -222,13 +248,13 @@ class AppScaffold extends StatelessWidget {
           children: [
             const DrawerHeader(
               decoration: BoxDecoration(
-                color: Color(0xFF1E3A8A),
+                color: AppTheme.primaryNavy,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Icon(Icons.account_balance, color: Colors.white, size: 40),
+                  Icon(Icons.account_balance, color: AppTheme.brandYellow, size: 40),
                   SizedBox(height: 12),
                   Text(
                     'Player Contabilidade',
