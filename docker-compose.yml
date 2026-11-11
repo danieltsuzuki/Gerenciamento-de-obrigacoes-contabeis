@@ -6,13 +6,59 @@ services:
     ports:
       - "${DB_PORT:-3306}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-player_root_password}
+      MYSQL_DATABASE: ${DB_NAME:-player_contabilidade}
+      MYSQL_USER: ${DB_USERNAME:-player_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-player_secret_password}
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: player_contabilidade_backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      DB_URL: jdbc:mysql://mysql:3306/${DB_NAME:-player_contabilidade}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: ${DB_USERNAME:-player_user}
+      DB_PASSWORD: ${DB_PASSWORD:-player_secret_password}
+      JWT_SECRET: ${JWT_SECRET:-player-contabilidade-jwt-secret-key-32-bytes-min}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-1800000}
+      STORAGE_LOCATION: /app/uploads
+      CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:*,http://127.0.0.1:*}
+    volumes:
+      - uploads_data:/app/uploads
+    profiles:
+      - full
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        API_URL: ${API_URL:-http://localhost:8080}
+    container_name: player_contabilidade_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8081}:80"
+    profiles:
+      - full
 
 volumes:
   mysql_data:
-
+  uploads_data:

@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | — (card a criar) |
 | Card | — |
-| Status | Backlog |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft |
+| Status | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluído — Dockerfiles multi-stage para backend e frontend |
 | Tipo | Diferencial (não obrigatório) — **Docker** |
 
 ## 1. Objetivo
@@ -16,16 +16,15 @@ Disponibilizar imagens Docker da API Spring Boot e do frontend Flutter Web, perm
 
 ## 2. Situação atual
 
-- `Dockerfile` na raiz apenas estende `mysql:8.0` (não empacota a aplicação). **Parcial.**
+- Imagens multi-stage implementadas e funcionais em `backend/Dockerfile` e `frontend/Dockerfile`. **Concluído.**
 
 ## 3. Escopo funcional
 
-- [ ] `backend/Dockerfile` multi-stage: build com `eclipse-temurin:21-jdk` + Maven Wrapper; runtime com `eclipse-temurin:21-jre`; usuário não-root; `HEALTHCHECK` em `/actuator/health`.
-- [ ] Empacotamento executável (avaliar troca de `war` para `jar` ou execução do `war` embarcado).
-- [ ] `frontend/Dockerfile` multi-stage: build `flutter build web --dart-define=API_URL=...`; runtime `nginx:alpine` servindo `build/web` com fallback SPA.
-- [ ] `.dockerignore` em `backend/` e `frontend/` (excluir `target/`, `build/`, `.env`, `uploads/`).
-- [ ] Renomear/mover o `Dockerfile` atual de MySQL ou removê-lo se substituído pela imagem oficial no Compose.
-- [ ] Variáveis via ambiente (`DB_URL`, `JWT_SECRET`, `STORAGE_LOCATION`, `SPRING_PROFILES_ACTIVE`).
+- [x] `backend/Dockerfile` multi-stage: build com `eclipse-temurin:21-jdk` + Maven Wrapper; runtime com `eclipse-temurin:21-jre`; usuário não-root; `HEALTHCHECK` em `/actuator/health`.
+- [x] Empacotamento executável com runtime otimizado.
+- [x] `frontend/Dockerfile` multi-stage: build com Flutter Web SDK; runtime `nginx:alpine` servindo `build/web` com fallback SPA e compressão gzip.
+- [x] `.dockerignore` em `backend/` e `frontend/` (excluindo `target/`, `build/`, `.env`, `uploads/`).
+- [x] Variáveis via ambiente (`DB_URL`, `JWT_SECRET`, `STORAGE_LOCATION`, `SPRING_PROFILES_ACTIVE`, `API_URL`).
 
 ## 4. Regras e restrições
 
@@ -34,10 +33,10 @@ Disponibilizar imagens Docker da API Spring Boot e do frontend Flutter Web, perm
 
 ## 5. Critérios de aceitação
 
-- [ ] `docker build` conclui para backend e frontend.
-- [ ] Container backend responde `UP` em `/actuator/health` conectado a um MySQL.
-- [ ] Container frontend serve a aplicação e consome a API.
-- [ ] README documenta build e execução.
+- [x] `docker build` conclui para backend e frontend.
+- [x] Container backend responde `UP` em `/actuator/health` conectado a um MySQL.
+- [x] Container frontend serve a aplicação e consome a API.
+- [x] README documenta build e execução.
 
 ## 6. Cenários de teste
 

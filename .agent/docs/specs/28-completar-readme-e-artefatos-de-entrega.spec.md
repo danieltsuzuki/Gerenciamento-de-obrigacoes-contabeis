@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | — (card a criar) |
 | Card | — |
-| Status | Backlog |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft — derivada da validação de conformidade com o enunciado (10/11/2026) |
+| Status | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluído — README completo e links de entrega registrados |
 | Tipo | Obrigatório |
 
 ## 1. Objetivo
@@ -20,23 +20,23 @@ Garantir que o `README.md` contenha **todas** as seções exigidas pelo enunciad
 |---|---|
 | Como executar o backend | Atendido |
 | Como executar o frontend | Atendido |
-| Tecnologias utilizadas | Atendido (versões do Spring Boot descritas de forma ambígua: "3.x / 4.x") |
-| Estrutura do projeto | Atendido parcialmente (falta árvore de `backend/` e `frontend/lib`) |
-| Decisões arquiteturais | **Parcial** — há link para ADR-0001, mas não há seção que resuma as decisões (monorepo, package by feature, soft delete, PATCH de status, JWT, storage local, Flyway, sem lib de estado no Flutter) |
-| Melhorias futuras | **Ausente** |
-| Seção de funcionalidades do frontend | **Desatualizada** — descreve apenas a SPEC-013 |
-| Links: repositório backend, repositório frontend, PR, Trello público | **Ausentes** no README |
+| Tecnologias utilizadas | Atendido (versão do Spring Boot fixada em 4.1.2) |
+| Estrutura do projeto | Atendido com árvore detalhada de backend e frontend |
+| Decisões arquiteturais | Atendido com resumo das 9 decisões arquiteturais e links para ADRs |
+| Melhorias futuras | Atendido com roadmap detalhado das SPECs 032 a 041 |
+| Seção de funcionalidades do frontend | Atendido com especificações SPEC-013 a SPEC-026 |
+| Links: repositório backend, repositório frontend, PR, Trello público | Atendido com tabela completa de links de entrega |
 
 ## 3. Escopo funcional
 
-- [ ] Adicionar seção **Decisões Arquiteturais** com resumo e links para ADRs.
-- [ ] Adicionar seção **Melhorias Futuras** (alimentada pelas SPECs 30–40 ainda não implementadas e por `docs/pendencias-e-perguntas-em-aberto.md`).
-- [ ] Atualizar a seção de funcionalidades do frontend (SPEC-013 a SPEC-026).
-- [ ] Detalhar a estrutura de `backend/src/main/java/...` e `frontend/lib/`.
-- [ ] Fixar a versão real do Spring Boot conforme `backend/pom.xml`.
-- [ ] Adicionar seção **Entrega** com links do repositório (backend e frontend), Pull Request e quadro público do Trello.
-- [ ] Registrar decisão: por ser monorepo, os links de "repositório backend" e "repositório frontend" apontam para o mesmo repositório (subpastas `backend/` e `frontend/`) — ou criar ADR caso se decida separar.
-- [ ] Atualizar o índice `.agent/docs/specs/README.md` com os status reais das SPECs 17–26.
+- [x] Adicionar seção **Decisões Arquiteturais** com resumo e links para ADRs.
+- [x] Adicionar seção **Melhorias Futuras** (alimentada pelas SPECs 30–40 e SPEC-041).
+- [x] Atualizar a seção de funcionalidades do frontend (SPEC-013 a SPEC-026).
+- [x] Detalhar a estrutura de `backend/src/main/java/...` e `frontend/lib/`.
+- [x] Fixar a versão real do Spring Boot conforme `backend/pom.xml` (4.1.2).
+- [x] Adicionar seção **Entrega** com links do repositório (backend e frontend), Pull Request e quadro público do Trello.
+- [x] Registrar decisão: por ser monorepo, os links de "repositório backend" e "repositório frontend" apontam para o mesmo repositório (subpastas `backend/` e `frontend/`).
+- [x] Atualizar o índice `.agent/docs/specs/README.md` com os status reais das SPECs.
 
 ## 4. Regras de negócio e restrições
 
@@ -45,9 +45,9 @@ Garantir que o `README.md` contenha **todas** as seções exigidas pelo enunciad
 
 ## 5. Critérios de aceitação
 
-- [ ] README contém as 6 seções obrigatórias do enunciado.
-- [ ] README contém os 4 links de entrega.
-- [ ] `check_docs.py` retorna código 0.
+- [x] README contém as 6 seções obrigatórias do enunciado.
+- [x] README contém os 4 links de entrega.
+- [x] `check_docs.py` retorna código 0.
 
 ## 6. Cenários de teste
 

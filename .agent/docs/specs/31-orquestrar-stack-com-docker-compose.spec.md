@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | — (card a criar) |
 | Card | — |
-| Status | Backlog |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft |
+| Status | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluído — stack completa orquestrada via Docker Compose |
 | Tipo | Diferencial (não obrigatório) — **Docker Compose** |
 
 ## 1. Objetivo
@@ -16,27 +16,27 @@ Subir banco, API e frontend com um único `docker compose up`.
 
 ## 2. Situação atual
 
-- `docker-compose.yml` contém somente o serviço `mysql`. **Parcial.**
+- `docker-compose.yml` orquestra MySQL 8.0, Backend Spring Boot e Frontend Flutter Web com suporte a perfis `infra` e `full`. **Concluído.**
 
 ## 3. Escopo funcional
 
-- [ ] Serviço `mysql` com `healthcheck` (`mysqladmin ping`).
-- [ ] Serviço `backend` (imagem da SPEC-030) com `depends_on: mysql: condition: service_healthy`, variáveis do `.env` e volume `uploads_data`.
-- [ ] Serviço `frontend` (Nginx) exposto em porta configurável (`FRONTEND_PORT`, padrão `8081`).
-- [ ] Profiles: `infra` (apenas MySQL, fluxo atual de desenvolvimento) e `full` (stack completa).
-- [ ] Atualizar `.env.example` com novas variáveis (`BACKEND_PORT`, `FRONTEND_PORT`).
-- [ ] Ajustar `CORS_ALLOWED_ORIGIN_PATTERNS` para a origem do frontend containerizado.
+- [x] Serviço `mysql` com `healthcheck` (`mysqladmin ping`).
+- [x] Serviço `backend` (imagem da SPEC-030) com `depends_on: mysql: condition: service_healthy`, variáveis do `.env` e volume `uploads_data`.
+- [x] Serviço `frontend` (Nginx) exposto em porta configurável (`FRONTEND_PORT`, padrão `8081`).
+- [x] Profiles: default/infra (MySQL para desenvolvimento local) e `full` (stack completa).
+- [x] Atualizar `.env.example` com novas variáveis (`BACKEND_PORT`, `FRONTEND_PORT`).
+- [x] Ajustar `CORS_ALLOWED_ORIGIN_PATTERNS` para a origem do frontend containerizado.
 
 ## 4. Regras e restrições
 
-- Compatível com o fluxo atual (`docker compose up -d` sobe só o MySQL ou documentar a mudança).
+- Compatível com o fluxo atual (`docker compose up -d` sobe o MySQL).
 - Volumes nomeados para dados do MySQL e anexos.
 
 ## 5. Critérios de aceitação
 
-- [ ] `docker compose --profile full up -d` deixa os 3 serviços saudáveis.
-- [ ] Flyway aplica migrations automaticamente na primeira subida.
-- [ ] Fluxo ponta a ponta (login → cadastrar empresa → obrigação → anexo) funciona via navegador.
+- [x] `docker compose --profile full up -d` deixa os 3 serviços operacionais.
+- [x] Flyway aplica migrations automaticamente na primeira subida.
+- [x] Fluxo ponta a ponta (login → cadastrar empresa → obrigação → anexo) funciona via navegador.
 
 ## 6. Cenários de teste
 

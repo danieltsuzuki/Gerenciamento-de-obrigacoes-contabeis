@@ -42,5 +42,13 @@ class JwtServiceTest {
         assertThat(jwtService.isTokenValid("token-invalido")).isFalse();
         assertThat(jwtService.isTokenValid("token-invalido", "teste@empresa.com")).isFalse();
     }
+
+    @Test
+    @DisplayName("Deve lançar IllegalArgumentException quando secret for nulo, vazio ou menor que 32 bytes")
+    void shouldRejectInvalidSecret() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> new JwtService(null, 3600L));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> new JwtService("   ", 3600L));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> new JwtService("chave-curta-menor-32-bytes", 3600L));
+    }
 }
 

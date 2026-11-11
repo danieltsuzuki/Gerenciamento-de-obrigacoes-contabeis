@@ -31,9 +31,14 @@ Atualizado em: 2026-11-10
 | SPEC-022 | Implementar download/abertura de anexos | Testado | `features/attachment/domain/services/file_saver_service.dart`, `features/obligation/presentation/pages/obligation_detail_page.dart`, `core/network/downloaded_file.dart` | `test/features/attachment/attachment_download_test.dart` |
 | SPEC-023 | Adicionar testes do Flutter | Testado | Suíte completa em `test/core/` e `test/features/` cobrindo models, DTOs, repositories, services, tratamento de erros e widgets | `test/features/company/company_model_test.dart`, `test/features/responsible/responsible_model_test.dart`, `test/features/obligation/obligation_model_test.dart`, `test/features/attachment/attachment_model_test.dart`, `test/features/auth/auth_model_test.dart`, `test/features/unhandled_exceptions_and_error_handling_test.dart` (172 testes aprovados no frontend) |
 | SPEC-026 | Implementar autenticação e tela de login no Flutter | Testado | `features/auth/data/datasources/auth_session_storage.dart`, `features/auth/presentation/controllers/auth_session_controller.dart`, `features/auth/presentation/pages/login_page.dart`, `features/auth/presentation/pages/register_page.dart`, `features/auth/presentation/widgets/auth_guard.dart`, `core/widgets/app_scaffold.dart`, `core/network/api_client.dart`, `core/routing/app_routes.dart` | `test/features/auth/auth_session_storage_test.dart`, `test/features/auth/auth_session_controller_test.dart`, `test/features/auth/login_page_test.dart`, `test/features/auth/register_page_test.dart`, `test/features/auth/auth_guard_test.dart`, `test/core/widgets/app_scaffold_test.dart`, `test/features/auth/auth_integration_test.dart` |
+| SPEC-027 | Consolidar diferenciais implementados | Concluído / Testado | Autenticação JWT stateless, documentação OpenAPI/Swagger interativa e armazenamento físico seguro de anexos em disco com UUID | Suíte integrada de testes de controllers, serviços e storage |
+| SPEC-028 | Completar README e artefatos de entrega | Concluído | README completo com 6 seções exigidas pelo edital, árvore de diretórios, links de repositório, PR e Trello | Validação manual e `check_docs.py` |
+| SPEC-029 | Corrigir inconsistências de contrato e segurança | Concluído / Testado | Alinhamento do contrato de transição de status no PUT, documentação de `dueFrom`/`dueTo`, remoção de segredo padrão e validação de tamanho mínimo de chave JWT | `JwtServiceTest`, `ObligationApiIntegrationTest` e `check_docs.py` |
+| SPEC-030 | Containerizar backend e frontend com Docker | Concluído | Imagens Docker multi-stage otimizadas para backend (`eclipse-temurin:21`) e frontend (`nginx:alpine` com suporte a SPA) | `backend/Dockerfile`, `frontend/Dockerfile` e `.dockerignore` |
+| SPEC-031 | Orquestrar stack com Docker Compose | Concluído | Orquestração com perfis `infra` (MySQL) e `full` (MySQL + Spring Boot + Flutter Web) | `docker compose config`, `docker compose --profile full config` |
 
 ## Resumo
-- **Testado:** 21
+- **Testado / Concluído:** 26
 - **Implementado:** 0
 - **Em andamento:** 0
 - **Planejado:** 0
