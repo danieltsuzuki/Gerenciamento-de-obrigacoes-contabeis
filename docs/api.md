@@ -17,7 +17,12 @@ A API suporta requisições cross-origin para integração com clientes web (ex.
 - **Origens Permitidas:** Configurável via `CORS_ALLOWED_ORIGIN_PATTERNS` (padrão: `http://localhost:*,http://127.0.0.1:*,https://localhost:*,https://127.0.0.1:*`).
 - **Métodos Permitidos:** `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `HEAD`.
 - **Pre-flight:** Requisições `OPTIONS` são liberadas publicamente sem autenticação, retornando status `200 OK` e cabeçalhos CORS (`Access-Control-Allow-Origin`, `Access-Control-Allow-Credentials: true`, `Access-Control-Max-Age: 3600`).
-- **Cabeçalhos Expostos:** `Authorization`, `Content-Disposition`, `Location`.
+- **Cabeçalhos Expostos:** `Authorization`, `Content-Disposition`, `Location`, `X-Request-Id`.
+
+### Rastreabilidade e Logs Estruturados (SPEC-036)
+- **Cabeçalho de Correlação (`X-Request-Id`):** Toda requisição aceita o cabeçalho HTTP `X-Request-Id`. Caso não seja fornecido pelo cliente, a API gera automaticamente um identificador UUID v4 único. O identificador é inserido no MDC (`Mapped Diagnostic Context`) sob a chave `requestId`, logado em todas as mensagens geradas durante o processamento da requisição e devolvido no cabeçalho `X-Request-Id` da resposta HTTP.
+- **Logs de Auditoria e Negócio:** Operações de autenticação, cadastro e alteração de entidades e anexos geram entradas estruturadas de nível `INFO` sem expor senhas, tokens ou dados sensíveis. Falhas 4xx são registradas em nível `WARN` e erros 5xx em nível `ERROR` com stack trace.
+- **Formato Estruturado (Perfil `prod`):** Em ambiente de produção (`prod`), os logs no console utilizam formato JSON estruturado compatível com a especificação Elastic Common Schema (`ecs`).
 
 ### Documentação Interativa com Swagger / OpenAPI
 A aplicação disponibiliza a interface interativa do Swagger UI e o contrato OpenAPI 3.0:
@@ -368,6 +373,52 @@ Acesso anônimo permitido.
 |---|---|---|
 | 200 | — | Obrigação encontrada |
 | 404 | `NOT_FOUND` | Identificador não existe no banco de dados |
+
+---
+
+### GET /api/obligations/{id}/history
+Recupera o histórico cronológico de transições de status da obrigação fiscal (SPEC-035).
+- Retorna uma lista ordenada crescentemente por data (`changedAt`) e identificador (`id`), desde o evento inicial de criação (`fromStatus: null` -> `toStatus: PENDING`) até a última mudança de estado.
+- Cada registro inclui os dados do responsável que realizou a transição (`changedBy`), ou `null` caso tenha sido uma operação do sistema/anônima.
+- Acesso anônimo permitido.
+
+**Respostas**
+| HTTP | code | Quando |
+|---|---|---|
+| 200 | — | Lista de histórico retornada com sucesso (pode ser vazia se não houver histórico) |
+| 404 | `NOT_FOUND` | Obrigação informada não foi encontrada |
+
+**Exemplo de Resposta (200 OK)**
+```json
+[
+  {
+    "id": 1,
+    "obligationId": 10,
+    "fromStatus": null,
+    "toStatus": "PENDING",
+    "changedBy": {
+      "id": 2,
+      "name": "Carlos Silva",
+      "email": "carlos@empresa.com",
+      "active": true
+    },
+    "changedAt": "2026-11-10T09:00:00"
+  },
+  {
+    "id": 2,
+    "obligationId": 10,
+    "fromStatus": "PENDING",
+    "toStatus": "IN_PROGRESS",
+    "changedBy": {
+      "id": 2,
+      "name": "Carlos Silva",
+      "email": "carlos@empresa.com",
+      "active": true
+    },
+    "changedAt": "2026-11-10T14:30:00"
+  }
+]
+```
 
 ---
 

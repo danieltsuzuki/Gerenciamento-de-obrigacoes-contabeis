@@ -6,17 +6,21 @@ import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.company.repos
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.CreateObligationRequest;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationDetailResponse;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationListItemResponse;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationStatusHistoryResponse;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationWithAttachmentCount;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.UpdateObligationRequest;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.entity.Obligation;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.entity.ObligationStatusHistory;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.enums.ObligationStatus;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.exception.InvalidStatusTransitionException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.mapper.ObligationMapper;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.repository.ObligationRepository;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.repository.ObligationStatusHistoryRepository;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.entity.Responsible;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.repository.ResponsibleRepository;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.BusinessRuleException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.NotFoundException;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.security.SecurityAuditorAware;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,6 +52,9 @@ class ObligationServiceTest {
     private ObligationRepository obligationRepository;
 
     @Mock
+    private ObligationStatusHistoryRepository statusHistoryRepository;
+
+    @Mock
     private CompanyRepository companyRepository;
 
     @Mock
@@ -55,6 +62,9 @@ class ObligationServiceTest {
 
     @Mock
     private AttachmentRepository attachmentRepository;
+
+    @Mock
+    private SecurityAuditorAware securityAuditorAware;
 
     private final ObligationMapper obligationMapper = new ObligationMapper();
     private final Clock clock = Clock.fixed(Instant.parse("2026-11-08T12:00:00Z"), ZoneOffset.UTC);
@@ -65,10 +75,12 @@ class ObligationServiceTest {
     void setUp() {
         obligationService = new ObligationService(
                 obligationRepository,
+                statusHistoryRepository,
                 companyRepository,
                 responsibleRepository,
                 attachmentRepository,
                 obligationMapper,
+                securityAuditorAware,
                 clock
         );
     }
@@ -388,6 +400,137 @@ class ObligationServiceTest {
                 .isInstanceOf(NotFoundException.class);
 
         verify(obligationRepository, never()).save(any());
+        verify(statusHistoryRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("SPEC-035: Deve registrar evento inicial no histórico ao criar obrigação")
+    void shouldRecordInitialHistoryOnObligationCreation() {
+        Company company = new Company();
+        company.setId(1L);
+        company.setActive(true);
+
+        Responsible responsible = new Responsible();
+        responsible.setId(2L);
+        responsible.setActive(true);
+
+        Responsible auditor = new Responsible();
+        auditor.setId(3L);
+        auditor.setName("Auditor Admin");
+
+        when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
+        when(responsibleRepository.findById(2L)).thenReturn(Optional.of(responsible));
+        when(securityAuditorAware.getCurrentAuditor()).thenReturn(Optional.of(auditor));
+        when(obligationRepository.save(any(Obligation.class))).thenAnswer(invocation -> {
+            Obligation o = invocation.getArgument(0);
+            o.setId(100L);
+            return o;
+        });
+
+        CreateObligationRequest request = new CreateObligationRequest(
+                1L, 2L, "DCTF Mensal", "Descrição", LocalDate.of(2026, 12, 1)
+        );
+
+        ObligationDetailResponse response = obligationService.create(request);
+
+        assertThat(response).isNotNull();
+        verify(statusHistoryRepository, times(1)).save(argThat(h ->
+                h.getObligation().getId().equals(100L)
+                        && h.getFromStatus() == null
+                        && h.getToStatus() == ObligationStatus.PENDING
+                        && h.getChangedBy().equals(auditor)
+        ));
+    }
+
+    @Test
+    @DisplayName("SPEC-035: Deve registrar histórico de transição quando status for alterado via updateStatus")
+    void shouldRecordHistoryOnUpdateStatusTransition() {
+        Company company = new Company();
+        company.setId(1L);
+
+        Responsible responsible = new Responsible();
+        responsible.setId(2L);
+
+        Responsible auditor = new Responsible();
+        auditor.setId(5L);
+
+        Obligation obligation = new Obligation();
+        obligation.setId(10L);
+        obligation.setCompany(company);
+        obligation.setResponsible(responsible);
+        obligation.setTitle("Obrigação ICMS");
+        obligation.setDueDate(LocalDate.of(2026, 12, 15));
+        // inicia PENDING
+
+        when(obligationRepository.findById(10L)).thenReturn(Optional.of(obligation));
+        when(obligationRepository.save(any(Obligation.class))).thenAnswer(i -> i.getArgument(0));
+        when(securityAuditorAware.getCurrentAuditor()).thenReturn(Optional.of(auditor));
+
+        obligationService.updateStatus(10L, ObligationStatus.IN_PROGRESS);
+
+        verify(statusHistoryRepository, times(1)).save(argThat(h ->
+                h.getObligation().getId().equals(10L)
+                        && h.getFromStatus() == ObligationStatus.PENDING
+                        && h.getToStatus() == ObligationStatus.IN_PROGRESS
+                        && h.getChangedBy().equals(auditor)
+        ));
+    }
+
+    @Test
+    @DisplayName("SPEC-035: Transição inválida de status não grava registro no histórico")
+    void shouldNotRecordHistoryOnInvalidTransition() {
+        Company company = new Company();
+        company.setId(1L);
+
+        Responsible responsible = new Responsible();
+        responsible.setId(2L);
+
+        Obligation obligation = new Obligation();
+        obligation.setId(20L);
+        obligation.setCompany(company);
+        obligation.setResponsible(responsible);
+        obligation.setTitle("Obrigação Inválida");
+        obligation.setDueDate(LocalDate.of(2026, 12, 15));
+        // inicia PENDING
+
+        when(obligationRepository.findById(20L)).thenReturn(Optional.of(obligation));
+
+        // PENDING -> COMPLETED é inválido
+        assertThatThrownBy(() -> obligationService.updateStatus(20L, ObligationStatus.COMPLETED))
+                .isInstanceOf(InvalidStatusTransitionException.class);
+
+        verify(statusHistoryRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("SPEC-035: Deve retornar lista cronológica do histórico de status da obrigação")
+    void shouldReturnHistoryInChronologicalOrder() {
+        Obligation obligation = new Obligation();
+        obligation.setId(30L);
+
+        Responsible auditor = new Responsible();
+        auditor.setId(7L);
+        auditor.setName("Maria Fiscal");
+        auditor.setEmail("maria@contabilidade.com");
+        auditor.setActive(true);
+
+        ObligationStatusHistory h1 = new ObligationStatusHistory(obligation, null, ObligationStatus.PENDING, auditor);
+        h1.setId(1L);
+        ObligationStatusHistory h2 = new ObligationStatusHistory(obligation, ObligationStatus.PENDING, ObligationStatus.IN_PROGRESS, auditor);
+        h2.setId(2L);
+
+        when(obligationRepository.findById(30L)).thenReturn(Optional.of(obligation));
+        when(statusHistoryRepository.findByObligationIdOrderByChangedAtAscIdAsc(30L)).thenReturn(List.of(h1, h2));
+
+        List<ObligationStatusHistoryResponse> history = obligationService.findHistoryByObligationId(30L);
+
+        assertThat(history).hasSize(2);
+        assertThat(history.get(0).fromStatus()).isNull();
+        assertThat(history.get(0).toStatus()).isEqualTo(ObligationStatus.PENDING);
+        assertThat(history.get(0).changedBy().name()).isEqualTo("Maria Fiscal");
+
+        assertThat(history.get(1).fromStatus()).isEqualTo(ObligationStatus.PENDING);
+        assertThat(history.get(1).toStatus()).isEqualTo(ObligationStatus.IN_PROGRESS);
     }
 }
 

@@ -10,6 +10,7 @@ import 'package:player_contabilidade_front/features/company/domain/repositories/
 import 'package:player_contabilidade_front/features/obligation/data/models/create_obligation_request.dart';
 import 'package:player_contabilidade_front/features/obligation/data/models/update_obligation_request.dart';
 import 'package:player_contabilidade_front/features/obligation/domain/entities/obligation.dart';
+import 'package:player_contabilidade_front/features/obligation/domain/entities/obligation_status_history.dart';
 import 'package:player_contabilidade_front/features/obligation/domain/repositories/obligation_repository.dart';
 import 'package:player_contabilidade_front/features/obligation/presentation/pages/obligation_form_page.dart';
 import 'package:player_contabilidade_front/features/responsible/data/models/create_responsible_request.dart';
@@ -87,6 +88,9 @@ class MockObligationRepository implements ObligationRepository {
   @override
   Future<Obligation> updateObligationStatus(int id, ObligationStatus newStatus) async =>
       throw UnimplementedError();
+
+  @override
+  Future<List<ObligationStatusHistory>> getObligationHistory(int id) async => [];
 }
 
 class MockCompanyRepository implements CompanyRepository {

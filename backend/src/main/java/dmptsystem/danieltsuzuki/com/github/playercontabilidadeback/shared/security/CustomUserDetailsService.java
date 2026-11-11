@@ -25,15 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         Responsible responsible = responsibleRepository.findByEmail(email != null ? email.trim().toLowerCase() : "")
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com e-mail: " + email));
 
-        return new User(
-                responsible.getEmail(),
-                responsible.getPasswordHash(),
-                responsible.isActive(),
-                true,
-                true,
-                true,
-                List.of(new SimpleGrantedAuthority("ROLE_USER"))
-        );
+        return UserPrincipal.fromResponsible(responsible);
     }
 }
 

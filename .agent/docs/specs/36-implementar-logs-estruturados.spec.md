@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | — (card a criar) |
 | Card | — |
-| Status | Backlog |
+| Status | Concluído |
 | Versão da SPEC | 1.0 |
-| Situação da especificação | Draft |
+| Situação da especificação | Aprovada |
 | Tipo | Diferencial (não obrigatório) — **Logs** |
 
 ## 1. Objetivo
@@ -16,18 +16,18 @@ Adicionar logging consistente na API para diagnóstico e operação.
 
 ## 2. Situação atual
 
-- **Ausente** — nenhuma classe de `backend/src/main` declara logger (SLF4J); apenas logs padrão do framework.
+- **Concluído** — logs estruturados implementados com `RequestLoggingFilter`, correlation ID (`X-Request-Id`), MDC, logs de negócio nos serviços, mascaramento seguro e JSON ECS em produção.
 
 ## 3. Escopo funcional
 
-- [ ] Filtro `RequestLoggingFilter` registrando método, caminho, status e duração de cada requisição.
-- [ ] Correlation ID: ler/gerar `X-Request-Id`, propagar via MDC e devolver no header de resposta (expor no CORS).
-- [ ] Logs de negócio em nível `INFO` nos serviços: criação/edição de empresa, responsável, obrigação; transições de status; upload/download de anexos.
-- [ ] `GlobalExceptionHandler`: `WARN` para erros 4xx de negócio e `ERROR` com stack trace para 5xx (`STORAGE_ERROR`, inesperados).
-- [ ] Logs de segurança: falha de login (sem registrar senha), token inválido/expirado.
-- [ ] Configuração por perfil: texto legível em `dev`; JSON estruturado em `prod` (Logback / `logging.structured.format.console`).
-- [ ] Nunca registrar senha, hash, token JWT completo ou conteúdo de arquivos.
-- [ ] Documentar níveis e formato no README.
+- [x] Filtro `RequestLoggingFilter` registrando método, caminho, status e duração de cada requisição.
+- [x] Correlation ID: ler/gerar `X-Request-Id`, propagar via MDC e devolver no header de resposta (expor no CORS).
+- [x] Logs de negócio em nível `INFO` nos serviços: criação/edição de empresa, responsável, obrigação; transições de status; upload/download de anexos.
+- [x] `GlobalExceptionHandler`: `WARN` para erros 4xx de negócio e `ERROR` com stack trace para 5xx (`STORAGE_ERROR`, inesperados).
+- [x] Logs de segurança: falha de login (sem registrar senha), token inválido/expirado.
+- [x] Configuração por perfil: texto legível em `dev`; JSON estruturado em `prod` (Logback / `logging.structured.format.console: ecs`).
+- [x] Nunca registrar senha, hash, token JWT completo ou conteúdo de arquivos.
+- [x] Documentar níveis e formato no README e `docs/api.md`.
 
 ## 4. Regras e restrições
 
@@ -36,9 +36,9 @@ Adicionar logging consistente na API para diagnóstico e operação.
 
 ## 5. Critérios de aceitação
 
-- [ ] Toda resposta contém `X-Request-Id`.
-- [ ] Teste unitário garantindo que senha/token não aparecem nos logs (ex.: `OutputCaptureExtension`).
-- [ ] Testes existentes continuam verdes.
+- [x] Toda resposta contém `X-Request-Id`.
+- [x] Teste unitário garantindo que senha/token não aparecem nos logs (ex.: `OutputCaptureExtension`).
+- [x] Testes existentes continuam verdes.
 
 ## 6. Cenários de teste
 

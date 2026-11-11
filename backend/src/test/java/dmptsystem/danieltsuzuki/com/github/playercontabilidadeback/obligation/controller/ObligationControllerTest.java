@@ -322,5 +322,41 @@ class ObligationControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
+
+    @Test
+    @DisplayName("SPEC-035: GET /api/obligations/{id}/history retorna lista cronológica -> 200 OK")
+    void shouldReturnObligationHistory() throws Exception {
+        dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationStatusHistoryResponse item1 =
+                new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationStatusHistoryResponse(
+                        1L, 10L, null, ObligationStatus.PENDING, responsibleSummary, LocalDateTime.of(2026, 11, 1, 10, 0)
+                );
+        dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationStatusHistoryResponse item2 =
+                new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationStatusHistoryResponse(
+                        2L, 10L, ObligationStatus.PENDING, ObligationStatus.IN_PROGRESS, responsibleSummary, LocalDateTime.of(2026, 11, 5, 14, 30)
+                );
+
+        when(obligationService.findHistoryByObligationId(10L)).thenReturn(List.of(item1, item2));
+
+        mockMvc.perform(get("/api/obligations/10/history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].fromStatus").doesNotExist())
+                .andExpect(jsonPath("$[0].toStatus").value("PENDING"))
+                .andExpect(jsonPath("$[0].changedBy.name").value("Carlos Silva"))
+                .andExpect(jsonPath("$[1].fromStatus").value("PENDING"))
+                .andExpect(jsonPath("$[1].toStatus").value("IN_PROGRESS"));
+    }
+
+    @Test
+    @DisplayName("SPEC-035: GET /api/obligations/{id}/history para obrigação inexistente -> 404 NOT_FOUND")
+    void shouldReturn404WhenObligationNotFoundForHistory() throws Exception {
+        when(obligationService.findHistoryByObligationId(999L))
+                .thenThrow(new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.NotFoundException("Obrigação", 999L));
+
+        mockMvc.perform(get("/api/obligations/999/history"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+    }
 }
 

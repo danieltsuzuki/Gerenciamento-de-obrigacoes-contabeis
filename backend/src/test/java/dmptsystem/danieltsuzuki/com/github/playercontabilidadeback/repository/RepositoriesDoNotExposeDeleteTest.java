@@ -3,6 +3,7 @@ package dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.repository;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.repository.AttachmentRepository;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.company.repository.CompanyRepository;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.repository.ObligationRepository;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.repository.ObligationStatusHistoryRepository;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.repository.ResponsibleRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,6 +37,7 @@ class RepositoriesDoNotExposeDeleteTest {
                 CompanyRepository.class,
                 ResponsibleRepository.class,
                 ObligationRepository.class,
+                ObligationStatusHistoryRepository.class,
                 AttachmentRepository.class
         );
     }

@@ -5,9 +5,9 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | — (card a criar) |
 | Card | — |
-| Status | Backlog |
+| Status | Concluído |
 | Versão da SPEC | 1.0 |
-| Situação da especificação | Draft |
+| Situação da especificação | Aprovada |
 | Tipo | Diferencial (não obrigatório) — **Auditoria** |
 
 ## 1. Objetivo
@@ -16,18 +16,18 @@ Registrar quem criou/alterou cada registro e manter histórico imutável das tra
 
 ## 2. Situação atual
 
-- **Parcial** — existem `created_at`/`updated_at` (MySQL `ON UPDATE CURRENT_TIMESTAMP`) e `completed_at`; não há autor da operação nem histórico.
+- **Concluído** — auditoria via Spring Data JPA (`created_by`, `updated_by`, `uploaded_by`) e histórico imutável de transições de status (`obligation_status_history`).
 
 ## 3. Escopo funcional
 
-- [ ] Nova migration Flyway adicionando `created_by`/`updated_by` (FK para `users`, nullable para registros legados e autocadastro) em `company`, `users`, `obligation`; `uploaded_by` em `attachment`.
-- [ ] Spring Data JPA Auditing (`@EnableJpaAuditing`, `AuditorAware` a partir do principal JWT).
-- [ ] Tabela `obligation_status_history` (`id`, `obligation_id`, `from_status`, `to_status`, `changed_by`, `changed_at`) sem `ON DELETE CASCADE`.
-- [ ] Registrar histórico na criação (`null → PENDING`) e em cada transição (PATCH e PUT).
-- [ ] Endpoint `GET /api/obligations/{id}/history` (leitura anônima conforme política de GET).
-- [ ] Expor `createdBy`/`updatedBy` (id e nome) nos DTOs de detalhe.
-- [ ] Flutter: linha do tempo de status na tela de detalhes da obrigação.
-- [ ] Atualizar `docs/api.md` e `docs/modelo-de-dados.md`.
+- [x] Nova migration Flyway adicionando `created_by`/`updated_by` (FK para `users`, nullable para registros legados e autocadastro) em `company`, `users`, `obligation`; `uploaded_by` em `attachment`.
+- [x] Spring Data JPA Auditing (`@EnableJpaAuditing`, `AuditorAware` a partir do principal JWT).
+- [x] Tabela `obligation_status_history` (`id`, `obligation_id`, `from_status`, `to_status`, `changed_by`, `changed_at`) sem `ON DELETE CASCADE`.
+- [x] Registrar histórico na criação (`null → PENDING`) e em cada transição (PATCH e PUT).
+- [x] Endpoint `GET /api/obligations/{id}/history` (leitura anônima conforme política de GET).
+- [x] Expor `createdBy`/`updatedBy` (id e nome) nos DTOs de detalhe.
+- [x] Flutter: linha do tempo de status na tela de detalhes da obrigação.
+- [x] Atualizar `docs/api.md` e `docs/modelo-de-dados.md`.
 
 ## 4. Regras e restrições
 
@@ -37,10 +37,10 @@ Registrar quem criou/alterou cada registro e manter histórico imutável das tra
 
 ## 5. Critérios de aceitação
 
-- [ ] Toda transição válida gera exatamente um registro de histórico.
-- [ ] Autor registrado corresponde ao usuário do token.
-- [ ] Testes de migration (Testcontainers), serviço, controller e widget.
-- [ ] `check_docs.py` OK.
+- [x] Toda transição válida gera exatamente um registro de histórico.
+- [x] Autor registrado corresponde ao usuário do token.
+- [x] Testes de migration (Testcontainers), serviço, controller e widget.
+- [x] `check_docs.py` OK.
 
 ## 6. Cenários de teste
 

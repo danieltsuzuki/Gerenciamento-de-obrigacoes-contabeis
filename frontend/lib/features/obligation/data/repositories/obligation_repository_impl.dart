@@ -1,5 +1,6 @@
 import '../../../../core/network/page_response.dart';
 import '../../domain/entities/obligation.dart';
+import '../../domain/entities/obligation_status_history.dart';
 import '../../domain/repositories/obligation_repository.dart';
 import '../datasources/obligation_remote_datasource.dart';
 import '../models/create_obligation_request.dart';
@@ -53,5 +54,10 @@ class ObligationRepositoryImpl implements ObligationRepository {
   @override
   Future<Obligation> updateObligationStatus(int id, ObligationStatus newStatus) {
     return _remoteDataSource.updateObligationStatus(id, newStatus);
+  }
+
+  @override
+  Future<List<ObligationStatusHistory>> getObligationHistory(int id) {
+    return _remoteDataSource.getObligationHistory(id);
   }
 }

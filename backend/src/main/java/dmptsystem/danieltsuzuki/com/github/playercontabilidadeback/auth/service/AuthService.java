@@ -7,12 +7,16 @@ import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.m
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.repository.ResponsibleRepository;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.BadCredentialsException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.security.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final ResponsibleRepository responsibleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -31,19 +35,27 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
-        Responsible user = responsibleRepository.findByEmail(request.email().trim().toLowerCase())
-                .orElseThrow(() -> new BadCredentialsException("Credenciais inválidas."));
+        String email = request.email() != null ? request.email().trim().toLowerCase() : "";
+        Responsible user = responsibleRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("Authentication failed - user not found: email='{}'", maskEmail(email));
+                    return new BadCredentialsException("Credenciais inválidas.");
+                });
 
         if (!user.isActive()) {
+            log.warn("Authentication failed - user inactive: id={}, email='{}'", user.getId(), maskEmail(user.getEmail()));
             throw new BadCredentialsException("Usuário inativo. Acesso não permitido.");
         }
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            log.warn("Authentication failed - invalid password: id={}, email='{}'", user.getId(), maskEmail(user.getEmail()));
             throw new BadCredentialsException("Credenciais inválidas.");
         }
 
         String token = jwtService.generateToken(user);
         long expiresIn = jwtService.getExpirationSeconds();
+
+        log.info("User authenticated successfully: id={}, email='{}'", user.getId(), user.getEmail());
 
         return new LoginResponse(
                 token,
@@ -51,6 +63,19 @@ public class AuthService {
                 expiresIn,
                 responsibleMapper.toResponse(user)
         );
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) {
+            return "***";
+        }
+        int atIndex = email.indexOf('@');
+        String local = email.substring(0, atIndex);
+        String domain = email.substring(atIndex);
+        if (local.length() <= 1) {
+            return "*..." + domain;
+        }
+        return local.charAt(0) + "***" + domain;
     }
 }
 

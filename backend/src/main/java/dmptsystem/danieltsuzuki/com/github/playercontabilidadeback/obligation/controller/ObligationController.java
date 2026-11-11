@@ -3,6 +3,7 @@ package dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.c
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.CreateObligationRequest;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationDetailResponse;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationListItemResponse;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.ObligationStatusHistoryResponse;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.UpdateObligationRequest;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.dto.UpdateObligationStatusRequest;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.enums.ObligationStatus;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/obligations")
@@ -139,5 +141,19 @@ public class ObligationController {
             @Valid @RequestBody UpdateObligationStatusRequest request
     ) {
         return obligationService.updateStatus(id, request.status());
+    }
+
+    @GetMapping("/{id}/history")
+    @SecurityRequirements
+    @Operation(summary = "Consulta histórico de transições de status da obrigação", description = "Recupera a trilha cronológica imutável das mudanças de status da obrigação, incluindo o autor da alteração e data/hora. Acesso público.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Histórico recuperado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Obrigação não encontrada")
+    })
+    public List<ObligationStatusHistoryResponse> getHistory(
+            @Parameter(description = "Identificador único da obrigação", example = "1")
+            @PathVariable Long id
+    ) {
+        return obligationService.findHistoryByObligationId(id);
     }
 }

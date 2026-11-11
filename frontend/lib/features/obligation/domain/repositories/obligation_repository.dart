@@ -2,6 +2,7 @@ import '../../../../core/network/page_response.dart';
 import '../../data/models/create_obligation_request.dart';
 import '../../data/models/update_obligation_request.dart';
 import '../entities/obligation.dart';
+import '../entities/obligation_status_history.dart';
 
 abstract class ObligationRepository {
   Future<PageResponse<Obligation>> getObligations({
@@ -23,4 +24,6 @@ abstract class ObligationRepository {
   Future<Obligation> updateObligation(int id, UpdateObligationRequest request);
 
   Future<Obligation> updateObligationStatus(int id, ObligationStatus newStatus);
+
+  Future<List<ObligationStatusHistory>> getObligationHistory(int id);
 }

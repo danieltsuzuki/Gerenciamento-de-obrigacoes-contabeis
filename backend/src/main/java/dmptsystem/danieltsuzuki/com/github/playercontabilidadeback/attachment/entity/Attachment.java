@@ -1,8 +1,10 @@
 package dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.entity;
 
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.entity.Obligation;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.entity.Responsible;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,6 +13,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -18,6 +22,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "attachment")
+@EntityListeners(AuditingEntityListener.class)
 public class Attachment {
 
     @Id
@@ -42,6 +47,11 @@ public class Attachment {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "obligation_id", nullable = false)
     private Obligation obligation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uploaded_by", updatable = false)
+    @CreatedBy
+    private Responsible uploadedBy;
 
     public Attachment() {
     }
@@ -107,6 +117,14 @@ public class Attachment {
 
     public void setObligation(Obligation obligation) {
         this.obligation = obligation;
+    }
+
+    public Responsible getUploadedBy() {
+        return uploadedBy;
+    }
+
+    public void setUploadedBy(Responsible uploadedBy) {
+        this.uploadedBy = uploadedBy;
     }
 
     @Override

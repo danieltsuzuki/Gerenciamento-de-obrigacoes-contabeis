@@ -9,6 +9,8 @@ import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.company.repos
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.DuplicateResourceException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.NotFoundException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.validator.Cnpj;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class CompanyService {
+
+    private static final Logger log = LoggerFactory.getLogger(CompanyService.class);
 
     private final CompanyRepository companyRepository;
     private final CompanyMapper companyMapper;
@@ -39,6 +43,7 @@ public class CompanyService {
         Company company = companyMapper.toEntity(request);
         company.setCnpj(normalizedCnpj);
         Company saved = companyRepository.save(company);
+        log.info("Company created: id={}, cnpj={}, legalName='{}'", saved.getId(), saved.getCnpj(), saved.getLegalName());
         return companyMapper.toResponse(saved);
     }
 
@@ -94,6 +99,7 @@ public class CompanyService {
         company.setActive(request.active());
 
         Company updated = companyRepository.save(company);
+        log.info("Company updated: id={}, legalName='{}', active={}", updated.getId(), updated.getLegalName(), updated.isActive());
         return companyMapper.toResponse(updated);
     }
 }

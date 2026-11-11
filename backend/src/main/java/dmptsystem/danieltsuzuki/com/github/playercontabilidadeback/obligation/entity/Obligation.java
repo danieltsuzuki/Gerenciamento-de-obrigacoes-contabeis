@@ -6,6 +6,7 @@ import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.ex
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.entity.Responsible;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -16,6 +17,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -25,6 +29,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "obligation")
+@EntityListeners(AuditingEntityListener.class)
 public class Obligation {
 
     @Id
@@ -55,6 +60,16 @@ public class Obligation {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", updatable = false)
+    @CreatedBy
+    private Responsible createdBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by")
+    @LastModifiedBy
+    private Responsible updatedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -83,6 +98,10 @@ public class Obligation {
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Company getCompany() {
@@ -139,6 +158,22 @@ public class Obligation {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Responsible getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Responsible createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Responsible getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Responsible updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     @Override

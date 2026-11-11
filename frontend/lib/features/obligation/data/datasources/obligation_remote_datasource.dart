@@ -1,6 +1,7 @@
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/page_response.dart';
 import '../../domain/entities/obligation.dart';
+import '../../domain/entities/obligation_status_history.dart';
 import '../models/create_obligation_request.dart';
 import '../models/update_obligation_request.dart';
 import '../models/update_obligation_status_request.dart';
@@ -96,5 +97,16 @@ class ObligationRemoteDataSource {
       body: request.toJson(),
     );
     return Obligation.fromJson(response as Map<String, dynamic>);
+  }
+
+  Future<List<ObligationStatusHistory>> getObligationHistory(int id) async {
+    final response = await _apiClient.get('/api/obligations/$id/history');
+    if (response is List) {
+      return response
+          .whereType<Map<String, dynamic>>()
+          .map(ObligationStatusHistory.fromJson)
+          .toList();
+    }
+    return [];
   }
 }
