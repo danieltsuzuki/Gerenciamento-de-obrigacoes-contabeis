@@ -29,6 +29,20 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação da especificação SPEC-039 (Configurar Pipeline de CI/CD):
+  - **Pipeline de Integração Contínua (`.github/workflows/ci.yml`):**
+    - Workflow automatizado disparado em `push` e `pull_request` para as branches `master` e `main`, além de trigger manual (`workflow_dispatch`).
+    - Job **Backend**: provisionamento de JDK 21 (Temurin) com cache inteligente do Maven, execução do `./mvnw clean verify` executando 202 testes automatizados com MySQL em Testcontainers e validação dos thresholds mínimos de cobertura do JaCoCo (`jacoco:check`), com upload do relatório HTML para artefatos.
+    - Job **Frontend**: provisionamento de Flutter SDK 3.29.1 estável com cache de dependências, linter com `flutter analyze`, suíte de 199 testes com cobertura via `flutter test --coverage`, verificação de threshold mínimo (≥ 80.00%) com `python tool/check_coverage.py` e upload do relatório `coverage/lcov.info`.
+    - Job **Docs**: validação contínua de consistência entre código, banco de dados e contratos de documentação via `python .agent/skills/documentacao-projeto/scripts/check_docs.py .`.
+    - Controle de concorrência (`concurrency`) para cancelamento automático de execuções redundantes no mesmo branch/PR.
+  - **Pipeline de Entrega Contínua (`.github/workflows/cd.yml`):**
+    - Workflow automatizado disparado na criação de tags de release (`v*.*.*`) ou merge na branch principal.
+    - Publicação automatizada de imagens Docker multi-stage otimizadas para o GitHub Container Registry (`ghcr.io/danieltsuzuki/player-contabilidade-backend` e `ghcr.io/danieltsuzuki/player-contabilidade-frontend`), com versionamento semântico, ref de branch e tag `latest`.
+    - Compilação e publicação do bundle estático Flutter Web (`flutter build web --release`) como artefato zipável com retenção de 30 dias.
+  - **Governança e Proteção de Branch:**
+    - Documentação das regras de proteção de branch (*Branch Protection Rules*) exigindo aprovação de PR e status verde obrigatório dos 3 checks de CI antes do merge na branch principal.
+    - Inclusão de badges de status de CI, CD e cobertura de testes no topo do `README.md`.
 - Implementação da especificação SPEC-040 (Medir e Garantir Cobertura de Testes Backend e Frontend):
   - **Validação Automatizada de Cobertura no Backend com JaCoCo (`jacoco:check`):**
     - Configuração de regras estritas de verificação no ciclo `verify` do `jacoco-maven-plugin:0.8.12` em `backend/pom.xml`: threshold mínimo de linhas no módulo (BUNDLE) de 85%, classes de controller com mínimo de 90% e classes de service com mínimo de 90%.
