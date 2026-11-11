@@ -5,7 +5,7 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | — (card a criar: "Resolução de Pendências de Negócio e Domínio") |
 | Card | — |
-| Status | Backlog |
+| Status | Concluído / Testado |
 | Versão da SPEC | 1.0 |
 | Situação da especificação | Aprovada em discussão técnica (10/11/2026) |
 | Tipo | Regras de Negócio e Domínio (Backend e Frontend) |
@@ -81,19 +81,19 @@ Implementar e validar as definições de regras de negócio acordadas para as 5 
 
 ## 3. Critérios de Aceitação
 
-- [ ] **Imutabilidade:** `POST /api/obligations/{id}/attachments` em obrigação com status `COMPLETED` retorna `422 Unprocessable Entity` com código de erro amigável.
-- [ ] **UI Imutabilidade:** Botão de upload em `ObligationDetailPage` bloqueado/oculto para obrigações concluídas.
-- [ ] **Autorização:** Usuário autenticado que não seja o responsável da obrigação recebe `403 Forbidden` ao tentar mudar status via `PATCH /api/obligations/{id}/status` ou `PUT`.
-- [ ] **UI Autorização:** Botões de transição de status habilitados exclusivamente quando o usuário logado for o responsável pela obrigação.
-- [ ] **Status Atrasada:** Obrigações com data de vencimento anterior à data atual e não concluídas exibem indicador visual destacado de "Atrasada" na listagem e na tela de detalhes.
-- [ ] **CNPJ Alfanumérico:**
+- [x] **Imutabilidade:** `POST /api/obligations/{id}/attachments` em obrigação com status `COMPLETED` retorna `422 Unprocessable Entity` com código de erro amigável.
+- [x] **UI Imutabilidade:** Botão de upload em `ObligationDetailPage` bloqueado/oculto para obrigações concluídas.
+- [x] **Autorização:** Usuário autenticado que não seja o responsável da obrigação recebe `403 Forbidden` ao tentar mudar status via `PATCH /api/obligations/{id}/status` ou `PUT`.
+- [x] **UI Autorização:** Botões de transição de status habilitados exclusivamente quando o usuário logado for o responsável pela obrigação.
+- [x] **Status Atrasada:** Obrigações com data de vencimento anterior à data atual e não concluídas exibem indicador visual destacado de "Atrasada" na listagem e na tela de detalhes.
+- [x] **CNPJ Alfanumérico:**
   - CNPJs válidos no padrão clássico numérico continuam sendo aceitos (ex.: `33.000.167/0001-01`).
   - CNPJs válidos no novo padrão alfanumérico da RFB são aceitos e normalizados com sucesso.
   - CNPJs com DVs incorretos (sejam numéricos ou alfanuméricos) são rejeitados com `400 VALIDATION_ERROR`.
-- [ ] **Testes:**
+- [x] **Testes:**
   - Testes unitários e de integração cobrindo cada nova regra no backend.
   - Testes de widget e models cobrindo as atualizações no frontend.
-- [ ] **Documentação:**
+- [x] **Documentação:**
   - `docs/pendencias-e-perguntas-em-aberto.md` atualizado com as decisões.
   - `docs/api.md` atualizado refletindo o retorno `403` no PATCH de status e `422` no upload de obrigação concluída.
 

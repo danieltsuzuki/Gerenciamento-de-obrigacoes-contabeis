@@ -16,9 +16,13 @@ class CnpjTest {
             "33000167000101",
             "33.000.167/0001-01",
             "07526557000100",
-            "07.526.557/0001-00"
+            "07.526.557/0001-00",
+            "12ABC34501DE35",
+            "12.ABC.345/01DE-35",
+            "AB123456000110",
+            "AB.123.456/0001-10"
     })
-    @DisplayName("deve aceitar CNPJ válido formatado ou desformatado")
+    @DisplayName("deve aceitar CNPJ válido formatado ou desformatado (numérico e alfanumérico)")
     void shouldAcceptValidCnpj(String cnpj) {
         assertThat(Cnpj.isValid(cnpj)).isTrue();
     }
@@ -64,10 +68,11 @@ class CnpjTest {
     }
 
     @Test
-    @DisplayName("normalize deve remover caracteres não numéricos")
+    @DisplayName("normalize deve remover caracteres de formatação e manter alfanuméricos em maiúsculas")
     void shouldNormalizeCnpj() {
         assertThat(Cnpj.normalize("33.000.167/0001-01")).isEqualTo("33000167000101");
         assertThat(Cnpj.normalize("33000167000101")).isEqualTo("33000167000101");
+        assertThat(Cnpj.normalize("12.abc.345/01de-35")).isEqualTo("12ABC34501DE35");
         assertThat(Cnpj.normalize(null)).isNull();
     }
 }

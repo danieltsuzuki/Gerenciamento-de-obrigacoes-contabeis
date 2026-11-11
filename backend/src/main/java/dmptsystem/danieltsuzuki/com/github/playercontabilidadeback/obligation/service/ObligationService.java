@@ -20,10 +20,15 @@ import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.r
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.BusinessRuleException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.NotFoundException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.security.SecurityAuditorAware;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.security.UserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -150,10 +155,11 @@ public class ObligationService {
             obligation.setResponsible(newResponsible);
         }
 
-        // Transição de status RN-008
+        // Transição de status RN-008 & SPEC-041
         ObligationStatus previousStatus = obligation.getStatus();
         boolean statusChanged = false;
         if (request.status() != null && request.status() != previousStatus) {
+            checkResponsibleAuthorization(obligation);
             obligation.changeStatus(request.status(), clock);
             statusChanged = true;
         }
@@ -180,6 +186,8 @@ public class ObligationService {
         Obligation obligation = obligationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Obrigação", id));
 
+        checkResponsibleAuthorization(obligation);
+
         ObligationStatus previousStatus = obligation.getStatus();
         obligation.changeStatus(newStatus, clock);
 
@@ -192,6 +200,22 @@ public class ObligationService {
 
         long count = attachmentRepository.countByObligationId(id);
         return obligationMapper.toDetailResponse(updated, count);
+    }
+
+    private void checkResponsibleAuthorization(Obligation obligation) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            throw new AccessDeniedException("Apenas o usuário responsável atribuído pode avançar o status desta obrigação.");
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            Long currentUserId = userPrincipal.getId();
+            if (currentUserId == null || !Objects.equals(currentUserId, obligation.getResponsible().getId())) {
+                throw new AccessDeniedException("Apenas o usuário responsável atribuído pode avançar o status desta obrigação.");
+            }
+        } else {
+            throw new AccessDeniedException("Apenas o usuário responsável atribuído pode avançar o status desta obrigação.");
+        }
     }
 
     @Transactional(readOnly = true)

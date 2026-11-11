@@ -29,6 +29,22 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação da especificação SPEC-041 (Resolução das Pendências de Domínio):
+  - **Imutabilidade de Anexos em Obrigações Concluídas:**
+    - Bloqueio estrito no `AttachmentService` para rejeitar uploads (`POST /api/obligations/{id}/attachments`) quando a obrigação estiver com status `COMPLETED`, lançando exceção com HTTP 422 e código de erro `OBLIGATION_COMPLETED`.
+    - Na interface Flutter (`ObligationDetailPage`), ocultação do botão de upload de arquivo para obrigações concluídas, exibição do badge "Imutável" e aviso contextual de imutabilidade histórica.
+  - **Autorização por Responsável no Avanço de Status:**
+    - Validação de autorização em `ObligationService` (`PATCH /api/obligations/{id}/status` e `PUT /api/obligations/{id}` quando há transição de status) verificando se o usuário autenticado via `SecurityContextHolder` é o mesmo responsável atribuído (`obligation.getResponsible().getId()`). Rejeição com HTTP 403 `FORBIDDEN` caso contrário.
+    - Na interface Flutter (`ObligationDetailPage`), ocultação dos botões de transição de status ("Iniciar Execução" e "Concluir Obrigação") e exibição de aviso informativo para usuários autenticados que não são o responsável pela obrigação.
+  - **Status Derivado "Atrasada":**
+    - Manutenção do enum original do banco (`PENDING`, `IN_PROGRESS`, `COMPLETED`).
+    - Exibição dinâmica na interface Flutter (`ObligationListPage` e `ObligationDetailPage`) com badge e chip de destaque visual em vermelho/laranja para obrigações com prazo vencido (`dueDate < hoje` e `status != completed`).
+  - **Suporte a CNPJ Alfanumérico da Receita Federal:**
+    - Atualização do validador de domínio `Cnpj.java` e `@ValidCnpj` para suportar 14 caracteres alfanuméricos com 2 dígitos verificadores calculados via algoritmo módulo 11 ponderado com ASCII `- 48`.
+    - Atualização da entidade `Company.java` para normalizar CNPJ preservando caracteres alfanuméricos.
+    - Atualização do `CnpjValidator.dart` no frontend Flutter com cálculo módulo 11 idêntico e suporte a entrada alfanumérica no formulário `CompanyFormPage`.
+  - **Decisão Arquitetural de Recorrência:**
+    - Formalização de que obrigações são tratadas como avulsas no MVP, documentado nas pendências de negócio e arquitetura.
 - Implementação da especificação SPEC-039 (Configurar Pipeline de CI/CD):
   - **Pipeline de Integração Contínua (`.github/workflows/ci.yml`):**
     - Workflow automatizado disparado em `push` e `pull_request` para as branches `master` e `main`, além de trigger manual (`workflow_dispatch`).
