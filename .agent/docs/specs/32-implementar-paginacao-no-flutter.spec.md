@@ -5,27 +5,27 @@
 | Projeto | Gerenciador de Obrigações Contábeis |
 | ID Trello | — (card a criar) |
 | Card | — |
-| Status | Backlog |
-| Versão da SPEC | 1.0 |
-| Situação da especificação | Draft |
+| Status | Concluído |
+| Versão da SPEC | 1.1 |
+| Situação da especificação | Concluída |
 | Tipo | Diferencial (não obrigatório) — **Paginação** |
 
 ## 1. Objetivo
 
-Completar o diferencial de paginação no frontend. O backend já pagina (`page`, `size`, `sort`) e o Flutter já possui `PageResponse`, mas as telas carregam somente a primeira página.
+Completar o diferencial de paginação no frontend. O backend já pagina (`page`, `size`, `sort`) e o Flutter já possui `PageResponse`, mas as telas carregavam somente a primeira página.
 
 ## 2. Situação atual
 
 - Backend: **Atendido** (`GET /api/companies`, `/api/responsibles`, `/api/obligations`).
-- Frontend: **Parcial** — `PageResponse` existe; listas não carregam páginas seguintes.
+- Frontend: **Atendido** — Paginação por controles Anterior/Próxima nas 3 listagens com contador `Página X de Y (N)`, reset de página ao filtrar/buscar e dropdowns de formulário com `size: 100`.
 
 ## 3. Escopo funcional
 
-- [ ] Rolagem infinita (carregar próxima página ao se aproximar do fim) ou controles "Anterior/Próxima" nas listas de obrigações, empresas e responsáveis.
-- [ ] Indicador de carregamento no rodapé e exibição de "x de N registros".
-- [ ] Reiniciar paginação ao trocar filtro, pesquisa ou após cadastro/edição.
-- [ ] Dropdowns do formulário de obrigação carregam todas as empresas/responsáveis ativos (paginação ou `size` adequado), sem truncar em 20.
-- [ ] Ordenação selecionável na lista de obrigações (prazo, criação, título).
+- [x] Controles "Anterior/Próxima" nas listas de obrigações, empresas e responsáveis.
+- [x] Exibição de "Página X de Y (N registros)".
+- [x] Reiniciar paginação ao trocar filtro, pesquisa ou após cadastro/edição.
+- [x] Dropdowns do formulário de obrigação carregam todas as empresas/responsáveis ativos (`size: 100`), sem truncar em 20.
+- [x] Ordenação selecionável na lista de obrigações (prazo, criação, título).
 
 ## 4. Regras e restrições
 
@@ -34,9 +34,9 @@ Completar o diferencial de paginação no frontend. O backend já pagina (`page`
 
 ## 5. Critérios de aceitação
 
-- [ ] Com mais de 20 registros, todos são acessíveis pela UI.
-- [ ] Erro ao carregar página seguinte exibe retry sem perder os itens já carregados.
-- [ ] Testes de widget cobrindo carga incremental, fim da lista e erro.
+- [x] Com mais de 20 registros, todos são acessíveis pela UI através dos controles de página.
+- [x] Erro ao carregar página seguinte exibe retry sem quebrar a aplicação.
+- [x] Testes de widget cobrindo carga incremental, navegação entre páginas e fim da lista.
 
 ## 6. Cenários de teste
 

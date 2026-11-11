@@ -55,18 +55,21 @@ Implementar interface Flutter para listar, detalhar, cadastrar e editar empresas
 
 - [x] Criar, editar, detalhar e listar integrados à API.
 - [x] Ao clicar no card, exibe a tela de detalhes mesmo deslogado.
-- [x] Botões de edição não são exibidos na tela de detalhes caso o usuário não esteja logado.
-- [x] Ao clicar no botão de edição (no card ou na tela de detalhes autenticado), direciona para o formulário de edição.
+- [x] Botões de edição (no card da listagem e na tela de detalhes) não são exibidos caso o usuário não esteja logado.
+- [x] Botão flutuante de novo cadastro (FAB) não é exibido caso o usuário não esteja logado.
+- [x] Ao clicar no botão de edição (autenticado), direciona para o formulário de edição pré-preenchido.
+- [x] No formulário de cadastro, o campo de situação cadastral é omitido e a empresa nasce sempre como ativa (`active: true`).
+- [x] No formulário de edição, a situação cadastral (ativa/inativa) é exibida e permite inativação/reativação lógica.
 - [x] CNPJ inválido/duplicado mostra erro apropriado.
-- [x] Situação ativa/inativa é exibida e editável.
 - [x] Sucesso e falha geram feedback ao usuário.
 
 ## 6. Cenários de teste
 
 - **Sucesso - Listagem:** listagem de empresas com nome, CNPJ formatado e chips de status.
 - **Sucesso - Detalhes:** visualização anônima dos dados cadastrais completos.
-- **Segurança - Ocultação:** ausência dos botões de edição na página de detalhes quando desautenticado.
-- **Sucesso - Edição:** abertura pré-preenchida ao clicar no ícone de editar (autenticado).
+- **Segurança - Ocultação:** ausência dos botões de edição e criação quando desautenticado.
+- **Formulário de Criação:** ausência do switch de situação cadastral, criando empresa ativa por padrão.
+- **Sucesso - Edição:** abertura pré-preenchida ao clicar no ícone de editar (autenticado) com switch de situação cadastral funcional.
 - **Validação:** validação de CNPJ, campos obrigatórios e tratamento de `409 DUPLICATE_CNPJ`.
 
 ## 7. Dependências

@@ -23,6 +23,9 @@ class FakeObligationRepository implements ObligationRepository {
     int? companyId,
     int? responsibleId,
     ObligationStatus? status,
+    String? dueFrom,
+    String? dueTo,
+    String? q,
     int page = 0,
     int size = 20,
     String sort = 'dueDate,asc',
@@ -70,6 +73,7 @@ class FakeCompanyRepository implements CompanyRepository {
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
+    String? q,
   }) async {
     return const PageResponse<Company>(
       content: [
@@ -108,6 +112,7 @@ class FakeResponsibleRepository implements ResponsibleRepository {
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
+    String? q,
   }) async {
     return const PageResponse<Responsible>(
       content: [

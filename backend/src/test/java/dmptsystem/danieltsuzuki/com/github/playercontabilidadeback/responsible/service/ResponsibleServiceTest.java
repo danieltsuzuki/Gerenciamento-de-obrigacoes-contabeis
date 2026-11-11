@@ -180,4 +180,32 @@ class ResponsibleServiceTest {
 
         verify(responsibleRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("deve delegar para search quando q for informado")
+    void shouldDelegateToSearchWhenQIsProvided() {
+        Responsible responsible = new Responsible();
+        responsible.setName("Carlos Contador");
+        responsible.setEmail("carlos@empresa.com");
+        Page<Responsible> page = new PageImpl<>(List.of(responsible));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        ResponsibleResponse expectedResponse = new ResponsibleResponse(1L, "Carlos Contador", "carlos@empresa.com", true, java.time.LocalDateTime.now(), java.time.LocalDateTime.now());
+        when(responsibleRepository.search(true, "carlos", pageable)).thenReturn(page);
+        when(responsibleMapper.toResponse(responsible)).thenReturn(expectedResponse);
+
+        Page<ResponsibleResponse> result = responsibleService.findAll(true, "carlos", pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).name()).isEqualTo("Carlos Contador");
+    }
+
+    @Test
+    @DisplayName("deve lançar SearchQueryTooLongException quando q tiver mais de 100 caracteres")
+    void shouldThrowWhenQExceeds100Chars() {
+        Pageable pageable = PageRequest.of(0, 10);
+        assertThatThrownBy(() -> responsibleService.findAll(null, "b".repeat(101), pageable))
+                .isInstanceOf(dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.SearchQueryTooLongException.class)
+                .hasMessageContaining("100 caracteres");
+    }
 }

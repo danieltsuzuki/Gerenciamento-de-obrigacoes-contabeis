@@ -52,15 +52,21 @@ public class CompanyController {
 
     @GetMapping
     @SecurityRequirements
-    @Operation(summary = "Lista empresas cadastradas", description = "Retorna lista paginada de empresas. Permite filtro por status ativo/inativo.")
+    @Operation(summary = "Lista empresas cadastradas", description = "Retorna lista paginada de empresas. Permite filtro por status ativo/inativo e busca textual por razão social, nome fantasia ou CNPJ.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Listagem de empresas retornada com sucesso")
+            @ApiResponse(responseCode = "200", description = "Listagem de empresas retornada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Parâmetro de busca inválido ou excede 100 caracteres")
     })
     public Page<CompanyResponse> list(
             @Parameter(description = "Filtro opcional por situação da empresa (true para ativas, false para inativas)")
             @RequestParam(required = false) Boolean active,
+            @Parameter(description = "Termo de busca textual opcional (razão social, nome fantasia ou CNPJ)")
+            @RequestParam(required = false) String q,
             @Parameter(hidden = true) Pageable pageable
     ) {
+        if (q != null && !q.trim().isEmpty()) {
+            return companyService.findAll(active, q, pageable);
+        }
         return companyService.findAll(active, pageable);
     }
 

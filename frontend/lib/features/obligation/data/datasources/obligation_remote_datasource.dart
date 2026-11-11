@@ -14,6 +14,9 @@ class ObligationRemoteDataSource {
     int? companyId,
     int? responsibleId,
     ObligationStatus? status,
+    String? dueFrom,
+    String? dueTo,
+    String? q,
     int page = 0,
     int size = 20,
     String sort = 'dueDate,asc',
@@ -26,6 +29,9 @@ class ObligationRemoteDataSource {
     if (companyId != null) queryParams['companyId'] = companyId;
     if (responsibleId != null) queryParams['responsibleId'] = responsibleId;
     if (status != null) queryParams['status'] = status.code;
+    if (dueFrom != null && dueFrom.isNotEmpty) queryParams['dueFrom'] = dueFrom;
+    if (dueTo != null && dueTo.isNotEmpty) queryParams['dueTo'] = dueTo;
+    if (q != null && q.trim().isNotEmpty) queryParams['q'] = q.trim();
 
     final response = await _apiClient.get(
       '/api/obligations',

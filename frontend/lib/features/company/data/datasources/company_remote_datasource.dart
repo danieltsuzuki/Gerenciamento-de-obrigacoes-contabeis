@@ -11,6 +11,7 @@ class CompanyRemoteDataSource {
 
   Future<PageResponse<Company>> getCompanies({
     bool? active,
+    String? q,
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
@@ -22,6 +23,9 @@ class CompanyRemoteDataSource {
     };
     if (active != null) {
       queryParams['active'] = active;
+    }
+    if (q != null && q.trim().isNotEmpty) {
+      queryParams['q'] = q.trim();
     }
 
     final response = await _apiClient.get(

@@ -225,5 +225,31 @@ class CompanyServiceTest {
 
         verify(companyRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("deve delegar para search quando q for informado")
+    void shouldDelegateToSearchWhenQIsProvided() {
+        Company company = new Company();
+        company.setLegalName("Petrobras");
+        company.setCnpj(VALID_NORMALIZED_CNPJ);
+        Page<Company> page = new PageImpl<>(List.of(company));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(companyRepository.search(true, "petro", "petro".replaceAll("\\D", ""), pageable)).thenReturn(page);
+
+        Page<CompanyResponse> result = companyService.findAll(true, "petro", pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).legalName()).isEqualTo("Petrobras");
+    }
+
+    @Test
+    @DisplayName("deve lançar SearchQueryTooLongException quando q tiver mais de 100 caracteres")
+    void shouldThrowWhenQExceeds100Chars() {
+        Pageable pageable = PageRequest.of(0, 10);
+        assertThatThrownBy(() -> companyService.findAll(null, "a".repeat(101), pageable))
+                .isInstanceOf(dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.SearchQueryTooLongException.class)
+                .hasMessageContaining("100 caracteres");
+    }
 }
 

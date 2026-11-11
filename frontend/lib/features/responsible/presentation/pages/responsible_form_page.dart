@@ -280,39 +280,41 @@ class _ResponsibleFormPageState extends State<ResponsibleFormPage> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  Card(
-                    elevation: 0,
-                    color: const Color(0xFFF8FAFC),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    child: SwitchListTile(
-                      key: const Key('responsible-active-switch'),
-                      title: const Text(
-                        'Situação Cadastral',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                  if (widget.isEditing) ...[
+                    Card(
+                      elevation: 0,
+                      color: const Color(0xFFF8FAFC),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
                       ),
-                      subtitle: Text(
-                        _active
-                            ? 'Responsável Ativo (pode ser atribuído a novas obrigações)'
-                            : 'Responsável Inativo (não poderá ser atribuído a novas obrigações — RN-005)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _active
-                              ? const Color(0xFF16A34A)
-                              : const Color(0xFF64748B),
+                      child: SwitchListTile(
+                        key: const Key('responsible-active-switch'),
+                        title: const Text(
+                          'Situação Cadastral',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
+                        subtitle: Text(
+                          _active
+                              ? 'Responsável Ativo (pode ser atribuído a novas obrigações)'
+                              : 'Responsável Inativo (não poderá ser atribuído a novas obrigações — RN-005)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _active
+                                ? const Color(0xFF16A34A)
+                                : const Color(0xFF64748B),
+                          ),
+                        ),
+                        value: _active,
+                        activeColor: const Color(0xFF16A34A),
+                        onChanged: (val) {
+                          setState(() {
+                            _active = val;
+                          });
+                        },
                       ),
-                      value: _active,
-                      activeColor: const Color(0xFF16A34A),
-                      onChanged: (val) {
-                        setState(() {
-                          _active = val;
-                        });
-                      },
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 24),
                   Row(
                     children: [

@@ -6,6 +6,7 @@ import '../entities/responsible.dart';
 abstract class ResponsibleRepository {
   Future<PageResponse<Responsible>> getResponsibles({
     bool? active,
+    String? q,
     int page = 0,
     int size = 20,
     String sort = 'id,asc',

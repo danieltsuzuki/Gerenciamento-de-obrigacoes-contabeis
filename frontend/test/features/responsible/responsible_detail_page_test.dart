@@ -45,6 +45,7 @@ class MockResponsibleRepository implements ResponsibleRepository {
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
+    String? q,
   }) async =>
       throw UnimplementedError();
 

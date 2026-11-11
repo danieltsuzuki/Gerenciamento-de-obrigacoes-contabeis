@@ -87,6 +87,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(SearchQueryTooLongException.class)
+    public ResponseEntity<ErrorResponse> handleSearchQueryTooLongException(SearchQueryTooLongException ex) {
+        ErrorResponse error = new ErrorResponse("VALIDATION_ERROR", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.storage.StorageException.class)
     public ResponseEntity<ErrorResponse> handleStorageException(
             dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.storage.StorageException ex

@@ -15,6 +15,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -156,6 +157,31 @@ class ResponsibleControllerTest {
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Carlos Atualizado"));
+    }
+
+    @Test
+    @DisplayName("GET /api/responsibles com termo de busca q deve retornar 200 OK")
+    void shouldReturn200WhenSearchingResponsibles() throws Exception {
+        ResponsibleResponse response = new ResponsibleResponse(1L, "Carlos Contador", "carlos@empresa.com", true, LocalDateTime.now(), LocalDateTime.now());
+        when(responsibleService.findAll(eq(true), eq("carlos"), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(response)));
+
+        mockMvc.perform(get("/api/responsibles?active=true&q=carlos&page=0&size=10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].name").value("Carlos Contador"));
+    }
+
+    @Test
+    @DisplayName("GET /api/responsibles com q excedendo 100 caracteres deve retornar 400 VALIDATION_ERROR")
+    void shouldReturn400WhenSearchQueryTooLong() throws Exception {
+        when(responsibleService.findAll(any(), eq("c".repeat(101)), any()))
+                .thenThrow(new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.SearchQueryTooLongException(
+                        "O parâmetro de busca 'q' não pode exceder 100 caracteres."
+                ));
+
+        mockMvc.perform(get("/api/responsibles?q=" + "c".repeat(101)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 
     @Test

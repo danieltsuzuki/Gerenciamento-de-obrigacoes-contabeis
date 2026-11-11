@@ -78,17 +78,38 @@ public class ObligationService {
             ObligationStatus status,
             LocalDate dueFrom,
             LocalDate dueTo,
+            String q,
             Pageable pageable
     ) {
+        if (q != null && q.trim().length() > 100) {
+            throw new dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.SearchQueryTooLongException(
+                    "O parâmetro de busca 'q' não pode exceder 100 caracteres."
+            );
+        }
+        String cleanQ = (q != null && !q.trim().isEmpty()) ? q.trim() : null;
+
         Page<ObligationWithAttachmentCount> page = obligationRepository.findWithAttachmentCountByFilters(
                 companyId,
                 responsibleId,
                 status,
                 dueFrom,
                 dueTo,
+                cleanQ,
                 pageable
         );
         return page.map(obligationMapper::toListItemResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ObligationListItemResponse> findAll(
+            Long companyId,
+            Long responsibleId,
+            ObligationStatus status,
+            LocalDate dueFrom,
+            LocalDate dueTo,
+            Pageable pageable
+    ) {
+        return findAll(companyId, responsibleId, status, dueFrom, dueTo, null, pageable);
     }
 
     public ObligationDetailResponse update(Long id, UpdateObligationRequest request) {

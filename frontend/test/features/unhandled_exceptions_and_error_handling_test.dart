@@ -30,6 +30,7 @@ class ErrorCompanyRepository implements CompanyRepository {
     int page = 0,
     int size = 20,
     String sort = 'legalName,asc',
+    String? q,
   }) async {
     throw errorToThrow;
   }
@@ -55,6 +56,7 @@ class ErrorResponsibleRepository implements ResponsibleRepository {
     int page = 0,
     int size = 20,
     String sort = 'name,asc',
+    String? q,
   }) async {
     throw errorToThrow;
   }

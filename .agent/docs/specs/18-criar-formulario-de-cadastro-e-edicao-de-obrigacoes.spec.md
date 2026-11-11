@@ -48,29 +48,33 @@ Implementar interface Flutter unificada (`ObligationFormPage`) para cadastro e e
 
 - `POST /api/obligations`: `CreateObligationRequest(companyId, responsibleId, title, description, dueDate)`.
 - `PUT /api/obligations/{id}`: `UpdateObligationRequest(companyId, responsibleId, title, description, dueDate, status)`.
-- `GET /api/companies?active=true`: consulta empresas ativas para popular o dropdown.
-- `GET /api/responsibles?active=true`: consulta responsáveis ativos para popular o dropdown.
+- `GET /api/companies?active=true`: consulta empresas ativas para popular o seletor.
+- `GET /api/responsibles?active=true`: consulta responsáveis ativos para popular o seletor.
+- `SearchableSelectFormField<T>`: componente genérico de seleção pesquisável em diálogo modal centralizado (`Dialog`, `maxWidth: 520px`), substituindo dropdowns convencionais e facilitando a localização de empresas (por razão, fantasia ou CNPJ) e responsáveis (por nome ou e-mail).
 - Rotas nomeadas:
   - `AppRoutes.obligationCreate` (`/obligations/create`)
   - `AppRoutes.obligationEdit` (`/obligations/edit`)
 
 ## 5. Critérios de aceitação
 
-- [x] Seletores carregam apenas empresas e responsáveis ativos.
+- [x] Seletores carregam empresas e responsáveis ativos em componente pesquisável centralizado na tela.
+- [x] Seleção de empresa permite busca textual instantânea por razão social, nome fantasia e CNPJ.
+- [x] Seleção de responsável permite busca textual instantânea por nome e e-mail.
 - [x] Validações inline impedem submissão de formulário incompleto ou inválido.
 - [x] Cadastro cria obrigação com status `PENDING` definido pelo backend.
 - [x] Edição de obrigação ativa salva corretamente e atualiza a interface.
 - [x] Tentativa de editar obrigação concluída (`COMPLETED`) é bloqueada com feedback explicativo.
+- [x] Botões de edição na listagem e na tela de detalhes ficam ocultos para usuários não logados.
 - [x] Cobertura automatizada por testes unitários e de widgets.
 
 ## 6. Cenários de teste
 
-- **Sucesso - Cadastro:** preenchimento de título, empresa ativa, responsável ativo e dueDate enviando `CreateObligationRequest`.
+- **Sucesso - Cadastro com Busca:** abertura do diálogo de seleção de empresa e responsável, busca por texto, seleção e persistência com `CreateObligationRequest`.
 - **Sucesso - Edição:** abertura pré-preenchida, alteração de título/prazo e envio de `UpdateObligationRequest`.
 - **Validação:** tentativa de salvar com campos vazios exibe mensagens de erro em cada campo.
 - **Regra de Negócio - Entidades Inativas:** bloqueio de seleção ou exibição de aviso caso empresa/responsável seja inativado.
 - **Regra de Negócio - Obrigação Concluída:** bloqueio de edição em obrigações com status `COMPLETED`.
-- **Autenticação:** proteção com `requireAuth`.
+- **Autenticação:** proteção com `requireAuth` e ocultação de ações de edição para anônimos.
 
 ## 7. Dependências
 

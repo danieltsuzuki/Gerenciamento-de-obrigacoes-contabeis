@@ -13,12 +13,14 @@ class ResponsibleRepositoryImpl implements ResponsibleRepository {
   @override
   Future<PageResponse<Responsible>> getResponsibles({
     bool? active,
+    String? q,
     int page = 0,
     int size = 20,
     String sort = 'id,asc',
   }) {
     return _remoteDataSource.getResponsibles(
       active: active,
+      q: q,
       page: page,
       size: size,
       sort: sort,
