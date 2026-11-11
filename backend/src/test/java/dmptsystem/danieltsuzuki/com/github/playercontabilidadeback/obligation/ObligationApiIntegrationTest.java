@@ -64,6 +64,23 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
         return com.jayway.jsonpath.JsonPath.read(loginResponse, "$.token");
     }
 
+    private String obtainBearerTokenForUser(String email, String rawPassword) throws Exception {
+        String loginJson = """
+                {
+                    "email": "%s",
+                    "password": "%s"
+                }
+                """.formatted(email, rawPassword);
+
+        String loginResponse = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        return com.jayway.jsonpath.JsonPath.read(loginResponse, "$.token");
+    }
+
     private Long insertCompany(String legalName, String tradeName, String cnpj, boolean active) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -99,9 +116,6 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Ciclo completo da API de Obrigações: autenticação JWT, validação RN-006 (ativos), máquina de estados RN-008, anexos e bloqueio 405 de DELETE")
     void testObligationApiLifecycle() throws Exception {
-        String token = obtainBearerToken();
-        String authHeader = "Bearer " + token;
-
         // Limpeza de tabelas filhas para isolamento do teste
         jdbcTemplate.update("DELETE FROM attachment");
         jdbcTemplate.update("DELETE FROM obligation");
@@ -111,6 +125,13 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
         Long inactiveCompanyId = insertCompany("Empresa Inativa LTDA", "Empresa Inativa", "22333444000192", false);
         Long activeUserId = insertUser("Contador Ativo", "contador.ativo@empresa.com", true);
         Long inactiveUserId = insertUser("Contador Inativo", "contador.inativo@empresa.com", false);
+        Long otherUserId = insertUser("Outro Contador", "outro.contador@empresa.com", true);
+
+        String token = obtainBearerTokenForUser("contador.ativo@empresa.com", "senha123");
+        String authHeader = "Bearer " + token;
+
+        String otherToken = obtainBearerTokenForUser("outro.contador@empresa.com", "senha123");
+        String otherAuthHeader = "Bearer " + otherToken;
 
         String futureDueDate = LocalDate.now().plusDays(15).toString();
 
@@ -291,6 +312,14 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value("INVALID_STATUS_TRANSITION"));
 
+        // 11c. Tentativa de alterar status por outro usuário que não é o responsável atribuído (SPEC-041) -> 403 FORBIDDEN
+        mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
+                        .header("Authorization", otherAuthHeader)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\": \"IN_PROGRESS\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+
         // 12. PATCH com transição válida PENDING -> IN_PROGRESS -> 200 OK (completedAt deve continuar null)
         mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)
                         .header("Authorization", authHeader)
@@ -327,6 +356,16 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.id").value(obligationId))
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.completedAt").isNotEmpty());
+
+        // 15b. Tentativa de anexar arquivo em obrigação COMPLETED -> 422 OBLIGATION_COMPLETED (SPEC-041)
+        org.springframework.mock.web.MockMultipartFile mockFile = new org.springframework.mock.web.MockMultipartFile(
+                "file", "guia_darf.pdf", "application/pdf", "dados de teste".getBytes()
+        );
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/obligations/{id}/attachments", obligationId)
+                        .file(mockFile)
+                        .header("Authorization", authHeader))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("OBLIGATION_COMPLETED"));
 
         // 16. PATCH a partir de COMPLETED (terminal) tentando reabrir para IN_PROGRESS ou PENDING -> 422
         mockMvc.perform(patch("/api/obligations/{id}/status", obligationId)

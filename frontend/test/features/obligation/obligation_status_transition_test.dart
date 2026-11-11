@@ -121,10 +121,10 @@ void main() {
       );
     });
 
-    Future<void> signIn() async {
-      const session = AuthSession(
+    Future<void> signIn({int id = 2, String name = 'Carlos Silva'}) async {
+      final session = AuthSession(
         token: 'token-valido',
-        responsible: Responsible(id: 1, name: 'Admin', email: 'admin@empresa.com', active: true),
+        responsible: Responsible(id: id, name: name, email: '$name@empresa.com', active: true),
       );
       await sessionStorage.saveSession(session);
       await authController.initialize();
@@ -325,6 +325,56 @@ void main() {
 
       expect(find.byKey(const Key('obligation-detail-start-action')), findsNothing);
       expect(find.byKey(const Key('obligation-detail-complete-action')), findsNothing);
+    });
+
+    testWidgets('SPEC-041: usuário autenticado diferente do responsável atribuído não vê botões de ação e vê aviso',
+        (tester) async {
+      // Loga com usuário id: 99 (diferente do Carlos Silva id: 2)
+      await signIn(id: 99, name: 'Outro Contador');
+
+      final ob = Obligation(
+        id: 10,
+        title: 'Declaração DCTF',
+        status: ObligationStatus.pending,
+        dueDate: DateTime(2026, 12, 15),
+        company: const ObligationParticipantSummary(id: 1, name: 'Empresa Alpha'),
+        responsible: const ObligationParticipantSummary(id: 2, name: 'Carlos Silva'),
+      );
+      mockObligationRepo.obligationToReturn = ob;
+
+      await tester.pumpWidget(createWidgetUnderTest(ob));
+      await tester.pumpAndSettle();
+
+      // Botão de transição não deve aparecer para outro usuário
+      expect(find.byKey(const Key('obligation-detail-start-action')), findsNothing);
+      expect(find.byKey(const Key('obligation-detail-complete-action')), findsNothing);
+      // Mensagem explicativa de autorização deve estar visível
+      expect(find.textContaining('Apenas o responsável (Carlos Silva) pode avançar o status'), findsOneWidget);
+    });
+
+    testWidgets('SPEC-041: obrigação COMPLETED possui histórico imutável e oculta botão de upload',
+        (tester) async {
+      await signIn(id: 2, name: 'Carlos Silva');
+
+      final ob = Obligation(
+        id: 10,
+        title: 'Declaração DCTF',
+        status: ObligationStatus.completed,
+        dueDate: DateTime(2026, 12, 15),
+        completedAt: DateTime(2026, 11, 10),
+        company: const ObligationParticipantSummary(id: 1, name: 'Empresa Alpha'),
+        responsible: const ObligationParticipantSummary(id: 2, name: 'Carlos Silva'),
+      );
+      mockObligationRepo.obligationToReturn = ob;
+
+      await tester.pumpWidget(createWidgetUnderTest(ob));
+      await tester.pumpAndSettle();
+
+      // Botão de upload deve estar oculto
+      expect(find.byKey(const Key('obligation-detail-add-attachment-button')), findsNothing);
+      // Badge e aviso de imutabilidade devem estar visíveis
+      expect(find.byKey(const Key('obligation-detail-attachment-immutable-badge')), findsOneWidget);
+      expect(find.textContaining('histórico de documentos anexados é 100% imutável'), findsOneWidget);
     });
   });
 }

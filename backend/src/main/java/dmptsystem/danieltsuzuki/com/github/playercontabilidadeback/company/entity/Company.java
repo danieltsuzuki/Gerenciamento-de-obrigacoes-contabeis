@@ -76,7 +76,7 @@ public class Company {
 
     private void normalizeCnpj() {
         if (cnpj != null) {
-            cnpj = cnpj.replaceAll("\\D", "");
+            cnpj = dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.validator.Cnpj.normalize(cnpj);
         }
     }
 

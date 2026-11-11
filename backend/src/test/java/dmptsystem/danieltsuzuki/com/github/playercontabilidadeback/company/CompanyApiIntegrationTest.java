@@ -37,14 +37,22 @@ class CompanyApiIntegrationTest extends AbstractIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     private String obtainBearerToken() throws Exception {
-        jdbcTemplate.update("DELETE FROM users WHERE email = 'company_admin@empresa.com'");
-        jdbcTemplate.update(
-                "INSERT INTO users (name, email, password, active, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
-                "Admin User",
-                "company_admin@empresa.com",
-                passwordEncoder.encode("secret123"),
-                true
-        );
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM users WHERE email = 'company_admin@empresa.com'", Integer.class);
+        if (count == null || count == 0) {
+            jdbcTemplate.update(
+                    "INSERT INTO users (name, email, password, active, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
+                    "Admin User",
+                    "company_admin@empresa.com",
+                    passwordEncoder.encode("secret123"),
+                    true
+            );
+        } else {
+            jdbcTemplate.update(
+                    "UPDATE users SET password = ?, active = true WHERE email = 'company_admin@empresa.com'",
+                    passwordEncoder.encode("secret123")
+            );
+        }
 
         String loginJson = """
                 {
@@ -207,5 +215,41 @@ class CompanyApiIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(delete("/api/companies/" + companyId)
                         .header("Authorization", authHeader))
                 .andExpect(status().isMethodNotAllowed());
+    }
+
+    @Test
+    @DisplayName("Deve cadastrar e consultar empresa com novo CNPJ alfanumérico da Receita Federal com sucesso (SPEC-041)")
+    void shouldCreateAndRetrieveCompanyWithAlphanumericCnpj() throws Exception {
+        String token = obtainBearerToken();
+        String authHeader = "Bearer " + token;
+
+        String alphanumericCnpj = "12.ABC.345/01DE-35";
+        String normalizedCnpj = "12ABC34501DE35";
+
+        jdbcTemplate.update("DELETE FROM company WHERE cnpj = ?", normalizedCnpj);
+
+        String createJson = """
+                {
+                    "legalName": "Inovação Tech Alfanumérica LTDA",
+                    "tradeName": "Inovação Tech",
+                    "cnpj": "%s"
+                }
+                """.formatted(alphanumericCnpj);
+
+        String postResponse = mockMvc.perform(post("/api/companies")
+                        .header("Authorization", authHeader)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createJson))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.cnpj").value(normalizedCnpj))
+                .andReturn().getResponse().getContentAsString();
+
+        Number idNum = com.jayway.jsonpath.JsonPath.read(postResponse, "$.id");
+        Long companyId = idNum.longValue();
+
+        mockMvc.perform(get("/api/companies/" + companyId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cnpj").value(normalizedCnpj))
+                .andExpect(jsonPath("$.legalName").value("Inovação Tech Alfanumérica LTDA"));
     }
 }

@@ -21,6 +21,8 @@ import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.responsible.r
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.BusinessRuleException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.NotFoundException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.security.SecurityAuditorAware;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.security.UserPrincipal;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -83,6 +88,23 @@ class ObligationServiceTest {
                 securityAuditorAware,
                 clock
         );
+
+        Responsible mockResponsible = new Responsible();
+        mockResponsible.setId(2L);
+        mockResponsible.setName("Responsável 2");
+        mockResponsible.setEmail("resp2@empresa.com");
+        mockResponsible.setPasswordHash("hash");
+        mockResponsible.setActive(true);
+        UserPrincipal principal = UserPrincipal.fromResponsible(mockResponsible);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                principal, null, principal.getAuthorities()
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -531,6 +553,52 @@ class ObligationServiceTest {
 
         assertThat(history.get(1).fromStatus()).isEqualTo(ObligationStatus.PENDING);
         assertThat(history.get(1).toStatus()).isEqualTo(ObligationStatus.IN_PROGRESS);
+    }
+
+    @Test
+    @DisplayName("Deve recusar transição de status com 403 AccessDeniedException quando usuário autenticado for diferente do responsável atribuído")
+    void shouldRejectStatusTransitionWhenUserIsNotTheAssignedResponsible() {
+        Responsible otherUser = new Responsible();
+        otherUser.setId(99L);
+        otherUser.setName("Outro Usuário");
+        otherUser.setEmail("outro@teste.com");
+        otherUser.setPasswordHash("hash");
+        otherUser.setActive(true);
+        UserPrincipal otherPrincipal = UserPrincipal.fromResponsible(otherUser);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                otherPrincipal, null, otherPrincipal.getAuthorities()
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        Obligation obligation = new Obligation();
+        obligation.setId(10L);
+        Responsible assigned = new Responsible();
+        assigned.setId(2L);
+        obligation.setResponsible(assigned);
+
+        when(obligationRepository.findById(10L)).thenReturn(Optional.of(obligation));
+
+        assertThatThrownBy(() -> obligationService.updateStatus(10L, ObligationStatus.IN_PROGRESS))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Apenas o usuário responsável atribuído pode avançar o status desta obrigação.");
+    }
+
+    @Test
+    @DisplayName("Deve recusar transição de status com 403 AccessDeniedException quando usuário não estiver autenticado")
+    void shouldRejectStatusTransitionWhenUserIsUnauthenticated() {
+        SecurityContextHolder.clearContext();
+
+        Obligation obligation = new Obligation();
+        obligation.setId(10L);
+        Responsible assigned = new Responsible();
+        assigned.setId(2L);
+        obligation.setResponsible(assigned);
+
+        when(obligationRepository.findById(10L)).thenReturn(Optional.of(obligation));
+
+        assertThatThrownBy(() -> obligationService.updateStatus(10L, ObligationStatus.IN_PROGRESS))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Apenas o usuário responsável atribuído pode avançar o status desta obrigação.");
     }
 }
 

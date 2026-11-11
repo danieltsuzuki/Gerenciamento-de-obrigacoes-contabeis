@@ -210,7 +210,7 @@ Atualiza os dados de um responsável (nome, e-mail e situação cadastral / inat
 ## Endpoints de Empresas (`/api/companies`)
 
 ### POST /api/companies
-Cadastra uma nova empresa cliente. O CNPJ é normalizado e validado através dos dígitos verificadores. Requer autenticação JWT (`Authorization: Bearer <token>`).
+Cadastra uma nova empresa cliente. O CNPJ é normalizado e validado através dos dígitos verificadores (compatível com o formato numérico clássico e o novo padrão alfanumérico da Receita Federal — SPEC-041). Requer autenticação JWT (`Authorization: Bearer <token>`).
 
 **Request**
 ```json
@@ -226,7 +226,7 @@ Cadastra uma nova empresa cliente. O CNPJ é normalizado e validado através dos
 |---|---|:---:|---|
 | `legalName` | String | Sim | Razão social (máx. 255 caracteres) |
 | `tradeName` | String | Não | Nome fantasia (máx. 255 caracteres) |
-| `cnpj` | String | Sim | CNPJ formatado ou apenas dígitos (validado) |
+| `cnpj` | String | Sim | CNPJ numérico clássico ou alfanumérico da RFB (validado e normalizado) |
 | `active` | Boolean | Não | Situação cadastral inicial (padrão `true`) |
 
 **Respostas**
@@ -457,6 +457,7 @@ Atualiza os dados de uma obrigação existente.
 | 200 | — | Obrigação atualizada com sucesso |
 | 400 | `VALIDATION_ERROR` | Falha de validação ou campos obrigatórios ausentes |
 | 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
+| 403 | `FORBIDDEN` | Usuário autenticado não é o responsável atribuído à obrigação (ao tentar avançar status) (SPEC-041) |
 | 404 | `NOT_FOUND` | Obrigação, empresa ou responsável não encontrado |
 | 422 | `COMPANY_INACTIVE` / `USER_INACTIVE` | Nova empresa ou responsável está inativo (RN-006) |
 | 422 | `INVALID_STATUS_TRANSITION` | Transição de status proibida pelo ciclo de vida (RN-008) |
@@ -492,6 +493,7 @@ Operação explícita para transição de status da obrigação fiscal.
 | 200 | — | Status atualizado com sucesso |
 | 400 | `VALIDATION_ERROR` | Status nulo ou formato enum inválido |
 | 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
+| 403 | `FORBIDDEN` | Usuário autenticado não é o responsável atribuído à obrigação (SPEC-041) |
 | 404 | `NOT_FOUND` | Obrigação informada não foi encontrada |
 | 422 | `INVALID_STATUS_TRANSITION` | Transição de status proibida pelo ciclo de vida (RN-008) |
 
@@ -518,6 +520,7 @@ Realiza o upload de um arquivo anexo associado a uma obrigação fiscal via `mul
 | 400 | `VALIDATION_ERROR` | Arquivo ausente, vazio, tipo MIME não suportado ou limite de tamanho excedido |
 | 401 | `UNAUTHORIZED` | Requisição sem token JWT válido |
 | 404 | `NOT_FOUND` | Obrigação informada não existe |
+| 422 | `OBLIGATION_COMPLETED` | Obrigação já concluída; histórico é imutável e novos uploads são proibidos (SPEC-041) |
 | 500 | `STORAGE_ERROR` | Falha ao gravar arquivo em disco |
 
 ---

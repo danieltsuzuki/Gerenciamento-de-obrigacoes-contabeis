@@ -310,7 +310,7 @@ void main() {
         (tester) async {
       const session = AuthSession(
         token: 'token-valido',
-        responsible: Responsible(id: 1, name: 'Admin', email: 'admin@empresa.com', active: true),
+        responsible: Responsible(id: 2, name: 'Carlos Silva', email: 'carlos@empresa.com', active: true),
       );
       await sessionStorage.saveSession(session);
       await authController.initialize();
@@ -355,7 +355,7 @@ void main() {
         (tester) async {
       const session = AuthSession(
         token: 'token-valido',
-        responsible: Responsible(id: 1, name: 'Admin', email: 'admin@empresa.com', active: true),
+        responsible: Responsible(id: 2, name: 'Carlos Silva', email: 'carlos@empresa.com', active: true),
       );
       await sessionStorage.saveSession(session);
       await authController.initialize();

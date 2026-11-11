@@ -64,6 +64,13 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
       _obligation != null &&
       _obligation!.status != ObligationStatus.completed;
 
+  bool get _isAssignedResponsible {
+    if (!_isAuthenticated || _obligation == null) return false;
+    final currentUser = widget.authController?.currentUser;
+    if (currentUser == null) return true;
+    return currentUser.id == _obligation!.responsible.id;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -215,6 +222,16 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
       if (!allowed || !mounted) return;
     }
 
+    if (!_isAssignedResponsible) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Apenas o responsável atribuído (${_obligation?.responsible.name}) pode avançar o status desta obrigação.'),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
     final isStarting = nextStatus == ObligationStatus.inProgress;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -298,6 +315,16 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
     if (_obligation == null || _isUploadingAttachment) return;
     if (widget.attachmentRepository == null) return;
 
+    if (_obligation?.status == ObligationStatus.completed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não é permitido adicionar novos anexos a uma obrigação já concluída.'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
     if (widget.authController != null && !widget.authController!.isAuthenticated) {
       final allowed = await requireAuth(
         context,
@@ -364,9 +391,12 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _isUploadingAttachment = false);
+      final msg = e.code == 'OBLIGATION_COMPLETED' || e.statusCode == 422
+          ? (e.message.isNotEmpty ? e.message : 'Não é permitido adicionar novos anexos a uma obrigação já concluída.')
+          : 'Falha ao enviar anexo: ${e.message}';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Falha ao enviar anexo: ${e.message}'),
+          content: Text(msg),
           backgroundColor: const Color(0xFFDC2626),
         ),
       );
@@ -784,13 +814,15 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
             children: [
               const Icon(Icons.info_outline, color: Color(0xFF2563EB)),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Esta obrigação está pendente de início.',
-                  style: TextStyle(color: Color(0xFF1E3A8A), fontSize: 13, fontWeight: FontWeight.w500),
+                  _isAssignedResponsible
+                      ? 'Esta obrigação está pendente de início.'
+                      : 'Esta obrigação está pendente. Apenas o responsável (${obligation.responsible.name}) pode avançar o status.',
+                  style: const TextStyle(color: Color(0xFF1E3A8A), fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ),
-              if (_isAuthenticated)
+              if (_isAuthenticated && _isAssignedResponsible)
                 ElevatedButton.icon(
                   key: const Key('obligation-detail-start-action'),
                   onPressed: () => _handleStatusTransition(ObligationStatus.inProgress),
@@ -822,13 +854,15 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
             children: [
               const Icon(Icons.autorenew, color: Color(0xFF16A34A)),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Obrigação em andamento.',
-                  style: TextStyle(color: Color(0xFF14532D), fontSize: 13, fontWeight: FontWeight.w500),
+                  _isAssignedResponsible
+                      ? 'Obrigação em andamento.'
+                      : 'Obrigação em andamento. Apenas o responsável (${obligation.responsible.name}) pode avançar o status.',
+                  style: const TextStyle(color: Color(0xFF14532D), fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ),
-              if (_isAuthenticated)
+              if (_isAuthenticated && _isAssignedResponsible)
                 ElevatedButton.icon(
                   key: const Key('obligation-detail-complete-action'),
                   onPressed: () => _handleStatusTransition(ObligationStatus.completed),
@@ -990,7 +1024,32 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
                     ),
                   ),
                 ),
-                if (_isAuthenticated && widget.attachmentRepository != null)
+                if (obligation.status == ObligationStatus.completed)
+                  Container(
+                    key: const Key('obligation-detail-attachment-immutable-badge'),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lock_clock_outlined, size: 14, color: Color(0xFF475569)),
+                        SizedBox(width: 4),
+                        Text(
+                          'Imutável',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF475569),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (_isAuthenticated && widget.attachmentRepository != null)
                   ElevatedButton.icon(
                     key: const Key('obligation-detail-add-attachment-button'),
                     onPressed: _isUploadingAttachment ? null : _handleUploadAttachment,
@@ -1012,6 +1071,29 @@ class _ObligationDetailPageState extends State<ObligationDetailPage> {
               ],
             ),
             const SizedBox(height: 16),
+            if (obligation.status == ObligationStatus.completed) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.lock_outline, size: 16, color: Color(0xFF64748B)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Obrigação concluída: o histórico de documentos anexados é 100% imutável.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF475569), fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             if (!_isAuthenticated) ...[
               Container(
                 padding: const EdgeInsets.all(12),

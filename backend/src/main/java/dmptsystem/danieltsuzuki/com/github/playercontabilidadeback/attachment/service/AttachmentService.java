@@ -9,7 +9,9 @@ import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.re
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.storage.FileStorage;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.storage.StorageException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.entity.Obligation;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.enums.ObligationStatus;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.repository.ObligationRepository;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.BusinessRuleException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +77,13 @@ public class AttachmentService {
 
         Obligation obligation = obligationRepository.findById(obligationId)
                 .orElseThrow(() -> new NotFoundException("Obrigação", obligationId));
+
+        if (obligation.getStatus() == ObligationStatus.COMPLETED) {
+            throw new BusinessRuleException(
+                    "OBLIGATION_COMPLETED",
+                    "Não é permitido adicionar novos anexos a uma obrigação já concluída."
+            );
+        }
 
         if (file == null || file.isEmpty()) {
             throw new InvalidFileException("O arquivo não pode ser nulo ou vazio.");

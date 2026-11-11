@@ -44,9 +44,10 @@ Atualizado em: 2026-11-11
 | SPEC-038 | Implementar tema claro e escuro, paleta corporativa, modais centralizados e filtros avançados | Concluído / Testado | Paleta oficial (`#17152F`, `#F5A900`, `#FFC52E`, `#FFFFFF`), `AppTheme` com `lightTheme` e `darkTheme` (WCAG AA), `ThemeController` com alternância de tema no AppBar do `AppScaffold`, centralização de todos os diálogos/modais (`alignment: Alignment.center`, `maxWidth: 520` a `600px`), selects pesquisáveis com diálogo modal centralizado (`SearchableSelectFormField`), filtros avançados e ordenação configurável em `CompanyListPage` e `ResponsibleListPage`, ocultação de ações de mutação (FAB e botões de adição/remoção) para anônimos com diálogo acolhedor de autenticação no `requireAuth` | `test/features/theme_and_filters_spec38_test.dart`, `test/features/auth/auth_guard_test.dart`, `test/features/company/company_list_page_test.dart`, `test/features/responsible/responsible_list_page_test.dart` (198 testes aprovados no frontend) |
 | SPEC-039 | Configurar pipeline automatizado de CI/CD | Concluído / Testado | Workflows GitHub Actions em `.github/workflows/`: `ci.yml` (backend com Java 21 e Maven verify, frontend com Flutter 3.29.1, lint e lcov, e validação de docs) e `cd.yml` (build/push de imagens Docker backend/frontend no GHCR e empacotamento web como artefato de release); badges e proteção de branch documentados | `.github/workflows/ci.yml`, `.github/workflows/cd.yml`, badges no `README.md` |
 | SPEC-040 | Medir e garantir cobertura de testes (backend e frontend) | Concluído / Testado | JaCoCo 0.8.12 no Maven com goal `check` no ciclo `verify` (limites mínimos: BUNDLE ≥ 85%, Controllers ≥ 90%, Services ≥ 90%); criação de `AuthServiceTest` (100%) e expansão de casos de borda em `LocalFileSystemStorageTest`; medição com `flutter test --coverage` no Flutter e script `frontend/tool/check_coverage.py` com limite de linhas ≥ 80.00% | `./mvnw verify`, `backend/target/site/jacoco/index.html`, `python frontend/tool/check_coverage.py`, 202 testes backend (87.17% geral), 199 testes frontend (82.14% geral) |
+| SPEC-041 | Resolução das Pendências de Domínio (Imutabilidade de Concluídas, Autorização por Responsável, Status Atrasada, CNPJ Alfanumérico e Recorrência) | Concluído / Testado | Imutabilidade de anexos para status `COMPLETED` (422 `OBLIGATION_COMPLETED` e botão oculto com badge "Imutável"), autorização por responsável no avanço de status (403 `FORBIDDEN` e botões restritos na UI), status derivado "Atrasada" no Flutter (sem alterar enum do banco), validação e normalização de CNPJ alfanumérico da RFB (módulo 11 ASCII - 48 no backend e frontend) e decisão formal de obrigações avulsas no MVP | `AttachmentServiceTest`, `ObligationServiceTest`, `CompanyApiIntegrationTest`, `CnpjTest`, `test/core/utils/cnpj_validator_test.dart`, `test/features/obligation/obligation_status_transition_test.dart` (210 testes backend, 201 testes frontend) |
 
 ## Resumo
-- **Testado / Concluído:** 34
+- **Testado / Concluído:** 35
 - **Implementado:** 0
 - **Em andamento:** 0
 - **Planejado:** 0
@@ -57,18 +58,18 @@ Atualizado em: 2026-11-11
 - **Plugin:** `org.jacoco:jacoco-maven-plugin:0.8.12`
 - **Validação de Limites Automatizada:** Goal `check` vinculado à fase `verify` (`./mvnw verify` ou `./mvnw jacoco:check`), falhando a build se os mínimos não forem atingidos.
 - **Relatório HTML:** `backend/target/site/jacoco/index.html`
-- **Métricas Atuais (202 testes executados com 100% de aprovação):**
-  - **Total Geral (BUNDLE):** **87.17%** de linhas cobertas (822/943 linhas) — *Meta: ≥ 85%*
+- **Métricas Atuais (210 testes executados com 100% de aprovação):**
+  - **Total Geral (BUNDLE):** **87.33%** de linhas cobertas (841/963 linhas) — *Meta: ≥ 85%*
   - **Controllers:** **100.0%** de linhas cobertas em todos os 5 controllers (`AttachmentController`, `AuthController`, `CompanyController`, `ObligationController`, `ResponsibleController`) — *Meta: ≥ 90%*
-  - **Services:** **≥ 91.4% a 100%** de linhas cobertas (`ResponsibleService`: 100%, `AuthService`: 100%, `CompanyService`: 97.7%, `ObligationService`: 92.7%, `AttachmentService`: 91.4%) — *Meta: ≥ 90%*
+  - **Services:** **≥ 91.4% a 100%** de linhas cobertas (`ResponsibleService`: 100%, `AuthService`: 100%, `CompanyService`: 97.7%, `ObligationService`: 93.8%, `AttachmentService`: 92.5%) — *Meta: ≥ 90%*
   - **Storage & Segurança:** `LocalFileSystemStorage`: 87.0%, `JwtService`: 97.1%, `JwtAuthenticationFilter`: 95.5%, `SecurityConfig`: 100.0%, `Cnpj`: 100.0%.
   - **Exclusões Justificadas:** Classes de inicialização do Spring (`PlayerContabilidadeBackApplication`, `ServletInitializer`), DTOs de transporte (`**/dto/**`) e configurações de infraestrutura pura (`**/shared/config/**`).
 
 ### Frontend (Flutter & lcov)
 - **Coleta de Cobertura:** `flutter test --coverage` gerando `frontend/coverage/lcov.info`
 - **Ferramenta de Verificação:** `python frontend/tool/check_coverage.py` com flag `--threshold 80.0`
-- **Métricas Atuais (199 testes de widget e unitários com 100% de aprovação):**
-  - **Total Geral de Linhas:** **82.14%** (3.026 de 3.684 linhas cobertas) — *Meta: ≥ 80.00%*
+- **Métricas Atuais (201 testes de widget e unitários com 100% de aprovação):**
+  - **Total Geral de Linhas:** **82.17%** (3.047 de 3.708 linhas cobertas) — *Meta: ≥ 80.00%*
   - **Entidades e Domínio:** 100.0% de cobertura (`Company`, `Responsible`, `Attachment`, `ObligationStatusHistory`), 96.5% (`Obligation`)
   - **Repositórios e Mappers:** 100.0% (`CompanyRepositoryImpl`, `ResponsibleRepositoryImpl`, `AttachmentRepositoryImpl`), 91.7% a 100% nos modelos DTO
   - **Telas e Formulários:** 84.2% a 95.5% (`CompanyListPage`, `CompanyFormPage`, `ResponsibleListPage`, `ResponsibleFormPage`, `ObligationDetailPage`, `LoginPage`, `RegisterPage`)

@@ -8,7 +8,9 @@ import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.ma
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.repository.AttachmentRepository;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.attachment.storage.FileStorage;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.entity.Obligation;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.enums.ObligationStatus;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.obligation.repository.ObligationRepository;
+import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.BusinessRuleException;
 import dmptsystem.danieltsuzuki.com.github.playercontabilidadeback.shared.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -260,6 +262,28 @@ class AttachmentServiceTest {
 
         assertThatThrownBy(() -> attachmentService.download(999L))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar upload de anexo quando obrigação estiver concluída (COMPLETED) com 422")
+    void shouldRejectUploadWhenObligationIsCompleted() {
+        Obligation completedObligation = new Obligation();
+        completedObligation.setId(5L);
+        completedObligation.changeStatus(ObligationStatus.IN_PROGRESS, clock);
+        completedObligation.changeStatus(ObligationStatus.COMPLETED, clock);
+
+        when(obligationRepository.findById(5L)).thenReturn(Optional.of(completedObligation));
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "guia.pdf", "application/pdf", "dados".getBytes()
+        );
+
+        assertThatThrownBy(() -> attachmentService.upload(5L, file))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("Não é permitido adicionar novos anexos a uma obrigação já concluída.")
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("OBLIGATION_COMPLETED"));
+
+        verifyNoInteractions(fileStorage);
     }
 }
 
