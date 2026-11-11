@@ -39,14 +39,22 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     private String obtainBearerToken() throws Exception {
-        jdbcTemplate.update("DELETE FROM users WHERE email = 'obligation_admin@empresa.com'");
-        jdbcTemplate.update(
-                "INSERT INTO users (name, email, password, active, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
-                "Obligation Admin",
-                "obligation_admin@empresa.com",
-                passwordEncoder.encode("secretObligation123"),
-                true
-        );
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM users WHERE email = 'obligation_admin@empresa.com'", Integer.class);
+        if (count == null || count == 0) {
+            jdbcTemplate.update(
+                    "INSERT INTO users (name, email, password, active, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
+                    "Obligation Admin",
+                    "obligation_admin@empresa.com",
+                    passwordEncoder.encode("secretObligation123"),
+                    true
+            );
+        } else {
+            jdbcTemplate.update(
+                    "UPDATE users SET password = ?, active = true WHERE email = 'obligation_admin@empresa.com'",
+                    passwordEncoder.encode("secretObligation123")
+            );
+        }
 
         String loginJson = """
                 {
@@ -118,6 +126,7 @@ class ObligationApiIntegrationTest extends AbstractIntegrationTest {
     void testObligationApiLifecycle() throws Exception {
         // Limpeza de tabelas filhas para isolamento do teste
         jdbcTemplate.update("DELETE FROM attachment");
+        jdbcTemplate.update("DELETE FROM obligation_status_history");
         jdbcTemplate.update("DELETE FROM obligation");
 
         // Criação de fixtures

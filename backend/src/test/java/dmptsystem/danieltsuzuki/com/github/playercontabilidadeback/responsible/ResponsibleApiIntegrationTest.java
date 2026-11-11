@@ -31,14 +31,22 @@ class ResponsibleApiIntegrationTest extends AbstractIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     private String obtainBearerToken() throws Exception {
-        jdbcTemplate.update("DELETE FROM users WHERE email = 'seed_admin@empresa.com'");
-        jdbcTemplate.update(
-                "INSERT INTO users (name, email, password, active, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
-                "Seed Admin",
-                "seed_admin@empresa.com",
-                passwordEncoder.encode("senha12345"),
-                true
-        );
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM users WHERE email = 'seed_admin@empresa.com'", Integer.class);
+        if (count == null || count == 0) {
+            jdbcTemplate.update(
+                    "INSERT INTO users (name, email, password, active, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
+                    "Seed Admin",
+                    "seed_admin@empresa.com",
+                    passwordEncoder.encode("senha12345"),
+                    true
+            );
+        } else {
+            jdbcTemplate.update(
+                    "UPDATE users SET password = ?, active = true WHERE email = 'seed_admin@empresa.com'",
+                    passwordEncoder.encode("senha12345")
+            );
+        }
 
         String loginJson = """
                 {
