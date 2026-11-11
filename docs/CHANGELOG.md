@@ -23,6 +23,13 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Atualização do script `check_docs.py` e do `.gitignore` para suporte transparente à estrutura monorepo.
 
 ### Adicionado
+- Implementação e validação da SPEC-022 (Implementar download/abertura de anexos):
+  - Camada de salvamento e abertura de arquivos desacoplada via `FileSaverService` e `DefaultFileSaverService`.
+  - Suporte multiplataforma com download e abertura local segura em disco (`platform_file_saver_io.dart` na pasta Downloads do usuário em ambientes desktop Windows/Linux/macOS) e via Blob e download nativo no navegador (`platform_file_saver_web.dart`).
+  - Ação de download integrada no card de anexos em `ObligationDetailPage` via `GET /api/attachments/{attachmentId}/download` utilizando o identificador numérico único do anexo e autenticação JWT.
+  - Indicador de progresso visual dedicado por item em download (`CircularProgressIndicator`), desabilitando cliques simultâneos no mesmo anexo enquanto a tela permanece totalmente responsiva.
+  - Tratamento resiliente de falhas com feedback via SnackBar para `404 NOT_FOUND` (arquivo não encontrado), `401 UNAUTHORIZED` (sessão expirada com redirecionamento de login), `500 STORAGE_ERROR` (falha no storage) e erros de rede.
+  - Suíte de testes automatizados dedicada em `attachment_download_test.dart` com 7 cenários cobrindo download bem-sucedido, progresso, prevenção de duplicatas, tratamento de erros 404/500, parsing de headers e delegação de serviço (142 testes aprovados no frontend).
 - Implementação e validação da SPEC-021 (Implementar seleção e envio de anexos no Flutter):
   - Camada de seleção de documentos desacoplada com `FilePickerService` e `SelectedFile`, incluindo implementação padrão `DefaultFilePickerService` com suporte a tipos MIME suportados (`PDF`, `PNG`, `JPEG`, `XML`, `XLSX`).
   - Suporte completo a seleção direta de arquivos reais do computador (`platform_file_picker_io.dart` via PowerShell STA `OpenFileDialog` no Windows Desktop e `platform_file_picker_web.dart` via `FileUploadInputElement` na Web) acionado imediatamente ao clicar em "Anexar Arquivo" na página de detalhes, eliminando a necessidade de modal intermediário.

@@ -27,11 +27,12 @@ Atualizado em: 2026-11-10
 | SPEC-018 | Criar formulário de cadastro e edição de obrigações | Testado | `features/obligation/presentation/pages/obligation_form_page.dart`, `features/obligation/presentation/pages/obligation_detail_page.dart`, `core/routing/app_routes.dart` | `test/features/obligation/obligation_form_page_test.dart`, `test/features/obligation/obligation_detail_page_test.dart` |
 | SPEC-019 | Criar tela de detalhes da obrigação | Testado | `features/obligation/presentation/pages/obligation_detail_page.dart`, `features/attachment/domain/entities/attachment.dart`, `core/routing/app_routes.dart` | `test/features/obligation/obligation_detail_page_test.dart` |
 | SPEC-020 | Implementar fluxo de alteração de status no Flutter | Testado | `features/obligation/presentation/pages/obligation_detail_page.dart`, `features/obligation/domain/entities/obligation.dart`, `features/obligation/domain/repositories/obligation_repository.dart` | `test/features/obligation/obligation_status_transition_test.dart` |
-| SPEC-021 | Implementar seleção e envio de anexos no Flutter | Testado | `features/attachment/domain/services/file_picker_service.dart`, `features/obligation/presentation/pages/obligation_detail_page.dart`, `features/attachment/domain/entities/attachment.dart` | `test/features/attachment/attachment_upload_test.dart` (135 testes aprovados no frontend) |
+| SPEC-021 | Implementar seleção e envio de anexos no Flutter | Testado | `features/attachment/domain/services/file_picker_service.dart`, `features/obligation/presentation/pages/obligation_detail_page.dart`, `features/attachment/domain/entities/attachment.dart` | `test/features/attachment/attachment_upload_test.dart` |
+| SPEC-022 | Implementar download/abertura de anexos | Testado | `features/attachment/domain/services/file_saver_service.dart`, `features/obligation/presentation/pages/obligation_detail_page.dart`, `core/network/downloaded_file.dart` | `test/features/attachment/attachment_download_test.dart` (142 testes aprovados no frontend) |
 | SPEC-026 | Implementar autenticação e tela de login no Flutter | Testado | `features/auth/data/datasources/auth_session_storage.dart`, `features/auth/presentation/controllers/auth_session_controller.dart`, `features/auth/presentation/pages/login_page.dart`, `features/auth/presentation/pages/register_page.dart`, `features/auth/presentation/widgets/auth_guard.dart`, `core/widgets/app_scaffold.dart`, `core/network/api_client.dart`, `core/routing/app_routes.dart` | `test/features/auth/auth_session_storage_test.dart`, `test/features/auth/auth_session_controller_test.dart`, `test/features/auth/login_page_test.dart`, `test/features/auth/register_page_test.dart`, `test/features/auth/auth_guard_test.dart`, `test/core/widgets/app_scaffold_test.dart`, `test/features/auth/auth_integration_test.dart` |
 
 ## Resumo
-- **Testado:** 19
+- **Testado:** 20
 - **Implementado:** 0
 - **Em andamento:** 0
 - **Planejado:** 0
